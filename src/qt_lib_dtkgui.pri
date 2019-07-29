@@ -1,0 +1,14 @@
+QT.dtkgui.VERSION = 2.0.16.4
+QT.dtkgui.MAJOR_VERSION = 2
+QT.dtkgui.MINOR_VERSION = 0
+QT.dtkgui.PATCH_VERSION = 16
+QT.dtkgui.name = dtkgui
+QT.dtkgui.module = dtkgui
+QT.dtkgui.tools = /usr/lib/x86_64-linux-gnu/libdtk-2.0.16/DGui/bin
+QT.dtkgui.libs = /usr/lib/x86_64-linux-gnu
+QT.dtkgui.includes = /usr/include/libdtk-2.0.16/DCore/../DGui
+QT.dtkgui.frameworks =
+QT.dtkgui.depends = core gui dtkcore gui_private
+QT.dtkgui.module_config = v2 internal_module
+QT.dtkgui.DEFINES = 
+QT_MODULES += 
