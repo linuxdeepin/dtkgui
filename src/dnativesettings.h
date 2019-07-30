@@ -36,6 +36,7 @@ class DNativeSettings : public QObject, public DCORE_NAMESPACE::DObject
 public:
     explicit DNativeSettings(quint32 window, const QByteArray &domain = QByteArray(), QObject *parent = nullptr);
 
+    bool isValid() const;
     QByteArrayList allKeys() const;
 
     QVariant getSetting(const QByteArray &name) const;

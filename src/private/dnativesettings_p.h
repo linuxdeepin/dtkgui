@@ -47,6 +47,7 @@ private:
 public:
     QByteArray domain;
     QMetaObject *fakeMetaObject = nullptr;
+    bool valid = false;
 };
 
 DGUI_END_NAMESPACE

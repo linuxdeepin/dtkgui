@@ -102,6 +102,13 @@ DNativeSettings::DNativeSettings(quint32 window, const QByteArray &domain, QObje
 
 }
 
+bool DNativeSettings::isValid() const
+{
+    D_DC(DNativeSettings);
+
+    return d->valid;
+}
+
 QByteArrayList DNativeSettings::allKeys() const
 {
     D_DC(DNativeSettings);
@@ -127,7 +134,7 @@ DNativeSettings::DNativeSettings(const QMetaObject *metaObject, quint32 window, 
     : QObject(parent)
     , DObject(*new DNativeSettingsPrivate(this, domain))
 {
-    init(metaObject, window);
+    d_func()->valid = init(metaObject, window);
 }
 
 bool DNativeSettings::init(const QMetaObject *metaObject, quint32 window)

@@ -104,6 +104,11 @@ int main(int argc, char *argv[])
 
     DNativeSettings settings(window_id, parser.value(option_domain).toLatin1());
 
+    if (!settings.isValid()) {
+        qWarning() << "Settings is invalid, platform plugin is:" << qApp->platformName();
+        return -1;
+    }
+
     if (parser.isSet(option_set)) {
         QVariant value;
 
