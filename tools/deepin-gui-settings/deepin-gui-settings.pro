@@ -16,6 +16,8 @@ CONFIG(debug, debug|release) {
     unix:QMAKE_RPATHDIR += $$OUT_PWD/../../src
 }
 
-target.path = $$replace(QT.dtkcore.tools, DCore, DGui)
+DTK_MODULE_NAME=dtkgui
+load(dtk_build_config)
+target.path = $$TOOL_INSTALL_DIR
 
 INSTALLS += target
