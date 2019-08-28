@@ -25,6 +25,7 @@ includes.files += \
     $$PWD/DtkGuis \
     $$PWD/dtkgui_config.h \
     $$PWD/DNativeSettings \
+    $$PWD/DWindowManagerHelper \
     $$PWD/DForeignWindow \
     $$PWD/DWindowGroupLeader \
     $$PWD/DPlatformHandle
