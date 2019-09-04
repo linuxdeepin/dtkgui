@@ -27,27 +27,19 @@
 
 DGUI_BEGIN_NAMESPACE
 
-class DNativeSettingsPrivate : public QObject, public DCORE_NAMESPACE::DObjectPrivate
+class DNativeSettingsPrivate : public DCORE_NAMESPACE::DObjectPrivate
 {
     D_DECLARE_PUBLIC(DNativeSettings)
 public:
     DNativeSettingsPrivate(DNativeSettings *qq, const QByteArray &domain);
     ~DNativeSettingsPrivate();
 
-    bool init(const QMetaObject *init, quint32 window);
-
-    const QMetaObject *metaObject() const override;
-
-Q_SIGNALS:
-    void propertyChanged(const QByteArray &name, const QVariant &value);
-
-private:
-    bool event(QEvent *event) override;
+    bool init(const QMetaObject *mo, quint32 window);
 
 public:
     QByteArray domain;
-    QMetaObject *fakeMetaObject = nullptr;
     bool valid = false;
+    QByteArrayList allKeys;
 };
 
 DGUI_END_NAMESPACE

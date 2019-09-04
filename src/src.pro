@@ -11,14 +11,20 @@ HEADERS += \
     $$PWD/dwindowmanagerhelper.h \
     $$PWD/dforeignwindow.h \
     $$PWD/dwindowgroupleader.h \
-    $$PWD/dplatformhandle.h
+    $$PWD/dplatformhandle.h \
+    $$PWD/dpalette.h \
+    $$PWD/dguiapplicationhelper.h \
+    $$PWD/dplatformtheme.h
 
 SOURCES += \
     $$PWD/dnativesettings.cpp \
     $$PWD/dwindowmanagerhelper.cpp \
     $$PWD/dforeignwindow.cpp \
     $$PWD/dwindowgroupleader.cpp \
-    $$PWD/dplatformhandle.cpp
+    $$PWD/dplatformhandle.cpp \
+    $$PWD/dpalette.cpp \
+    $$PWD/dguiapplicationhelper.cpp \
+    $$PWD/dplatformtheme.cpp
 
 includes.files += \
     $$PWD/*.h \
@@ -28,7 +34,10 @@ includes.files += \
     $$PWD/DWindowManagerHelper \
     $$PWD/DForeignWindow \
     $$PWD/DWindowGroupLeader \
-    $$PWD/DPlatformHandle
+    $$PWD/DPlatformHandle \
+    $$PWD/DPalette \
+    $$PWD/DGuiApplicationHelper \
+    $$PWD/DPlatformTheme
 
 DTK_MODULE_NAME=$$TARGET
 load(dtk_build)

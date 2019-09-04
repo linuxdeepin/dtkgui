@@ -32,7 +32,8 @@ class DNativeSettingsPrivate;
 class DNativeSettings : public QObject, public DCORE_NAMESPACE::DObject
 {
     Q_OBJECT
-    Q_PROPERTY(QByteArrayList allKeys READ allKeys NOTIFY allKeysChanged)
+    D_DECLARE_PRIVATE(DNativeSettings)
+    Q_PROPERTY(QByteArrayList allKeys READ allKeys WRITE __setAllKeys NOTIFY allKeysChanged)
 public:
     explicit DNativeSettings(quint32 window, const QByteArray &domain = QByteArray(), QObject *parent = nullptr);
 
@@ -44,16 +45,17 @@ public:
 
 Q_SIGNALS:
     void allKeysChanged();
+    void propertyChanged(const QByteArray &name, const QVariant &value);
 
 protected:
+    DNativeSettings(DNativeSettingsPrivate &dd, const QMetaObject *metaObject, quint32 window, QObject *parent);
     DNativeSettings(const QMetaObject *metaObject, quint32 window, const QByteArray &domain, QObject *parent);
 
     bool init(const QMetaObject *metaObject, quint32 window);
 
-    DNativeSettingsPrivate* d_func();
-    const DNativeSettingsPrivate* d_func() const;
-
 private:
+    void __setAllKeys(const QByteArrayList &keys);
+
     friend class DNativeSettingsPrivate;
 };
 

@@ -109,6 +109,7 @@ public:
     bool autoInputMaskByClipPath() const;
 
     WId realWindowId() const;
+    static WId windowLeader();
 
 public Q_SLOTS:
     void setWindowRadius(int windowRadius);

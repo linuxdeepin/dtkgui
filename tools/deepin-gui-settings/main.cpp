@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 
     QCommandLineParser parser;
     QCommandLineOption option_window({"w", "window"}, "resource id of window to examine");
+    QCommandLineOption option_window_leader("window-leader", "use leader window of the window");
     QCommandLineOption option_select_window("select", "auto select a window on screen");
     QCommandLineOption option_domain({"p", "domain"}, "domain of settings property");
     QCommandLineOption option_set("set", "set a settings item to a given value. Can only and must specify a value(eg: [-s|-i|-c])");
@@ -58,6 +59,7 @@ int main(int argc, char *argv[])
     option_remove.setValueName("key");
 
     parser.addOption(option_window);
+    parser.addOption(option_window_leader);
     parser.addOption(option_select_window);
     parser.addOption(option_domain);
     parser.addOption(option_set);
@@ -99,6 +101,32 @@ int main(int argc, char *argv[])
 
         if (!ok) {
             parser.showHelp(-1);
+        }
+    }
+
+    if (parser.isSet(option_window_leader)) {
+        QProcess xprop;
+        xprop.start("xprop", {"-id", QString::number(window_id), "WM_CLIENT_LEADER"}, QIODevice::ReadOnly);
+
+        if (!xprop.waitForFinished()) {
+            qFatal(qPrintable(xprop.errorString()));
+            return -1;
+        }
+
+        const QByteArrayList &list = xprop.readAllStandardOutput().split(' ');
+        bool ok = false;
+
+        if (!list.isEmpty()) {
+            quint32 id = list.last().trimmed().toInt(&ok, 16);
+
+            if (ok) {
+                window_id = id;
+            }
+        }
+
+        if (!ok) {
+            qFatal(qPrintable("not found WM_CLIENT_LEADER"));
+            return -1;
         }
     }
 

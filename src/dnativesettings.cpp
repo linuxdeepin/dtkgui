@@ -30,8 +30,7 @@
 DGUI_BEGIN_NAMESPACE
 
 DNativeSettingsPrivate::DNativeSettingsPrivate(DNativeSettings *qq, const QByteArray &domain)
-    : QObject(qq)
-    , DCORE_NAMESPACE::DObjectPrivate(qq)
+    : DObjectPrivate(qq)
     , domain(domain)
 {
 
@@ -39,61 +38,25 @@ DNativeSettingsPrivate::DNativeSettingsPrivate(DNativeSettings *qq, const QByteA
 
 DNativeSettingsPrivate::~DNativeSettingsPrivate()
 {
-    if (fakeMetaObject) {
-        free(fakeMetaObject);
-    }
+
 }
 
-static void removeProperty(QMetaObjectBuilder &ob, const QByteArray &name)
-{
-    int index = ob.indexOfProperty(name);
-
-    if (index >= 0) {
-        ob.removeProperty(index);
-    }
-}
-
-bool DNativeSettingsPrivate::init(const QMetaObject *init, quint32 window)
+bool DNativeSettingsPrivate::init(const QMetaObject *mo, quint32 window)
 {
     QFunctionPointer native_build_setting_fun = qGuiApp->platformFunction("_d_buildNativeSettings");
 
     if (!native_build_setting_fun)
         return false;
 
-    QMetaObjectBuilder ob(init);
+    D_Q(DNativeSettings);
 
-    if (!domain.isEmpty())
-        ob.addClassInfo("Domain", domain);
-
-    // 移除特殊属性
-    removeProperty(ob, "allKeys");
-
-    // 重新构建QMetaObject对象
-    fakeMetaObject = ob.toMetaObject();
-
-    return reinterpret_cast<bool(*)(QObject*, quint32)>(native_build_setting_fun)(this, window);
-}
-
-const QMetaObject *DNativeSettingsPrivate::metaObject() const
-{
-    return d_ptr->metaObject ? d_ptr->dynamicMetaObject() : fakeMetaObject;
-}
-
-bool DNativeSettingsPrivate::event(QEvent *event)
-{
-    if (event->type() != QEvent::DynamicPropertyChange) {
-        return QObject::event(event);
+    if (!domain.isEmpty()) {
+        q->setProperty("_d_domain", domain);
     }
 
-    QDynamicPropertyChangeEvent *ev = static_cast<QDynamicPropertyChangeEvent*>(event);
+    q->setProperty("_d_metaObject", reinterpret_cast<qintptr>(mo));
 
-    if (QByteArrayLiteral("allKeys") == ev->propertyName()) {
-        D_Q(DNativeSettings);
-
-        Q_EMIT q->allKeysChanged();
-    }
-
-    return QObject::event(event);
+    return reinterpret_cast<bool(*)(QObject*, quint32)>(native_build_setting_fun)(q, window);
 }
 
 DNativeSettings::DNativeSettings(quint32 window, const QByteArray &domain, QObject *parent)
@@ -113,28 +76,34 @@ QByteArrayList DNativeSettings::allKeys() const
 {
     D_DC(DNativeSettings);
 
-    return qvariant_cast<QByteArrayList>(d->property("allKeys"));
+    return d->allKeys;
 }
 
 QVariant DNativeSettings::getSetting(const QByteArray &name) const
 {
     D_DC(DNativeSettings);
 
-    return d->property(name.constData());
+    return property(name.constData());
 }
 
 void DNativeSettings::setSetting(const QByteArray &name, const QVariant &value)
 {
     D_D(DNativeSettings);
 
-    d->setProperty(name.constData(), value);
+    setProperty(name.constData(), value);
+}
+
+DNativeSettings::DNativeSettings(DNativeSettingsPrivate &dd, const QMetaObject *metaObject, quint32 window, QObject *parent)
+    : QObject(parent)
+    , DObject(dd)
+{
+    d_func()->valid = init(metaObject, window);
 }
 
 DNativeSettings::DNativeSettings(const QMetaObject *metaObject, quint32 window, const QByteArray &domain, QObject *parent)
-    : QObject(parent)
-    , DObject(*new DNativeSettingsPrivate(this, domain))
+    : DNativeSettings(*new DNativeSettingsPrivate(this, domain), metaObject, window, parent)
 {
-    d_func()->valid = init(metaObject, window);
+
 }
 
 bool DNativeSettings::init(const QMetaObject *metaObject, quint32 window)
@@ -144,14 +113,13 @@ bool DNativeSettings::init(const QMetaObject *metaObject, quint32 window)
     return d->init(metaObject, window);
 }
 
-DNativeSettingsPrivate *DNativeSettings::d_func()
+void DNativeSettings::__setAllKeys(const QByteArrayList &keys)
 {
-    return dynamic_cast<DNativeSettingsPrivate *>(d_d_ptr.data());
-}
+    D_D(DNativeSettings);
 
-const DNativeSettingsPrivate *DNativeSettings::d_func() const
-{
-    return dynamic_cast<const DNativeSettingsPrivate *>(d_d_ptr.data());
+    d->allKeys = keys;
+
+    Q_EMIT allKeysChanged();
 }
 
 DGUI_END_NAMESPACE

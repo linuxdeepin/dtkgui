@@ -64,6 +64,7 @@ DEFINE_CONST_CHAR(enableDxcb);
 DEFINE_CONST_CHAR(isEnableDxcb);
 DEFINE_CONST_CHAR(setEnableNoTitlebar);
 DEFINE_CONST_CHAR(isEnableNoTitlebar);
+DEFINE_CONST_CHAR(clientLeader);
 
 static void setWindowProperty(QWindow *window, const char *name, const QVariant &value)
 {
@@ -944,6 +945,21 @@ bool DPlatformHandle::autoInputMaskByClipPath() const
 WId DPlatformHandle::realWindowId() const
 {
     return qvariant_cast<WId>(m_window->property("_d_real_content_window"));
+}
+
+WId DPlatformHandle::windowLeader()
+{
+    QFunctionPointer clientLeader = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    clientLeader = qApp->platformFunction(_clientLeader);
+#endif
+
+    if (!clientLeader) {
+        return 0;
+    }
+
+    return reinterpret_cast<quint32(*)()>(clientLeader)();
 }
 
 void DPlatformHandle::setWindowRadius(int windowRadius)
