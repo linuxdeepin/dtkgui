@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
         xprop.start("xprop", {"-id", QString::number(window_id), "WM_CLIENT_LEADER"}, QIODevice::ReadOnly);
 
         if (!xprop.waitForFinished()) {
-            qFatal(qPrintable(xprop.errorString()));
+            qFatal("%s\n", xprop.errorString().toLocal8Bit().constData());
             return -1;
         }
 
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         }
 
         if (!ok) {
-            qFatal(qPrintable("not found WM_CLIENT_LEADER"));
+            qFatal("%s\n", "not found WM_CLIENT_LEADER");
             return -1;
         }
     }
