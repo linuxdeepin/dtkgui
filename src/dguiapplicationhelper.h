@@ -60,7 +60,7 @@ public:
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;
-    DPlatformTheme *windowTheme(const QWindow *window) const;
+    DPlatformTheme *windowTheme(QWindow *window) const;
 
     DPalette applicationPalette() const;
     DPalette windowPalette(QWindow *window) const;
@@ -81,8 +81,10 @@ Q_SIGNALS:
 
 protected:
     explicit DGuiApplicationHelper();
+    virtual void initialize();
 
-    bool eventFilter(QObject *watched, QEvent *event) override;
+    typedef DGuiApplicationHelper *(*HelperCreator)();
+    static void registerInstanceCreator(HelperCreator creator);
 
 private:
     D_PRIVATE_SLOT(void _q_initApplicationTheme(bool))

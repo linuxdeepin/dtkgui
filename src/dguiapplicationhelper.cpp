@@ -60,13 +60,6 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
 {
     D_Q(DGuiApplicationHelper);
 
-    for (QWindow *window : app->topLevelWindows()) {
-        if (window->handle())
-            initWindow(window);
-    }
-
-    app->installEventFilter(q);
-
     q->connect(app, &QGuiApplication::paletteChanged, q, [q, this, app] {
         if (themeType == DGuiApplicationHelper::UnknownType)
             Q_EMIT q->themeTypeChanged(q->toColorType(app->palette()));
@@ -118,10 +111,11 @@ void DGuiApplicationHelperPrivate::staticInitApplication()
     }
 }
 
-void DGuiApplicationHelperPrivate::initWindow(QWindow *window)
+DPlatformTheme *DGuiApplicationHelperPrivate::initWindow(QWindow *window) const
 {
     DPlatformTheme *theme = new DPlatformTheme(window->winId(), appTheme);
     window->setProperty(WINDOW_THEME_KEY, QVariant::fromValue(theme));
+    theme->setParent(window); // 跟随窗口销毁
 
     auto onWindowThemeChanged = [theme, window] {
         qGuiApp->postEvent(window, new QEvent(QEvent::ThemeChange));
@@ -130,6 +124,8 @@ void DGuiApplicationHelperPrivate::initWindow(QWindow *window)
     window->connect(theme, &DPlatformTheme::themeNameChanged, window, onWindowThemeChanged);
     window->connect(theme, &DPlatformTheme::activeColorChanged, window, onWindowThemeChanged);
     window->connect(theme, &DPlatformTheme::paletteChanged, window, onWindowThemeChanged);
+
+    return theme;
 }
 
 void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
@@ -165,12 +161,27 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChanged(QGuiApplication *app)
 class _DGuiApplicationHelper
 {
 public:
-    _DGuiApplicationHelper() {
-        helper.d_func()->init();
+    _DGuiApplicationHelper()
+        : helper(creator())
+    {
+        helper->initialize();
     }
-    DGuiApplicationHelper helper;
+
+    ~_DGuiApplicationHelper()
+    {
+        delete helper;
+    }
+
+    static DGuiApplicationHelper *defaultCreator()
+    {
+        return new DGuiApplicationHelper();
+    }
+
+    DGuiApplicationHelper *helper;
+    static DGuiApplicationHelper::HelperCreator creator;
 };
 
+DGuiApplicationHelper::HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
 Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
 
 DGuiApplicationHelper::DGuiApplicationHelper()
@@ -180,26 +191,16 @@ DGuiApplicationHelper::DGuiApplicationHelper()
 
 }
 
-bool DGuiApplicationHelper::eventFilter(QObject *watched, QEvent *event)
+void DGuiApplicationHelper::initialize()
 {
-    if (event->type() == QEvent::PlatformSurface) {
-        if (QWindow *window = qobject_cast<QWindow*>(watched)) {
-            if (window->type() != Qt::Window)
-                return QObject::eventFilter(watched, event);
+    D_D(DGuiApplicationHelper);
 
-            QPlatformSurfaceEvent *ev = static_cast<QPlatformSurfaceEvent*>(event);
+    d->init();
+}
 
-            D_D(DGuiApplicationHelper);
-
-            if (ev->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
-                d->initWindow(window);
-            } else if (DPlatformTheme *theme = windowTheme(window)) {
-                theme->deleteLater();
-            }
-        }
-    }
-
-    return QObject::eventFilter(watched, event);
+void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::HelperCreator creator)
+{
+    _DGuiApplicationHelper::creator = creator;
 }
 
 inline static int adjustColorValue(int base, qint8 increment, int max = 255)
@@ -210,7 +211,7 @@ inline static int adjustColorValue(int base, qint8 increment, int max = 255)
 
 DGuiApplicationHelper *DGuiApplicationHelper::instance()
 {
-    return &_globalHelper->helper;
+    return _globalHelper->helper;
 }
 
 QColor DGuiApplicationHelper::adjustColor(const QColor &base,
@@ -477,9 +478,18 @@ DPlatformTheme *DGuiApplicationHelper::applicationTheme() const
     return d->appTheme;
 }
 
-DPlatformTheme *DGuiApplicationHelper::windowTheme(const QWindow *window) const
+DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
 {
-    return qvariant_cast<DPlatformTheme*>(window->property(WINDOW_THEME_KEY));
+    DPlatformTheme *theme = qvariant_cast<DPlatformTheme*>(window->property(WINDOW_THEME_KEY));
+
+    if (theme) {
+        return theme;
+    }
+
+    D_DC(DGuiApplicationHelper);
+    theme = d->initWindow(window);
+
+    return theme;
 }
 
 DPalette DGuiApplicationHelper::applicationPalette() const
