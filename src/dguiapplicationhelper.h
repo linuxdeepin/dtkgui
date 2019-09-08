@@ -47,6 +47,8 @@ public:
         DarkType
     };
 
+    typedef DGuiApplicationHelper *(*HelperCreator)();
+    static void registerInstanceCreator(HelperCreator creator);
     static DGuiApplicationHelper *instance();
 
     QColor adjustColor(const QColor &base, qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
@@ -82,9 +84,6 @@ Q_SIGNALS:
 protected:
     explicit DGuiApplicationHelper();
     virtual void initialize();
-
-    typedef DGuiApplicationHelper *(*HelperCreator)();
-    static void registerInstanceCreator(HelperCreator creator);
 
 private:
     D_PRIVATE_SLOT(void _q_initApplicationTheme(bool))
