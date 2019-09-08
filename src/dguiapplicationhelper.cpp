@@ -201,6 +201,12 @@ void DGuiApplicationHelper::initialize()
 void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::HelperCreator creator)
 {
     _DGuiApplicationHelper::creator = creator;
+
+    if (_globalHelper.exists() && _globalHelper->helper) {
+        delete _globalHelper->helper;
+        _globalHelper->helper = creator();
+        _globalHelper->helper->initialize();
+    }
 }
 
 inline static int adjustColorValue(int base, qint8 increment, int max = 255)
