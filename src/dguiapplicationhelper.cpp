@@ -446,7 +446,7 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
     ColorType type = LightType;
 
     // 深色主题
-    if (theme_name.endsWith("-dark")) {
+    if (theme_name.endsWith("dark")) {
         type = DarkType;
     }
 
