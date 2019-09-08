@@ -149,7 +149,8 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChanged(QGuiApplication *app)
 {
     D_Q(DGuiApplicationHelper);
 
-    if (app->testAttribute(Qt::AA_SetPalette)) {
+    if (app->testAttribute(Qt::AA_SetPalette)
+            || paletteType != DGuiApplicationHelper::UnknownType) {
         return;
     }
 
@@ -337,7 +338,7 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
 
 DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType type)
 {
-    static DPalette *light_palette = nullptr, *dark_palette = nullptr;
+    static const DPalette *light_palette = nullptr, *dark_palette = nullptr;
 
     if (type == LightType) {
         if (Q_LIKELY(light_palette)) {
@@ -355,13 +356,13 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
     const QColor *qcolor_list, *dcolor_list;
 
     if (type == DarkType) {
-        dark_palette = new DPalette();
-        pa = dark_palette;
+        pa = new DPalette();
+        dark_palette = pa;
         qcolor_list = dark_qpalette;
         dcolor_list = dark_dpalette;
     } else {
-        light_palette = new DPalette();
-        pa = light_palette;
+        pa = new DPalette();
+        light_palette = pa;
         qcolor_list = light_qpalette;
         dcolor_list = light_dpalette;
     }
@@ -380,7 +381,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
         generatePaletteColor(*pa, role, type);
     }
 
-    return *pa;
+    return *const_cast<const DPalette*>(pa);
 }
 
 template<typename M>
@@ -502,6 +503,20 @@ DPalette DGuiApplicationHelper::applicationPalette() const
 {
     D_DC(DGuiApplicationHelper);
 
+    ColorType type = UnknownType;
+
+    // 如果应用程序自己设置过palette，则以这个palette为基础获取DPalette
+    if (qGuiApp && qGuiApp->testAttribute(Qt::AA_SetPalette)) {
+        type = toColorType(qGuiApp->palette());
+    } else {
+        type = d->paletteType;
+    }
+
+    // 如果自定义了palette的类型，则直接返回对应的标准DPalette
+    if (type != UnknownType) {
+        return standardPalette(type);
+    }
+
     return fetchPalette(d->appTheme);
 }
 
@@ -583,13 +598,7 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
         return;
 
     d->paletteType = paletteType;
-
-    if (paletteType == UnknownType) {
-        qGuiApp->setAttribute(Qt::AA_SetPalette, false);
-        d->notifyAppThemeChanged(qGuiApp);
-    } else {
-        qGuiApp->setPalette(standardPalette(paletteType));
-    }
+    d->notifyAppThemeChanged(qGuiApp);
 
     Q_EMIT paletteTypeChanged(paletteType);
 }
