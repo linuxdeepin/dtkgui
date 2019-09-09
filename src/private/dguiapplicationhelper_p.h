@@ -39,7 +39,7 @@ public:
     static void staticInitApplication();
     DPlatformTheme *initWindow(QWindow *window) const;
     void _q_initApplicationTheme(bool notifyChange = false);
-    void notifyAppThemeChanged(QGuiApplication *app);
+    void notifyAppThemeChanged(QGuiApplication *app, bool ignorePaletteType = false);
 
     DGuiApplicationHelper::ColorType themeType = DGuiApplicationHelper::UnknownType;
     DGuiApplicationHelper::ColorType paletteType = DGuiApplicationHelper::UnknownType;

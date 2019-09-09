@@ -135,7 +135,7 @@ void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
 
     appTheme = new DPlatformTheme(DPlatformHandle::windowLeader(), systemTheme);
     QGuiApplication *app = qGuiApp;
-    auto onAppThemeChanged = std::bind(&DGuiApplicationHelperPrivate::notifyAppThemeChanged, this, app);
+    auto onAppThemeChanged = std::bind(&DGuiApplicationHelperPrivate::notifyAppThemeChanged, this, app, false);
     QObject::connect(appTheme, &DPlatformTheme::themeNameChanged, app, onAppThemeChanged);
     QObject::connect(appTheme, &DPlatformTheme::activeColorChanged, app, onAppThemeChanged);
     QObject::connect(appTheme, &DPlatformTheme::paletteChanged, app, onAppThemeChanged);
@@ -145,12 +145,12 @@ void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
     }
 }
 
-void DGuiApplicationHelperPrivate::notifyAppThemeChanged(QGuiApplication *app)
+void DGuiApplicationHelperPrivate::notifyAppThemeChanged(QGuiApplication *app, bool ignorePaletteType)
 {
     D_Q(DGuiApplicationHelper);
 
     if (app->testAttribute(Qt::AA_SetPalette)
-            || paletteType != DGuiApplicationHelper::UnknownType) {
+            || (!ignorePaletteType && paletteType != DGuiApplicationHelper::UnknownType)) {
         return;
     }
 
@@ -598,7 +598,7 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
         return;
 
     d->paletteType = paletteType;
-    d->notifyAppThemeChanged(qGuiApp);
+    d->notifyAppThemeChanged(qGuiApp, true);
 
     Q_EMIT paletteTypeChanged(paletteType);
 }
