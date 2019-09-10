@@ -278,7 +278,7 @@ static QColor light_qpalette[QPalette::NColorRoles] {
     QColor("#414d68"),                  //ButtonText
     Qt::white,                          //Base
     QColor("#f8f8f8"),                  //Window
-    QColor(0, 0, 0, 0.7 * 255),         //Shadow
+    QColor(0, 0, 0, 0.4 * 255),         //Shadow
     QColor("#0081ff"),                  //Highlight
     Qt::white,                          //HighlightedText
     QColor("#0082fa"),                  //Link
