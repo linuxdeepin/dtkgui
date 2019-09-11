@@ -50,6 +50,7 @@ public:
     typedef DGuiApplicationHelper *(*HelperCreator)();
     static void registerInstanceCreator(HelperCreator creator);
     static DGuiApplicationHelper *instance();
+    ~DGuiApplicationHelper();
 
     QColor adjustColor(const QColor &base, qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
                        qint8 redFloat, qint8 greenFloat, qint8 blueFloat, qint8 alphaFloat);
@@ -65,6 +66,7 @@ public:
     DPlatformTheme *windowTheme(QWindow *window) const;
 
     DPalette applicationPalette() const;
+    void setApplicationPalette(const DPalette &palette);
     DPalette windowPalette(QWindow *window) const;
 
     static ColorType toColorType(const QColor &color);

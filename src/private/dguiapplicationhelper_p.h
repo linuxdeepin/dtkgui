@@ -47,6 +47,7 @@ public:
     DPlatformTheme *systemTheme;
     // 应用程序级别的主题设置
     DPlatformTheme *appTheme = nullptr;
+    DPalette *appPalette = nullptr;
 };
 
 DGUI_END_NAMESPACE

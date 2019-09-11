@@ -221,6 +221,15 @@ DGuiApplicationHelper *DGuiApplicationHelper::instance()
     return _globalHelper->helper;
 }
 
+DGuiApplicationHelper::~DGuiApplicationHelper()
+{
+    D_D(DGuiApplicationHelper);
+
+    if (d->appPalette) {
+        delete d->appPalette;
+    }
+}
+
 QColor DGuiApplicationHelper::adjustColor(const QColor &base,
                                           qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
                                           qint8 redFloat, qint8 greenFloat, qint8 blueFloat, qint8 alphaFloat)
@@ -503,6 +512,10 @@ DPalette DGuiApplicationHelper::applicationPalette() const
 {
     D_DC(DGuiApplicationHelper);
 
+    if (d->appPalette) {
+        return *d->appPalette;
+    }
+
     ColorType type = UnknownType;
 
     // 如果应用程序自己设置过palette，则以这个palette为基础获取DPalette
@@ -518,6 +531,25 @@ DPalette DGuiApplicationHelper::applicationPalette() const
     }
 
     return fetchPalette(d->appTheme);
+}
+
+void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
+{
+    D_D(DGuiApplicationHelper);
+
+    if (d->appPalette) {
+        if (palette.resolve()) {
+            *d->appPalette = palette;
+        } else {
+            delete d->appPalette;
+        }
+    } else if (palette.resolve()) {
+        d->appPalette = new DPalette(palette);
+    } else {
+        return;
+    }
+
+    d->notifyAppThemeChanged(qGuiApp, true);
 }
 
 DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
