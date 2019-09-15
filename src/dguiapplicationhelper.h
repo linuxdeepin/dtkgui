@@ -52,8 +52,8 @@ public:
     static DGuiApplicationHelper *instance();
     ~DGuiApplicationHelper();
 
-    QColor adjustColor(const QColor &base, qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
-                       qint8 redFloat, qint8 greenFloat, qint8 blueFloat, qint8 alphaFloat);
+    static QColor adjustColor(const QColor &base, qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
+                              qint8 redFloat, qint8 greenFloat, qint8 blueFloat, qint8 alphaFloat);
     static QColor blendColor(const QColor &substrate, const QColor &superstratum);
     static DPalette standardPalette(ColorType type);
     static void generatePaletteColor(DPalette &base, QPalette::ColorRole role, ColorType type);

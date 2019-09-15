@@ -425,6 +425,7 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::Color
         const QBrush &window = base.brush(QPalette::Normal, role);
         base.setBrush(QPalette::Disabled, role, window);
         base.setBrush(QPalette::Inactive, role, window);
+        return;
     }
 
     generatePaletteColor_helper(base, role, type);
