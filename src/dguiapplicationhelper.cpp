@@ -403,11 +403,15 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
     QColor disable_mask_color, inactive_mask_color;
 
     if (type == DGuiApplicationHelper::DarkType) {
-        disable_mask_color.setRgba(qRgba(255, 255, 255, 255 * 0.6));
-        inactive_mask_color.setRgba(qRgba(255, 255, 255, 255 * 0.4));
+        disable_mask_color = dark_qpalette[QPalette::Window];
+        inactive_mask_color = dark_qpalette[QPalette::Window];
+        disable_mask_color.setAlphaF(0.7);
+        inactive_mask_color.setAlphaF(0.6);
     } else {
-        disable_mask_color.setRgba(qRgba(255, 255, 255, 255 * 0.8));
-        inactive_mask_color.setRgba(qRgba(255, 255, 255, 255 * 0.6));
+        disable_mask_color = light_qpalette[QPalette::Window];
+        inactive_mask_color = light_qpalette[QPalette::Window];
+        disable_mask_color.setAlphaF(0.6);
+        inactive_mask_color.setAlphaF(0.4);
     }
 
     const QColor &color = base.color(QPalette::Normal, role);
