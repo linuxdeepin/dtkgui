@@ -60,6 +60,7 @@ public:
     static void generatePaletteColor(DPalette &palette, DPalette::ColorType role, ColorType type);
     static void generatePalette(DPalette &base, ColorType type = UnknownType);
     static DPalette fetchPalette(const DPlatformTheme *theme);
+    static void setUseInactiveColorGroup(bool on);
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;

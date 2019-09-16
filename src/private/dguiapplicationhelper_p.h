@@ -48,6 +48,7 @@ public:
     // 应用程序级别的主题设置
     DPlatformTheme *appTheme = nullptr;
     DPalette *appPalette = nullptr;
+    static bool useInactiveColor;
 };
 
 DGUI_END_NAMESPACE

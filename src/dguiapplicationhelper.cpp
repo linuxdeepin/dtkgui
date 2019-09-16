@@ -35,6 +35,7 @@ DGUI_BEGIN_NAMESPACE
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
+bool DGuiApplicationHelperPrivate::useInactiveColor = true;
 DGuiApplicationHelperPrivate::DGuiApplicationHelperPrivate(DGuiApplicationHelper *qq)
     : DObjectPrivate(qq)
 {
@@ -416,7 +417,11 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
 
     const QColor &color = base.color(QPalette::Normal, role);
     base.setColor(QPalette::Disabled, role, DGuiApplicationHelper::blendColor(color, disable_mask_color));
-    base.setColor(QPalette::Inactive, role, DGuiApplicationHelper::blendColor(color, inactive_mask_color));
+
+    if (DGuiApplicationHelperPrivate::useInactiveColor)
+        base.setColor(QPalette::Inactive, role, DGuiApplicationHelper::blendColor(color, inactive_mask_color));
+    else
+        base.setColor(QPalette::Inactive, role, color);
 }
 
 void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::ColorRole role, DGuiApplicationHelper::ColorType type)
@@ -483,6 +488,11 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
     }
 
     return base_palette;
+}
+
+void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
+{
+    DGuiApplicationHelperPrivate::useInactiveColor = on;
 }
 
 DPlatformTheme *DGuiApplicationHelper::systemTheme() const
