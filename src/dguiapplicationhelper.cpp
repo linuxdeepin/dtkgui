@@ -284,7 +284,7 @@ static QColor light_qpalette[QPalette::NColorRoles] {
     QColor("#e3e3e3"),                  //Dark
     QColor("#e4e4e4"),                  //Mid
     QColor("#414d68"),                  //Text
-    QColor("#3768ff"),                  //BrightText
+    Qt::black,                          //BrightText
     QColor("#414d68"),                  //ButtonText
     Qt::white,                          //Base
     QColor("#f8f8f8"),                  //Window
@@ -307,7 +307,7 @@ static QColor dark_qpalette[QPalette::NColorRoles] {
     QColor("#414141"),                  //Dark
     QColor("#434343"),                  //Mid
     QColor("#c0c6d4"),                  //Text
-    QColor("#3768ff"),                  //BrightText
+    Qt::white,                          //BrightText
     QColor("#c0c6d4"),                  //ButtonText
     QColor("#454545"),                  //Base
     QColor("#252525"),                  //Window
