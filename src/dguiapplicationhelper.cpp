@@ -202,6 +202,9 @@ void DGuiApplicationHelper::initialize()
 
 void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::HelperCreator creator)
 {
+    if (creator == _DGuiApplicationHelper::creator)
+        return;
+
     _DGuiApplicationHelper::creator = creator;
 
     if (_globalHelper.exists() && _globalHelper->helper) {
