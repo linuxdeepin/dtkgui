@@ -1,1 +1,2 @@
 usr/lib/*/lib*.so.*
+etc/dbus-1/system.d/com.deepin.dtk.FileDrag.conf
