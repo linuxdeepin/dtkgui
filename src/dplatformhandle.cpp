@@ -567,6 +567,8 @@ bool DPlatformHandle::setEnableNoTitlebarForWindow(QWindow *window, bool enable)
             //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
             setWindowProperty(window, _windowRadius, 18);
         }
+
+        return ok;
     }
 
     return false;
