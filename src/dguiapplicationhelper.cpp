@@ -291,7 +291,7 @@ static QColor light_qpalette[QPalette::NColorRoles] {
     QColor("#414d68"),                  //ButtonText
     Qt::white,                          //Base
     QColor("#f8f8f8"),                  //Window
-    QColor(0, 0, 0, 0.4 * 255),         //Shadow
+    QColor(0, 0, 0, 0.05 * 255),        //Shadow
     QColor("#0081ff"),                  //Highlight
     Qt::white,                          //HighlightedText
     QColor("#0082fa"),                  //Link
@@ -346,7 +346,7 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor("#0082FA"),                  //TextLively
     QColor("#0056c1"),                  //LightLively
     QColor("#004c9c"),                  //DarkLively
-    QColor(0, 0, 0, 0.05 * 255)         //FrameBorder
+    QColor(0, 0, 0, 0.08 * 255)         //FrameBorder
 };
 
 DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType type)
