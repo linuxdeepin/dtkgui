@@ -312,7 +312,7 @@ static QColor dark_qpalette[QPalette::NColorRoles] {
     QColor("#c0c6d4"),                  //Text
     Qt::white,                          //BrightText
     QColor("#c0c6d4"),                  //ButtonText
-    QColor("#454545"),                  //Base
+    QColor("#282828"),                  //Base
     QColor("#252525"),                  //Window
     QColor(0, 0, 0, 0.05 * 255),        //Shadow
     QColor("#0081ff"),                  //Highlight
