@@ -87,7 +87,7 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
         appTheme->setFallbackProperty(true);
 
         if (!active_color.isValid())
-            notifyAppThemeChanged(app);
+            notifyAppThemeChanged(app, true);
     });
     app->connect(systemTheme, &DPlatformTheme::paletteChanged, app, [this, app] {
         if (appTheme == systemTheme)
@@ -545,7 +545,13 @@ DPalette DGuiApplicationHelper::applicationPalette() const
 
     // 如果自定义了palette的类型，则直接返回对应的标准DPalette
     if (type != UnknownType) {
-        return standardPalette(type);
+        DPalette pa = standardPalette(type);
+
+        // 应用Active Color
+        pa.setColor(QPalette::Normal, QPalette::Highlight, d->appTheme->activeColor());
+        generatePaletteColor(pa, QPalette::Highlight, type);
+
+        return pa;
     }
 
     return fetchPalette(d->appTheme);
