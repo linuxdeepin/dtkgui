@@ -546,10 +546,13 @@ DPalette DGuiApplicationHelper::applicationPalette() const
     // 如果自定义了palette的类型，则直接返回对应的标准DPalette
     if (type != UnknownType) {
         DPalette pa = standardPalette(type);
+        const QColor &active_color = d->appTheme->activeColor();
 
-        // 应用Active Color
-        pa.setColor(QPalette::Normal, QPalette::Highlight, d->appTheme->activeColor());
-        generatePaletteColor(pa, QPalette::Highlight, type);
+        if (active_color.isValid()) {
+            // 应用Active Color
+            pa.setColor(QPalette::Normal, QPalette::Highlight, active_color);
+            generatePaletteColor(pa, QPalette::Highlight, type);
+        }
 
         return pa;
     }
