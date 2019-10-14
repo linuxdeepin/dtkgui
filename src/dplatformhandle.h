@@ -67,8 +67,8 @@ public:
     static void enableDXcbForWindow(QWindow *window, bool redirectContent);
     static bool isEnabledDXcb(const QWindow *window);
 
-    static bool setEnableNoTitlebarForWindow(QWindow *window, bool enable);
-    static bool isEnableNoTitlebar(const QWindow *window);
+    static bool setEnabledNoTitlebarForWindow(QWindow *window, bool enable);
+    static bool isEnabledNoTitlebar(const QWindow *window);
 
     struct WMBlurArea {
         qint32 x = 0;

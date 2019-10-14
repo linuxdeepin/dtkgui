@@ -472,7 +472,7 @@ bool DPlatformHandle::isDXcbPlatform()
 void DPlatformHandle::enableDXcbForWindow(QWindow *window)
 {
     // 优先使用窗口管理器中实现的no titlebar接口实现自定义窗口修饰器的效果
-    if (setEnableNoTitlebarForWindow(window, true)) {
+    if (setEnabledNoTitlebarForWindow(window, true)) {
         return;
     }
 
@@ -524,7 +524,7 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window, bool redirectContent)
  */
 bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
 {
-    if (isEnableNoTitlebar(window))
+    if (isEnabledNoTitlebar(window))
         return true;
 
     QFunctionPointer is_enable_dxcb = nullptr;
@@ -549,7 +549,7 @@ bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
  * \~chinese \sa DWindowHandle::enableDXcbForWindow(QWindow *)
  * \~chinese \sa DWindowManagerHelper::hasNoTitlebar
  */
-bool DPlatformHandle::setEnableNoTitlebarForWindow(QWindow *window, bool enable)
+bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable)
 {
     if (!isDXcbPlatform())
         return false;
@@ -580,7 +580,7 @@ bool DPlatformHandle::setEnableNoTitlebarForWindow(QWindow *window, bool enable)
  * \~chinese \return 如果窗口使用窗管提供的方式隐藏了标题栏则返回 true，否则返回 false
  * \~chinese \sa DWindowHandle::isEnabledDXcb
  */
-bool DPlatformHandle::isEnableNoTitlebar(const QWindow *window)
+bool DPlatformHandle::isEnabledNoTitlebar(const QWindow *window)
 {
     QFunctionPointer is_enable_no_titlebar = nullptr;
 
