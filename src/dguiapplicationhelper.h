@@ -57,10 +57,11 @@ public:
     static QColor blendColor(const QColor &substrate, const QColor &superstratum);
     static DPalette standardPalette(ColorType type);
     static void generatePaletteColor(DPalette &base, QPalette::ColorRole role, ColorType type);
-    static void generatePaletteColor(DPalette &palette, DPalette::ColorType role, ColorType type);
+    static void generatePaletteColor(DPalette &base, DPalette::ColorType role, ColorType type);
     static void generatePalette(DPalette &base, ColorType type = UnknownType);
     static DPalette fetchPalette(const DPlatformTheme *theme);
     static void setUseInactiveColorGroup(bool on);
+    static void setColorCompositingEnabled(bool on);
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;

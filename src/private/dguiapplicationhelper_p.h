@@ -49,6 +49,8 @@ public:
     DPlatformTheme *appTheme = nullptr;
     DPalette *appPalette = nullptr;
     static bool useInactiveColor;
+    // 是否采用半透明样式的调色板
+    static bool compositingColor;
 };
 
 DGUI_END_NAMESPACE

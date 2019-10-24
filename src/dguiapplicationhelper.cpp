@@ -36,6 +36,8 @@ DGUI_BEGIN_NAMESPACE
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
 bool DGuiApplicationHelperPrivate::useInactiveColor = true;
+bool DGuiApplicationHelperPrivate::compositingColor = false;
+
 DGuiApplicationHelperPrivate::DGuiApplicationHelperPrivate(DGuiApplicationHelper *qq)
     : DObjectPrivate(qq)
 {
@@ -329,7 +331,7 @@ static QColor light_dpalette[DPalette::NColorTypes] {
     QColor(),                       //NoType
     QColor(0, 0, 0, 255 * 0.03),    //ItemBackground
     QColor("#001A2E"),              //TextTitle
-    QColor("#526A7F"),              //TextTips
+    QColor("#8AA1B4"),              //TextTips
     QColor("#FF5736"),              //TextWarning
     QColor("#0082FA"),              //TextLively
     QColor("#25b7ff"),              //LightLively
@@ -352,12 +354,25 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
 DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType type)
 {
     static const DPalette *light_palette = nullptr, *dark_palette = nullptr;
+    static const DPalette *alpha_light_palette = nullptr, *alpha_dark_palette = nullptr;
 
     if (type == LightType) {
+        if (Q_UNLIKELY(DGuiApplicationHelperPrivate::compositingColor)) {
+            if (Q_LIKELY(alpha_light_palette)) {
+                return *alpha_light_palette;
+            }
+        }
+
         if (Q_LIKELY(light_palette)) {
             return *light_palette;
         }
     } else if (type == DarkType) {
+        if (Q_UNLIKELY(DGuiApplicationHelperPrivate::compositingColor)) {
+            if (Q_LIKELY(alpha_dark_palette)) {
+                return *alpha_dark_palette;
+            }
+        }
+
         if (Q_LIKELY(dark_palette)) {
             return *dark_palette;
         }
@@ -370,27 +385,84 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
 
     if (type == DarkType) {
         pa = new DPalette();
-        dark_palette = pa;
+
+        if (DGuiApplicationHelperPrivate::compositingColor)
+            alpha_dark_palette = pa;
+        else
+            dark_palette = pa;
+
         qcolor_list = dark_qpalette;
         dcolor_list = dark_dpalette;
     } else {
         pa = new DPalette();
-        light_palette = pa;
+
+        if (DGuiApplicationHelperPrivate::compositingColor)
+            alpha_light_palette = pa;
+        else
+            light_palette = pa;
+
         qcolor_list = light_qpalette;
         dcolor_list = light_dpalette;
     }
 
     for (int i = 0; i < DPalette::NColorRoles; ++i) {
         QPalette::ColorRole role = static_cast<QPalette::ColorRole>(i);
+        QColor color = qcolor_list[i];
 
-        pa->setColor(DPalette::Active, role, qcolor_list[i]);
+        // 处理半透明色
+        if (DGuiApplicationHelperPrivate::compositingColor) {
+            switch (role) {
+            case QPalette::Window:
+                color = type == LightType ? adjustColor(color, 0, 0, 0, 0, 0, 0, -20) : adjustColor(color, 0, 0, -10, 0, 0, 0, -20);
+                break;
+            case QPalette::Base:
+                color = adjustColor(color, 0, 0, 0, 0, 0, 0, -20);
+                break;
+            case QPalette::WindowText:
+            case QPalette::Text:
+                color = adjustColor(color, 0, 0, type == LightType ? -20 : +20, 0, 0, 0, -20);
+                break;
+            case QPalette::ButtonText:
+                color = type == LightType ? adjustColor(color, 0, 0, -20, 0, 0, 0, -20) : adjustColor(color, 0, 0, +20, 0, 0, 0, 0);
+                break;
+            case QPalette::Button:
+            case QPalette::Light:
+            case QPalette::Mid:
+            case QPalette::Midlight:
+            case QPalette::Dark:
+                color = adjustColor(color, 0, 0, +20, 0, 0, 0, -40);
+                break;
+            default:
+                break;
+            }
+        }
+
+        pa->setColor(DPalette::Active, role, color);
         generatePaletteColor(*pa, role, type);
     }
 
     for (int i = 0; i < DPalette::NColorTypes; ++i) {
         DPalette::ColorType role = static_cast<DPalette::ColorType>(i);
+        QColor color = dcolor_list[i];
 
-        pa->setColor(DPalette::Active, role, dcolor_list[i]);
+        // 处理半透明色
+        if (DGuiApplicationHelperPrivate::compositingColor) {
+            switch (role) {
+            case DPalette::ItemBackground:
+                color = adjustColor(color, 0, 0, 100, 0, 0, 0, type == LightType ? -80 : -90);
+                break;
+            case DPalette::TextTitle:
+                color = adjustColor(color, 0, 0, -20, 0, 0, 0, -20);
+                break;
+            case DPalette::TextTips:
+                color = type == LightType ? adjustColor(color, 0, 0, -40, 0, 0, 0, -40) : adjustColor(color, 0, 0, +40, 0, 0, 0, -50);
+                break;
+            default:
+                break;
+            }
+        }
+
+        pa->setColor(DPalette::Active, role, color);
         generatePaletteColor(*pa, role, type);
     }
 
@@ -496,6 +568,11 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
 void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
 {
     DGuiApplicationHelperPrivate::useInactiveColor = on;
+}
+
+void DGuiApplicationHelper::setColorCompositingEnabled(bool on)
+{
+    DGuiApplicationHelperPrivate::compositingColor = on;
 }
 
 DPlatformTheme *DGuiApplicationHelper::systemTheme() const
