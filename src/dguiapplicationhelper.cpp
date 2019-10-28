@@ -318,7 +318,7 @@ static QColor dark_qpalette[QPalette::NColorRoles] {
     QColor("#252525"),                  //Window
     QColor(0, 0, 0, 0.05 * 255),        //Shadow
     QColor("#0081ff"),                  //Highlight
-    QColor("#b8d3ff"),                  //HighlightedText
+    QColor("#F1F6FF"),                  //HighlightedText
     QColor("#0082fa"),                  //Link
     QColor("#ad4579"),                  //LinkVisited
     QColor(0, 0, 0, 0.05 * 255),        //AlternateBase
