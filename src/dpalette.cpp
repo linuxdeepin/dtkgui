@@ -39,12 +39,50 @@ public:
     QSharedDataPointer<DPaletteData> data;
 };
 
+/*!
+ * \~chinese \class DPalette
+ * \~chinese \brief DPalette提供了修改的 QPalette 类
+ * \~chinese \li DPalette添加了新的颜色类型
+ */
+
+/*!
+ * \~chinese \enum DPalette::ColorType
+ * \~chinese DPalette::ColorType 定义了 DPalette 颜色类型
+ * \~chinese \var DPalette::ColorType DPalette::NoType
+ * \~chinese 无类型
+ * \~chinese \var DPalette::ColorType DPalette::ItemBackground
+ * \~chinese 列表项的背景色
+ * \~chinese \var DPalette::ColorType DPalette::TextTitle
+ * \~chinese 标题型文本的颜色
+ * \~chinese \var DPalette::ColorType DPalette::TextTips
+ * \~chinese 提示性文本的颜色
+ * \~chinese \var DPalette::ColorType DPalette::TextWarning
+ * \~chinese 警告类型的文本颜色
+* \~chinese \var DPalette::ColorType DPalette::TextLively
+ * \~chinese 活跃式文本颜色（不受活动色影响）
+ * \~chinese \var DPalette::ColorType DPalette::LightLively
+ * \~chinese 活跃式按钮（recommend button）背景色中的亮色（不受活跃色影响）
+ * \~chinese \var DPalette::ColorType DPalette::DarkLively
+ * \~chinese 活跃式按钮（recommend button）背景色中的暗色，会从亮色渐变到暗色（不受活跃色影响）
+ * \~chinese \var DPalette::ColorType DPalette::FrameBorder
+ * \~chinese 控件边框颜色
+ * \~chinese \var DPalette::ColorType DPalette::NColorTypes
+ * \~chinese 无颜色类型
+ */
+
+/*!
+ * \~chinese \brief DPalette::DPalette构造函数
+ */
 DPalette::DPalette()
     : d(new DPalettePrivate(QSharedDataPointer<DPaletteData>(new DPaletteData())))
 {
 
 }
 
+/*!
+ * \~chinese \brief DPalette::DPalette构造函数
+ * \~chinese \param palette参数被发送到 QPalette 构造函数
+ */
 DPalette::DPalette(const QPalette &palette)
     : QPalette(palette)
     , d(new DPalettePrivate(QSharedDataPointer<DPaletteData>(new DPaletteData())))
@@ -52,6 +90,10 @@ DPalette::DPalette(const QPalette &palette)
 
 }
 
+/*!
+ * \~chinese \brief DPalette::DPalette构造函数
+ * \~chinese \param palette参数被发送到 QPalette 构造函数
+ */
 DPalette::DPalette(const DPalette &palette)
     : QPalette(palette)
     , d(new DPalettePrivate(palette.d->data))
@@ -72,6 +114,10 @@ DPalette &DPalette::operator=(const DPalette &palette)
     return *this;
 }
 
+/*!
+ * \~chinese \brief DPalette::brush
+ * \~chinese \param \sa QPalette::brush()
+ */
 const QBrush &DPalette::brush(QPalette::ColorGroup cg, DPalette::ColorType cr) const
 {
     if (cr >= NColorTypes) {
@@ -87,6 +133,10 @@ const QBrush &DPalette::brush(QPalette::ColorGroup cg, DPalette::ColorType cr) c
     return d->data->br[cg][cr];
 }
 
+/*!
+ * \~chinese \brief DPalette::setBrush设置画刷
+ * \~chinese \param \sa cg QPalette::setBrush()
+ */
 void DPalette::setBrush(QPalette::ColorGroup cg, DPalette::ColorType cr, const QBrush &brush)
 {
     if (cg == All) {
