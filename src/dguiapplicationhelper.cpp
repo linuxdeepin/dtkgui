@@ -188,6 +188,27 @@ public:
 DGuiApplicationHelper::HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
 Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
 
+
+/*!
+ * \~chinese \class DGuiApplicationHelper
+ * \~chinese \brief DGuiApplicationHelper 应用程序的 GUI ，如主题、调色板等
+ */
+
+/*!
+ *
+ * \~chinese \enum DGuiApplicationHelper::ColorType
+ * \~chinese DGuiApplicationHelper::ColorType 定义了主题类型
+ *
+ * \~chinese \var DGuiApplicationHelper:ColorType DGuiApplicationHelper::UnknownType
+ * \~chinese 未知主题(浅色主题或深色主题)
+ *
+ * \~chinese \var DGuiApplicationHelper:ColorType DGuiApplicationHelper::LightType
+ * \~chinese 浅色主题
+ *
+ * \~chinese \var DGuiApplicationHelper:ColorType DGuiApplicationHelper::DarkType
+ * \~chinese 深色主题
+ */
+
 DGuiApplicationHelper::DGuiApplicationHelper()
     : QObject(nullptr)
     , DObject(*new DGuiApplicationHelperPrivate(this))
@@ -202,6 +223,11 @@ void DGuiApplicationHelper::initialize()
     d->init();
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::registerInstanceCreator创建 DGuiApplicationHelper 对象
+ * \~chinese \param creator 函数指针
+ * \~chinese \note \row 一定要先调用此函数,再使用 DGuiApplicationHelper::instance()
+ */
 void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::HelperCreator creator)
 {
     if (creator == _DGuiApplicationHelper::creator)
@@ -222,6 +248,10 @@ inline static int adjustColorValue(int base, qint8 increment, int max = 255)
            : base * (1 + increment / 100.0);
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::instance返回 DGuiApplicationHelper 对象
+ * \~chinese \return DGuiApplicationHelper对象
+ */
 DGuiApplicationHelper *DGuiApplicationHelper::instance()
 {
     return _globalHelper->helper;
@@ -236,6 +266,20 @@ DGuiApplicationHelper::~DGuiApplicationHelper()
     }
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::adjustColor 调整颜色
+ * \~chinese \note \row 取值范围均为 -100 ~ 100 ,当三原色参数为-100时，颜色为黑色，参数为100时，颜色为白色.
+ * \~chinese 以透明度( alphaFloat )为例,当参数为负数时基础色的 alphaFloat 值减少，现象偏向透明, 参数为正数alphaFloat 值增加，现象偏不透明
+ * \~chinese \param base基础色
+ * \~chinese \param hueFloat 色调
+ * \~chinese \param saturationFloat 饱和度
+ * \~chinese \param lightnessFloat 亮度
+ * \~chinese \param redFloat 红色
+ * \~chinese \param greenFloat 绿色
+ * \~chinese \param blueFloat 蓝色
+ * \~chinese \param alphaFloat Alpha通道(透明度)
+ * \~chinese \return 经过调整的颜色
+ */
 QColor DGuiApplicationHelper::adjustColor(const QColor &base,
                                           qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
                                           qint8 redFloat, qint8 greenFloat, qint8 blueFloat, qint8 alphaFloat)
@@ -264,6 +308,12 @@ QColor DGuiApplicationHelper::adjustColor(const QColor &base,
     return new_color;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::blendColor 将两种颜色混合，合成新的颜色
+ * \~chinese \param substrate底层颜色
+ * \~chinese \param superstratum上层颜色
+ * \~chinese \return 混合颜色
+ */
 QColor DGuiApplicationHelper::blendColor(const QColor &substrate, const QColor &superstratum)
 {
     QColor c2 = superstratum.toRgb();
@@ -351,6 +401,11 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor(0, 0, 0, 0.08 * 255)         //FrameBorder
 };
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::standardPalett 根据主题获取标准调色板
+ * \~chinese \param type 主题枚举值
+ * \~chinese \return 调色板
+ */
 DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType type)
 {
     static const DPalette *light_palette = nullptr, *dark_palette = nullptr;
@@ -499,6 +554,12 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
         base.setColor(QPalette::Inactive, role, color);
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::generatePaletteColor 获取调色板颜色
+ * \~chinese \param base调色板
+ * \~chinese \param \sa roleQPalette::ColorRole()
+ * \~chinese \param type主题枚举值
+ */
 void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::ColorRole role, DGuiApplicationHelper::ColorType type)
 {
     if (role == QPalette::Window) {
@@ -511,11 +572,22 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::Color
     generatePaletteColor_helper(base, role, type);
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::generatePaletteColor 获取调色板颜色
+ * \~chinese \param base调色板
+ * \~chinese \param role背景颜色
+ * \~chinese \param type主题枚举值
+ */
 void DGuiApplicationHelper::generatePaletteColor(DPalette &base, DPalette::ColorType role, DGuiApplicationHelper::ColorType type)
 {
     generatePaletteColor_helper(base, role, type);
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::generatePalette 根据主题的枚举值获取调色板数据
+ * \~chinese \param base调色板
+ * \~chinese \param type主题的枚举值
+ */
 void DGuiApplicationHelper::generatePalette(DPalette &base, ColorType type)
 {
     // 先判断调色板的色调
@@ -534,6 +606,11 @@ void DGuiApplicationHelper::generatePalette(DPalette &base, ColorType type)
     }
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::fetchPalette取出主题的调色板
+ * \~chinese \param theme主题信息
+ * \~chinese \return 调色板信息
+ */
 DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
 {
     DPalette base_palette;
@@ -565,16 +642,29 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
     return base_palette;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setUseInactiveColorGroup设置是否将调色板的颜色改为半透明模式
+ * \~chinese 一般用在主窗口背景为透明、模糊的程序中
+ * \~chinese \param on 是否开启
+ */
 void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
 {
     DGuiApplicationHelperPrivate::useInactiveColor = on;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setColorCompositingEnabled设置是否开启混合颜色
+ * \~chinese \param on 是否开启
+ */
 void DGuiApplicationHelper::setColorCompositingEnabled(bool on)
 {
     DGuiApplicationHelperPrivate::compositingColor = on;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::systemTheme返回系统主题
+ * \~chinese \return 系统主题
+ */
 DPlatformTheme *DGuiApplicationHelper::systemTheme() const
 {
     D_DC(DGuiApplicationHelper);
@@ -582,6 +672,10 @@ DPlatformTheme *DGuiApplicationHelper::systemTheme() const
     return d->systemTheme;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::applicationTheme返回应用主题对象
+ * \~chinese \return 应用主题
+ */
 DPlatformTheme *DGuiApplicationHelper::applicationTheme() const
 {
     D_DC(DGuiApplicationHelper);
@@ -589,6 +683,11 @@ DPlatformTheme *DGuiApplicationHelper::applicationTheme() const
     return d->appTheme;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::windowTheme返回 QWindow 主题对象
+ * \~chinese \param windowQWindow 对象
+ * \~chinese \return QWindow主题
+ */
 DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
 {
     DPlatformTheme *theme = qvariant_cast<DPlatformTheme*>(window->property(WINDOW_THEME_KEY));
@@ -603,6 +702,10 @@ DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
     return theme;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::applicationPalette返回应用程序调色板
+ * \~chinese \return 应用程序调色板
+ */
 DPalette DGuiApplicationHelper::applicationPalette() const
 {
     D_DC(DGuiApplicationHelper);
@@ -637,6 +740,10 @@ DPalette DGuiApplicationHelper::applicationPalette() const
     return fetchPalette(d->appTheme);
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setApplicationPalette设置应用程序调色板
+ * \~chinese \param palette调色板
+ */
 void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
 {
     D_D(DGuiApplicationHelper);
@@ -656,6 +763,11 @@ void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
     d->notifyAppThemeChanged(qGuiApp, true);
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::windowPalette
+ * \~chinese \param window
+ * \~chinese \return 调色板
+ */
 DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
 {
     D_DC(DGuiApplicationHelper);
@@ -692,11 +804,23 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QColor
     return DarkType;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::toColorType获取颜色的明亮度，将其转换为主题类型的枚举值。
+ * \~chinese \row 返回调色板背景颜色
+ * \~chinese \param palette调色板
+ * \~chinese \return 主题类型的枚举值
+ */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QPalette &palette)
 {
     return toColorType(palette.background().color());
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::themeType主题类型
+ * \~chinese \row Dpalette::ColorType 针对某一个控件
+ * \~chinese \row DGuiApplicationHelper::ColorType 针对整个程序
+ * \~chinese \return 主题类型的枚举值
+ */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
 {
     D_DC(DGuiApplicationHelper);
@@ -708,6 +832,10 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
     return qGuiApp ? toColorType(qGuiApp->palette()) : d->themeType;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::paletteType
+ * \~chinese \return 主题类型的枚举值
+ */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
 {
     D_DC(DGuiApplicationHelper);
@@ -715,6 +843,10 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
     return d->paletteType;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setThemeType设置主题类型
+ * \~chinese \param themeType主题类型的枚举值
+ */
 void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeType)
 {
     D_D(DGuiApplicationHelper);
@@ -726,6 +858,10 @@ void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeT
     Q_EMIT themeTypeChanged(themeType);
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setPaletteType设置调色板类型
+ * \~chinese \param paletteType主题类型的枚举值
+ */
 void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType paletteType)
 {
     D_D(DGuiApplicationHelper);
