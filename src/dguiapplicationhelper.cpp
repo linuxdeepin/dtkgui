@@ -485,7 +485,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
             case QPalette::Mid:
             case QPalette::Midlight:
             case QPalette::Dark:
-                color = adjustColor(color, 0, 0, +20, 0, 0, 0, -40);
+                color = adjustColor(color, 0, 0, -20, 0, 0, 0, -40);
                 break;
             default:
                 break;
