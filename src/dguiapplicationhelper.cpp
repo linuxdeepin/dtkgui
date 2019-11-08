@@ -29,9 +29,19 @@
 #include <QPointer>
 #include <QPlatformSurfaceEvent>
 #include <QDebug>
+#include <QLocalServer>
+#include <QLocalSocket>
+
 #include <private/qguiapplication_p.h>
 
+#ifdef Q_OS_LINUX
+#include <unistd.h>
+#endif
+
 DGUI_BEGIN_NAMESPACE
+
+Q_GLOBAL_STATIC(QLocalServer, _d_singleServer)
+static quint8 _d_singleServerVersion = 1;
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
@@ -841,6 +851,96 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
     D_DC(DGuiApplicationHelper);
 
     return d->paletteType;
+}
+
+bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicationHelper::SingleScope singleScope)
+{
+    bool new_server = !_d_singleServer.exists();
+
+    if (_d_singleServer->isListening()) {
+        _d_singleServer->close();
+    }
+
+    QString socket_key = "_d_dtk_single_instance_";
+
+    switch (singleScope) {
+    case GroupScope:
+        _d_singleServer->setSocketOptions(QLocalServer::GroupAccessOption);
+#ifdef Q_OS_LINUX
+        socket_key += QString("%1_").arg(getuid());
+#endif
+        break;
+    case WorldScope:
+        _d_singleServer->setSocketOptions(QLocalServer::WorldAccessOption);
+        break;
+    default:
+        _d_singleServer->setSocketOptions(QLocalServer::UserAccessOption);
+#ifdef Q_OS_LINUX
+        socket_key += QString("%1_").arg(getgid());
+#endif
+        break;
+    }
+
+    socket_key += key;
+
+    // 通知别的实例
+    QLocalSocket socket;
+    socket.connectToServer(socket_key);
+
+    // 等待到有效数据时认为server实例有效
+    if (socket.waitForReadyRead(100)) {
+        // 读取数据
+        qint8 version;
+        qint64 pid;
+        QStringList arguments;
+
+        QDataStream ds(&socket);
+        ds >> version >> pid >> arguments;
+        qInfo() << "Process is started: pid=" << pid << "arguments=" << arguments;
+
+        // 把自己的信息告诉第一个实例
+        ds << _d_singleServerVersion << qApp->applicationPid() << qApp->arguments();
+        socket.flush();
+
+        return false;
+    }
+
+    if (!_d_singleServer->listen(socket_key)) {
+        return false;
+    }
+
+    if (new_server) {
+        QObject::connect(_d_singleServer, &QLocalServer::newConnection, qApp, [] {
+            QLocalSocket *instance = _d_singleServer->nextPendingConnection();
+            // 先发送数据告诉新的实例自己收到了它的请求
+            QDataStream ds(instance);
+            ds << _d_singleServerVersion // 协议版本
+               << qApp->applicationPid() // 进程id
+               << qApp->arguments(); // 启动时的参数
+
+            QObject::connect(instance, &QLocalSocket::readyRead, qApp, [instance] {
+                // 读取数据
+                QDataStream ds(instance);
+
+                qint8 version;
+                qint64 pid;
+                QStringList arguments;
+
+                ds >> version >> pid >> arguments;
+                instance->close();
+
+                qInfo() << "New instance: pid=" << pid << "arguments=" << arguments;
+
+                // 通知新进程的信息
+                if (_globalHelper.exists())
+                    Q_EMIT _globalHelper->helper->newProcessInstance(pid, arguments);
+            });
+
+            instance->flush(); //发送数据给新的实例
+        });
+    }
+
+    return true;
 }
 
 /*!

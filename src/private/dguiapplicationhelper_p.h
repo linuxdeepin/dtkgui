@@ -26,6 +26,10 @@
 
 #include <DObjectPrivate>
 
+QT_BEGIN_NAMESPACE
+class QLocalServer;
+QT_END_NAMESPACE
+
 DGUI_BEGIN_NAMESPACE
 
 class DGuiApplicationHelperPrivate : public DCORE_NAMESPACE::DObjectPrivate

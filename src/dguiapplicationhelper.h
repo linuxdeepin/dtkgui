@@ -47,6 +47,12 @@ public:
         DarkType
     };
 
+    enum SingleScope {
+        UserScope,
+        GroupScope,
+        WorldScope
+    };
+
     typedef DGuiApplicationHelper *(*HelperCreator)();
     static void registerInstanceCreator(HelperCreator creator);
     static DGuiApplicationHelper *instance();
@@ -77,6 +83,8 @@ public:
 
     ColorType paletteType() const;
 
+    static bool setSingleInstance(const QString &key, SingleScope singleScope = UserScope);
+
 public Q_SLOTS:
     void setThemeType(ColorType themeType);
     void setPaletteType(ColorType paletteType);
@@ -84,6 +92,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void themeTypeChanged(ColorType themeType);
     void paletteTypeChanged(ColorType paletteType);
+    void newProcessInstance(qint64 pid, const QStringList &arguments);
 
 protected:
     explicit DGuiApplicationHelper();

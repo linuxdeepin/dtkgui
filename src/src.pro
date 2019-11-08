@@ -1,6 +1,6 @@
 TARGET = dtkgui
 TEMPLATE = lib
-QT += dtkcore gui gui-private dbus
+QT += dtkcore gui gui-private dbus network
 CONFIG += internal_module
 
 include(private/private.pri)
