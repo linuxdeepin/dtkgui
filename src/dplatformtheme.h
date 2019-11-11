@@ -43,6 +43,12 @@ class DPlatformTheme : public DNativeSettings
     Q_PROPERTY(QByteArray themeName READ themeName WRITE setThemeName NOTIFY themeNameChanged)
     Q_PROPERTY(QByteArray iconThemeName READ iconThemeName WRITE setIconThemeName NOTIFY iconThemeNameChanged)
     Q_PROPERTY(QByteArray soundThemeName READ soundThemeName WRITE setSoundThemeName NOTIFY soundThemeNameChanged)
+    // Font
+    Q_PROPERTY(QByteArray fontName READ fontName WRITE setFontName NOTIFY fontNameChanged)
+    Q_PROPERTY(QByteArray monoFontName READ monoFontName WRITE setMonoFontName NOTIFY monoFontNameChanged)
+    Q_PROPERTY(int fontPointSize READ fontPointSize WRITE setFontPointSize NOTIFY fontPointSizeChanged)
+    Q_PROPERTY(QByteArray gtkFontName READ gtkFontName WRITE setGtkFontName NOTIFY gtkFontNameChanged)
+
     Q_PROPERTY(QColor activeColor READ activeColor WRITE setActiveColor NOTIFY activeColorChanged)
     // QPalette
     Q_PROPERTY(QColor window READ window WRITE setWindow NOTIFY windowChanged)
@@ -96,6 +102,12 @@ public:
     QByteArray themeName() const;
     QByteArray iconThemeName() const;
     QByteArray soundThemeName() const;
+
+    QByteArray fontName() const;
+    QByteArray monoFontName() const;
+    int fontPointSize() const;
+    QByteArray gtkFontName() const;
+
     QColor activeColor() const;
 
     bool isValidPalette() const;
@@ -138,6 +150,10 @@ public Q_SLOTS:
     void setThemeName(const QByteArray &themeName);
     void setIconThemeName(const QByteArray &iconThemeName);
     void setSoundThemeName(const QByteArray &soundThemeName);
+    void setFontName(const QByteArray &fontName);
+    void setMonoFontName(const QByteArray &monoFontName);
+    void setFontPointSize(int fontPointSize);
+    void setGtkFontName(const QByteArray &fontName);
     void setActiveColor(const QColor activeColor);
     void setWindow(const QColor &window);
     void setWindowText(const QColor &windowText);
@@ -177,6 +193,10 @@ Q_SIGNALS:
     void themeNameChanged(QByteArray themeName);
     void iconThemeNameChanged(QByteArray iconThemeName);
     void soundThemeNameChanged(QByteArray soundThemeName);
+    void fontNameChanged(QByteArray fontName);
+    void monoFontNameChanged(QByteArray monoFontName);
+    void fontPointSizeChanged(int fontPointSize);
+    void gtkFontNameChanged(QByteArray fontName);
     void activeColorChanged(QColor activeColor);
     void paletteChanged(DPalette palette);
     void windowChanged(QColor window);

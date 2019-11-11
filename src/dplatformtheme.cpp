@@ -116,7 +116,7 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
 {
     D_D(DPlatformTheme);
 
-    d->theme = new DNativeSettings(window);
+    d->theme = new DNativeSettings(window, QByteArray(), this);
 
     connect(this, &DPlatformTheme::windowChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Window, std::placeholders::_1));
     connect(this, &DPlatformTheme::windowTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::WindowText, std::placeholders::_1));
@@ -370,6 +370,34 @@ QByteArray DPlatformTheme::soundThemeName() const
     return value.toByteArray();
 }
 
+QByteArray DPlatformTheme::fontName() const
+{
+    FETCH_PROPERTY("Qt/FontName", fontName)
+
+    return value.toByteArray();
+}
+
+QByteArray DPlatformTheme::monoFontName() const
+{
+    FETCH_PROPERTY("Qt/MonoFontName", monoFontName)
+
+    return value.toByteArray();
+}
+
+int DPlatformTheme::fontPointSize() const
+{
+    FETCH_PROPERTY("Qt/FontPointSize", fontPointSize)
+
+    return value.toInt();
+}
+
+QByteArray DPlatformTheme::gtkFontName() const
+{
+    FETCH_PROPERTY("Gtk/FontName", gtkFontName)
+
+    return value.toByteArray();
+}
+
 QColor DPlatformTheme::activeColor() const
 {
     FETCH_PROPERTY("Qt/ActiveColor", activeColor)
@@ -580,6 +608,34 @@ void DPlatformTheme::setSoundThemeName(const QByteArray &soundThemeName)
     D_D(DPlatformTheme);
 
     d->theme->setSetting("Net/SoundThemeName", soundThemeName);
+}
+
+void DPlatformTheme::setFontName(const QByteArray &fontName)
+{
+    D_D(DPlatformTheme);
+
+    d->theme->setSetting("Qt/FontName", fontName);
+}
+
+void DPlatformTheme::setMonoFontName(const QByteArray &monoFontName)
+{
+    D_D(DPlatformTheme);
+
+    d->theme->setSetting("Qt/MonoFontName", monoFontName);
+}
+
+void DPlatformTheme::setFontPointSize(int fontPointSize)
+{
+    D_D(DPlatformTheme);
+
+    d->theme->setSetting("Qt/FontPointSize", fontPointSize);
+}
+
+void DPlatformTheme::setGtkFontName(const QByteArray &fontName)
+{
+    D_D(DPlatformTheme);
+
+    d->theme->setSetting("Gtk/FontName", fontName);
 }
 
 void DPlatformTheme::setActiveColor(const QColor activeColor)
