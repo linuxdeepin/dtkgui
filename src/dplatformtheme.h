@@ -46,7 +46,7 @@ class DPlatformTheme : public DNativeSettings
     // Font
     Q_PROPERTY(QByteArray fontName READ fontName WRITE setFontName NOTIFY fontNameChanged)
     Q_PROPERTY(QByteArray monoFontName READ monoFontName WRITE setMonoFontName NOTIFY monoFontNameChanged)
-    Q_PROPERTY(int fontPointSize READ fontPointSize WRITE setFontPointSize NOTIFY fontPointSizeChanged)
+    Q_PROPERTY(qreal fontPointSize READ fontPointSize WRITE setFontPointSize NOTIFY fontPointSizeChanged)
     Q_PROPERTY(QByteArray gtkFontName READ gtkFontName WRITE setGtkFontName NOTIFY gtkFontNameChanged)
 
     Q_PROPERTY(QColor activeColor READ activeColor WRITE setActiveColor NOTIFY activeColorChanged)
@@ -105,7 +105,7 @@ public:
 
     QByteArray fontName() const;
     QByteArray monoFontName() const;
-    int fontPointSize() const;
+    qreal fontPointSize() const;
     QByteArray gtkFontName() const;
 
     QColor activeColor() const;
@@ -152,7 +152,7 @@ public Q_SLOTS:
     void setSoundThemeName(const QByteArray &soundThemeName);
     void setFontName(const QByteArray &fontName);
     void setMonoFontName(const QByteArray &monoFontName);
-    void setFontPointSize(int fontPointSize);
+    void setFontPointSize(qreal fontPointSize);
     void setGtkFontName(const QByteArray &fontName);
     void setActiveColor(const QColor activeColor);
     void setWindow(const QColor &window);
@@ -195,7 +195,7 @@ Q_SIGNALS:
     void soundThemeNameChanged(QByteArray soundThemeName);
     void fontNameChanged(QByteArray fontName);
     void monoFontNameChanged(QByteArray monoFontName);
-    void fontPointSizeChanged(int fontPointSize);
+    void fontPointSizeChanged(qreal fontPointSize);
     void gtkFontNameChanged(QByteArray fontName);
     void activeColorChanged(QColor activeColor);
     void paletteChanged(DPalette palette);

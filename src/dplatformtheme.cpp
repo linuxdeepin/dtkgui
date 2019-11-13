@@ -38,6 +38,13 @@ DPlatformThemePrivate::DPlatformThemePrivate(Dtk::Gui::DPlatformTheme *qq)
 
 void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, const QVariant &value)
 {
+    D_Q(DPlatformTheme);
+
+    if (QByteArrayLiteral("Gtk/FontName") == name) {
+        Q_EMIT q->gtkFontNameChanged(value.toByteArray());
+        return;
+    }
+
     const QByteArrayList &list = name.split('/');
 
     if (list.count() != 2)
@@ -51,7 +58,6 @@ void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, co
     // 转换首字母为小写
     pn[0] = QChar(pn.at(0)).toLower().toLatin1();
 
-    D_Q(DPlatformTheme);
     // 直接使用静态的meta object，防止通过metaObject函数调用到dynamic metaobject
     const QMetaObject *mo = &DPlatformTheme::staticMetaObject;
     int index = mo->indexOfProperty(pn.constData());
@@ -384,11 +390,11 @@ QByteArray DPlatformTheme::monoFontName() const
     return value.toByteArray();
 }
 
-int DPlatformTheme::fontPointSize() const
+qreal DPlatformTheme::fontPointSize() const
 {
     FETCH_PROPERTY("Qt/FontPointSize", fontPointSize)
 
-    return value.toInt();
+    return value.toDouble();
 }
 
 QByteArray DPlatformTheme::gtkFontName() const
@@ -624,7 +630,7 @@ void DPlatformTheme::setMonoFontName(const QByteArray &monoFontName)
     d->theme->setSetting("Qt/MonoFontName", monoFontName);
 }
 
-void DPlatformTheme::setFontPointSize(int fontPointSize)
+void DPlatformTheme::setFontPointSize(qreal fontPointSize)
 {
     D_D(DPlatformTheme);
 
