@@ -396,7 +396,8 @@ static QColor light_dpalette[DPalette::NColorTypes] {
     QColor("#0082FA"),              //TextLively
     QColor("#25b7ff"),              //LightLively
     QColor("#0098ff"),              //DarkLively
-    QColor(0, 0, 0, 0.03 * 255)     //FrameBorder
+    QColor(0, 0, 0, 0.03 * 255),    //FrameBorder
+    QColor(85, 85, 85, 0.4 * 255)   //PlaceholderText
 };
 
 static QColor dark_dpalette[DPalette::NColorTypes] {
@@ -408,7 +409,8 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor("#0082FA"),                  //TextLively
     QColor("#0056c1"),                  //LightLively
     QColor("#004c9c"),                  //DarkLively
-    QColor(0, 0, 0, 0.08 * 255)         //FrameBorder
+    QColor(0, 0, 0, 0.08 * 255),        //FrameBorder
+    QColor(192, 198, 212, 0.4 * 255)    //PlaceholderText
 };
 
 /*!
@@ -577,6 +579,13 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::Color
         base.setBrush(QPalette::Disabled, role, window);
         base.setBrush(QPalette::Inactive, role, window);
         return;
+    } else if (role == QPalette::Highlight && toColorType(base) == DarkType) {
+        // 暗色模式下的高亮色亮度要降低10%，避免太突兀
+        QColor highlight = base.highlight().color();
+
+        if (highlight.isValid()) {
+            base.setColor(QPalette::Highlight, adjustColor(highlight, 0, 0, -20, 0, 0, 0, 0));
+        }
     }
 
     generatePaletteColor_helper(base, role, type);

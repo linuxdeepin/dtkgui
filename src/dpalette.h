@@ -41,6 +41,7 @@ public:
         LightLively,        //活跃式按钮（recommend button）背景色中的亮色（不受活跃色影响）
         DarkLively,         //活跃式按钮（recommend button）背景色中的暗色，会从亮色渐变到暗色（不受活跃色影响）
         FrameBorder,        //控件边框颜色
+        PlaceholderText,    //占位类型的文本颜色，可用于输入框占位内容等提示性文字
         NColorTypes
     };
 
