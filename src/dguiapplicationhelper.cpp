@@ -397,7 +397,8 @@ static QColor light_dpalette[DPalette::NColorTypes] {
     QColor("#25b7ff"),              //LightLively
     QColor("#0098ff"),              //DarkLively
     QColor(0, 0, 0, 0.03 * 255),    //FrameBorder
-    QColor(85, 85, 85, 0.4 * 255)   //PlaceholderText
+    QColor(85, 85, 85, 0.4 * 255),  //PlaceholderText
+    QColor(0, 0, 0, 0.1 * 255)      //FrameShadowBorder
 };
 
 static QColor dark_dpalette[DPalette::NColorTypes] {
@@ -410,7 +411,8 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor("#0056c1"),                  //LightLively
     QColor("#004c9c"),                  //DarkLively
     QColor(0, 0, 0, 0.08 * 255),        //FrameBorder
-    QColor(192, 198, 212, 0.4 * 255)    //PlaceholderText
+    QColor(192, 198, 212, 0.4 * 255),   //PlaceholderText
+    QColor(0, 0, 0, 0.8 * 255)          //FrameShadowBorder
 };
 
 /*!
