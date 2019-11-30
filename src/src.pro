@@ -18,6 +18,8 @@ HEADERS += \
     $$PWD/dfiledragserver.h \
     $$PWD/dfiledrag.h \
     $$PWD/dfiledragclient.h \
+    $$PWD/dsvgrenderer.h \
+    $$PWD/dthumbnailprovider.h
 
 SOURCES += \
     $$PWD/dnativesettings.cpp \
@@ -30,7 +32,8 @@ SOURCES += \
     $$PWD/dplatformtheme.cpp \
     $$PWD/dfiledragserver.cpp \
     $$PWD/dfiledrag.cpp \
-    $$PWD/dfiledragclient.cpp
+    $$PWD/dfiledragclient.cpp \
+    $$PWD/dthumbnailprovider.cpp
 
 includes.files += \
     $$PWD/*.h \
@@ -46,7 +49,28 @@ includes.files += \
     $$PWD/DPlatformTheme \
     $$PWD/DFileDragServer \
     $$PWD/DFileDrag \
-    $$PWD/DFileDragClient
+    $$PWD/DFileDragClient \
+    $$PWD/DSvgRenderer \
+    $$PWD/DThumbnailProvider
+
+linux* {
+    CONFIG += link_pkgconfig
+    PKGCONFIG += librsvg-2.0
+
+    HEADERS += \
+        $$PWD/dregionmonitor.h
+
+    SOURCES += \
+        $$PWD/dregionmonitor.cpp \
+        $$PWD/dsvgrenderer.cpp
+
+    includes.files += \
+        $$PWD/DRegionMonitor
+
+    dbus_monitor.files += $$PWD/dbus/com.deepin.api.XEventMonitor.xml
+    dbus_monitor.header_flags += -i dbus/arealist.h
+    DBUS_INTERFACES += dbus_monitor
+}
 
 systembusconf.path = /etc/dbus-1/system.d
 systembusconf.files = $$PWD/dbus/com.deepin.dtk.FileDrag.conf
