@@ -410,7 +410,7 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor("#0082FA"),                  //TextLively
     QColor("#0056c1"),                  //LightLively
     QColor("#004c9c"),                  //DarkLively
-    QColor(0, 0, 0, 0.08 * 255),        //FrameBorder
+    QColor(255, 255, 255, 0.1 * 255),   //FrameBorder
     QColor(192, 198, 212, 0.4 * 255),   //PlaceholderText
     QColor(0, 0, 0, 0.8 * 255)          //FrameShadowBorder
 };
