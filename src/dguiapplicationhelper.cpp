@@ -393,10 +393,10 @@ static QColor light_dpalette[DPalette::NColorTypes] {
     QColor("#001A2E"),              //TextTitle
     QColor("#8AA1B4"),              //TextTips
     QColor("#FF5736"),              //TextWarning
-    QColor("#0082FA"),              //TextLively
-    QColor("#25b7ff"),              //LightLively
-    QColor("#0098ff"),              //DarkLively
-    QColor(0, 0, 0, 0.03 * 255),    //FrameBorder
+    Qt::white,                      //TextLively
+    QColor("#0081FF"),              //LightLively
+    QColor("#0081FF"),              //DarkLively
+    QColor(0, 0, 0, 0.05 * 255),    //FrameBorder
     QColor(85, 85, 85, 0.4 * 255),  //PlaceholderText
     QColor(0, 0, 0, 0.1 * 255)      //FrameShadowBorder
 };
@@ -406,10 +406,10 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor(255, 255, 255, 255 * 0.05),  //ItemBackground
     QColor("#C0C6D4"),                  //TextTitle
     QColor("#6D7C88"),                  //TextTips
-    QColor("#FF5736"),                  //TextWarning
-    QColor("#0082FA"),                  //TextLively
-    QColor("#0056c1"),                  //LightLively
-    QColor("#004c9c"),                  //DarkLively
+    QColor("#9a2f2f"),                  //TextWarning
+    Qt::white,                          //TextLively
+    QColor("#0059d2"),                  //LightLively
+    QColor("#0059d2"),                  //DarkLively
     QColor(255, 255, 255, 0.1 * 255),   //FrameBorder
     QColor(192, 198, 212, 0.4 * 255),   //PlaceholderText
     QColor(0, 0, 0, 0.8 * 255)          //FrameShadowBorder
