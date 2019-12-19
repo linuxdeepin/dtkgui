@@ -45,6 +45,25 @@ void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, co
         return;
     }
 
+    if (name.startsWith("Qt/DPI/")) {
+        const QString &screen_name = QString::fromLocal8Bit(name.mid(7));
+
+        if (!screen_name.isEmpty()) {
+            bool ok = false;
+            int dpi = value.toInt(&ok);
+
+            Q_EMIT q->dotsPerInchChanged(screen_name, ok ? dpi : -1);
+        }
+
+        return;
+    }
+
+    if (QByteArrayLiteral("Xft/DPI") == name) {
+        bool ok = false;
+        int dpi = value.toInt(&ok);
+        Q_EMIT q->dotsPerInchChanged(QString(), ok ? dpi : -1);
+    }
+
     const QByteArrayList &list = name.split('/');
 
     if (list.count() != 2)
@@ -313,6 +332,12 @@ void DPlatformTheme::setPalette(const DPalette &palette)
     if (d->fallbackProperty && !value.isValid() && d->parent) \
         return d->parent->Function(); \
 
+#define FETCH_PROPERTY_WITH_ARGS(Name, Function, Args) \
+    D_DC(DPlatformTheme); \
+    QVariant value = d->theme->getSetting(Name); \
+    if (d->fallbackProperty && !value.isValid() && d->parent) \
+        return d->parent->Function(Args); \
+
 int DPlatformTheme::cursorBlinkTime() const
 {
     FETCH_PROPERTY("Net/CursorBlinkTime", cursorBlinkTime)
@@ -553,6 +578,23 @@ QColor DPlatformTheme::frameBorder() const
     return GET_COLOR(frameBorder);
 }
 
+int DPlatformTheme::dotsPerInch(const QString &screenName) const
+{
+    bool ok = false;
+
+    if (!screenName.isEmpty()) {
+        FETCH_PROPERTY_WITH_ARGS("Qt/DPI/" + screenName.toLocal8Bit(), dotsPerInch, screenName);
+        int dpi = value.toInt(&ok);
+
+        if (ok)
+            return dpi;
+    }
+
+    FETCH_PROPERTY_WITH_ARGS("Xft/DPI", dotsPerInch, screenName);
+    int dpi = value.toInt(&ok);
+    return ok ? dpi : -1;
+}
+
 void DPlatformTheme::setCursorBlinkTime(int cursorBlinkTime)
 {
     D_D(DPlatformTheme);
@@ -786,6 +828,17 @@ void DPlatformTheme::setDarkLively(const QColor &darkLively)
 void DPlatformTheme::setFrameBorder(const QColor &frameBorder)
 {
     SET_COLOR(frameBorder);
+}
+
+void DPlatformTheme::setDotsPerInch(const QString &screenName, int dpi)
+{
+    D_D(DPlatformTheme);
+
+    if (screenName.isEmpty()) {
+        d->theme->setSetting("Xft/DPI", dpi);
+    } else {
+        d->theme->setSetting("Qt/DPI/" + screenName.toLocal8Bit(), dpi);
+    }
 }
 
 DGUI_END_NAMESPACE

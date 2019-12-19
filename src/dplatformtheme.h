@@ -140,6 +140,8 @@ public:
     QColor darkLively() const;
     QColor frameBorder() const;
 
+    int dotsPerInch(const QString &screenName = QString()) const;
+
 public Q_SLOTS:
     void setCursorBlinkTime(int cursorBlinkTime);
     void setCursorBlinkTimeout(int cursorBlinkTimeout);
@@ -182,6 +184,8 @@ public Q_SLOTS:
     void setLightLively(const QColor &lightLively);
     void setDarkLively(const QColor &darkLively);
     void setFrameBorder(const QColor &frameBorder);
+
+    void setDotsPerInch(const QString &screenName, int dpi);
 
 Q_SIGNALS:
     void cursorBlinkTimeChanged(int cursorBlinkTime);
@@ -226,6 +230,7 @@ Q_SIGNALS:
     void lightLivelyChanged(QColor lightLively);
     void darkLivelyChanged(QColor darkLively);
     void frameBorderChanged(QColor frameBorder);
+    void dotsPerInchChanged(const QString &screen, int dpi);
 
 private:
     friend class DPlatformThemePrivate;
