@@ -7,6 +7,11 @@
 
 DGUI_BEGIN_NAMESPACE
 
+/*!
+ * \~chinese \class DRegionMonitor
+ * \~chinese \brief 一个在指定区域内监视鼠标键盘动作的类
+ */
+
 DRegionMonitor::DRegionMonitor(QObject *parent)
     : QObject(parent),
       DObject(*new DRegionMonitorPrivate(this))
