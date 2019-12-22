@@ -59,6 +59,10 @@ bool DNativeSettingsPrivate::init(const QMetaObject *mo, quint32 window)
     return reinterpret_cast<bool(*)(QObject*, quint32)>(native_build_setting_fun)(q, window);
 }
 
+/*!
+ * \~chinese \class DNativeSettings
+ * \~chinese \brief 一个用于本地设置的类
+ */
 DNativeSettings::DNativeSettings(quint32 window, const QByteArray &domain, QObject *parent)
     : DNativeSettings(&DNativeSettings::staticMetaObject, window, domain, parent)
 {
