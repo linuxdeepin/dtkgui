@@ -70,6 +70,16 @@ QImage DSvgRendererPrivate::getImage(const QSize &size, const QString &elementId
     return image;
 }
 
+/*!
+ * \~chinese \class DSvgRenderer
+ * \~chinese \brief 提供了将SVG文件的内容绘制到绘制设备上的方法。
+ * \~chinese SVG图形可以在构造 DSvgRenderer 时加载，也可以稍后使用load（）函数加载。
+ * \~chinese 因为渲染是使用 QPainter 执行的，所以可以在 QPaintDevice 的任何子类上渲染SVG图形。
+ * \~chinese 如果加载了有效文件，则无论是在构造时还是以后某个时间，isValid（）都将返回true；否则将返回false。
+ * \~chinese DSvgRenderer提供render（）插槽，用于使用给定的 QPainter 渲染当前文档或动画文档的当前帧
+ * \~chinese \note 使用 DSvgRenderer 需要 librsvg库
+ */
+
 DSvgRenderer::DSvgRenderer(QObject *parent)
     : QObject(parent)
     , DObject(*new DSvgRendererPrivate(this))
