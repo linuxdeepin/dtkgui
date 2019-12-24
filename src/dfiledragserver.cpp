@@ -92,6 +92,17 @@ private:
     friend class DFileDragServer;
 };
 
+/*!
+ * \~chinese \class DFileDragServer
+ * \~chinese \brief 提供拖拽文件时与文件接收方交互的接口。
+ */
+
+/*!
+ * \~chinese \fn DFileDragServer::targetDataChanged
+ * \~chinese \param
+ * \~chinese \brief 信号会在接收方调用 setData 变化时被发送
+ */
+
 DFileDragServer::DFileDragServer(QObject *parent)
     : QObject(parent)
     , DCORE_NAMESPACE::DObject(*new DFileDragServerPrivate(this))
@@ -106,6 +117,11 @@ DFileDragServer::~DFileDragServer()
     DFileDragServerPrivate::servermap.remove(d->uuid.toString());
 }
 
+/*!
+ * \~chinese \brief DFileDragServer::targetData
+ * \~chinese \param key
+ * \~chinese \return 返回文件接收方设置数据 key 对应的 value
+ */
 QVariant DFileDragServer::targetData(const QString &key) const
 {
     D_D(const DFileDragServer);
@@ -113,6 +129,11 @@ QVariant DFileDragServer::targetData(const QString &key) const
     return d->data.value(key);
 }
 
+/*!
+ *\~chinese \brief DFileDragServer::setProgress
+ *\~chinese \param progress 当前进度
+ *\~chinese \brief 拖拽进度更新，接收方会受到 progressChanged 信号
+ */
 void DFileDragServer::setProgress(int progress)
 {
     D_D(DFileDragServer);
@@ -123,6 +144,11 @@ void DFileDragServer::setProgress(int progress)
     }
 }
 
+/*!
+ * \~chinese \brief DFileDragServer::setState
+ * \~chinese \param state
+ * \~chinese \brief 改变状态，接收方会受到 stateChanged 信号
+ */
 void DFileDragServer::setState(DFileDragState state)
 {
     D_D(DFileDragServer);

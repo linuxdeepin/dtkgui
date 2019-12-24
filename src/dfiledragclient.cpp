@@ -74,12 +74,14 @@ void DDndClientSignalRelay::progressChanged(QString uuid, int progress)
         Q_EMIT DFileDragClientPrivate::connectionmap[uuid]->progressChanged(progress);
     }
 }
+
 void DDndClientSignalRelay::stateChanged(QString uuid, int state)
 {
     if (DFileDragClientPrivate::connectionmap.contains(uuid)) {
         Q_EMIT DFileDragClientPrivate::connectionmap[uuid]->stateChanged(static_cast<DFileDragState>(state));
     }
 }
+
 void DDndClientSignalRelay::serverDestroyed(QString uuid)
 {
     if (DFileDragClientPrivate::connectionmap.contains(uuid)) {
@@ -87,6 +89,23 @@ void DDndClientSignalRelay::serverDestroyed(QString uuid)
         DFileDragClientPrivate::connectionmap.remove(uuid);
     }
 }
+
+/*!
+ * \~chinese \class DFileDragClient
+ * \~chinese \brief 提供拖拽文件时与文件发送方交互的接口。
+ */
+
+/*!
+ * \~chinese \fn DFileDragClient::progressChanged
+ * \~chinese \param 当前进度
+ * \~chinese \brief 信号会在当前进度变化时被发送
+ * \~chinese \fn DFileDragClient::stateChanged
+ * \~chinese \param 改变后的新状态
+ * \~chinese \brief 信号会在当前状态变化时被发送
+ * \~chinese \fn DFileDragClient::serverDestroyed
+ * \~chinese \brief 信号会在发送方析构销毁前被发送
+ * \~chinese \note DFileDragClient 收到后会自删除(deletelater)，因此不用去管理 new 出来的 DFileDragClient
+ */
 
 DFileDragClient::DFileDragClient(const QMimeData *data, QObject *parent)
     : QObject(parent)
@@ -126,6 +145,10 @@ DFileDragClient::DFileDragClient(const QMimeData *data, QObject *parent)
 
 }
 
+/*!
+ * \~chinese \brief DFileDragClient::progress
+ * \~chinese \return 返回当前拖拽的进度
+ */
 int DFileDragClient::progress() const
 {
     D_D(const DFileDragClient);
@@ -133,6 +156,10 @@ int DFileDragClient::progress() const
     return QDBusReply<int>(d->iface->call("progress", d->uuid.toString())).value();
 }
 
+/*!
+ * \~chinese \brief DFileDragClient::state
+ * \~chinese \return 返回当前状态,见 DFileDragState
+ */
 DFileDragState DFileDragClient::state() const
 {
     D_D(const DFileDragClient);
@@ -140,11 +167,24 @@ DFileDragState DFileDragClient::state() const
     return static_cast<DFileDragState>(QDBusReply<int>(d->iface->call("state", d->uuid.toString())).value());
 }
 
+/*!
+ * \~chinese \brief DFileDragClient::checkMimeData
+ * \~chinese \param data
+ * \~chinese \return 包含 DND_MIME_PID 格式的数据时返回 true，否则返回 false
+ * \~chinese \note 通常在接收拖放数据的应用的dropEvent(QDropEvent *event)函数中检测当前 event->mimeData() 是否是 DFileDrag
+ */
 bool DFileDragClient::checkMimeData(const QMimeData *data)
 {
     return data->hasFormat(DND_MIME_SERVICE) && data->hasFormat(DND_MIME_PID);
 }
 
+/*!
+ * \~chinese \brief DFileDragClient::setTargetData
+ * \~chinese \param data 拖放时传入的data,用于获取和发送数据的应用dbus通讯需要的一些信息
+ * \~chinese \param key
+ * \~chinese \param value
+ * \~chinese \note 向文件发送方设置自定义数据
+ */
 void DFileDragClient::setTargetData(const QMimeData *data, QString key, QVariant value)
 {
     Q_ASSERT(checkMimeData(data));
@@ -159,6 +199,12 @@ void DFileDragClient::setTargetData(const QMimeData *data, QString key, QVariant
     iface.call("setData", uuid, key, value.toString());
 }
 
+/*!
+ * \~chinese \brief DFileDragClient::setTargetUrl
+ * \~chinese \param data
+ * \~chinese \param url
+ * \~chinese \note 告知文件发送方拖拽目标路径
+ */
 void DFileDragClient::setTargetUrl(const QMimeData *data, QUrl url)
 {
     setTargetData(data, DND_TARGET_URL_KEY, QVariant::fromValue(url.toString()));

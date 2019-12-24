@@ -40,6 +40,19 @@ class DFileDragPrivate : DCORE_NAMESPACE::DObjectPrivate
     D_DECLARE_PUBLIC(DFileDrag)
 };
 
+/*!
+ * \~chinese \class DFileDrag
+ * \~chinese \brief 继承自QDrag，一般在文件拖拽发送方 mouseMoveEvent 中发起拖拽，设置发送数据
+ * \~chinese \brief 和 DFileDragServer 配合使用
+ */
+
+/*!
+ * \~chinese \fn DFileDragServer::targetUrlChanged
+ * \~chinese \param
+ * \~chinese \brief 信号会在接收方调用 setTargetUrl 时被发送
+ * \~chinese \brief 可以用于获取被拖拽至的目标目录
+ */
+
 DFileDrag::DFileDrag(QObject *source, DFileDragServer *server)
     : QDrag(source)
     , DObject(*new DFileDragPrivate(this, server))
@@ -53,6 +66,10 @@ DFileDrag::DFileDrag(QObject *source, DFileDragServer *server)
     });
 }
 
+/*!
+ * \~chinese \brief DFileDrag::targetUrl
+ * \~chinese \return 返回拖拽文件接收方设置的接收路径
+ */
 QUrl DFileDrag::targetUrl()
 {
     Q_D(DFileDrag);
@@ -60,6 +77,11 @@ QUrl DFileDrag::targetUrl()
     return QUrl(d->srv->targetData(DND_TARGET_URL_KEY).value<QString>());
 }
 
+/*!
+ * \~chinese \brief DFileDrag::setMimeData
+ * \~chinese \param data
+ * \~chinese \brief 发起拖拽文件前设置发送数据接口
+ */
 void DFileDrag::setMimeData(QMimeData *data)
 {
     Q_D(DFileDrag);
