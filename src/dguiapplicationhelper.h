@@ -68,6 +68,7 @@ public:
     static DPalette fetchPalette(const DPlatformTheme *theme);
     static void setUseInactiveColorGroup(bool on);
     static void setColorCompositingEnabled(bool on);
+    static bool isXWindowPlatform();
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;

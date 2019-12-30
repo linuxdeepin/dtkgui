@@ -682,6 +682,13 @@ void DGuiApplicationHelper::setColorCompositingEnabled(bool on)
     DGuiApplicationHelperPrivate::compositingColor = on;
 }
 
+bool DGuiApplicationHelper::isXWindowPlatform()
+{
+    static bool isX = qGuiApp->platformName() == "xcb" || qGuiApp->platformName() == "dxcb";
+
+    return isX;
+}
+
 /*!
  * \~chinese \brief DGuiApplicationHelper::systemTheme返回系统主题
  * \~chinese \return 系统主题
@@ -899,7 +906,7 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     socket.connectToServer(socket_key);
 
     // 等待到有效数据时认为server实例有效
-    if (socket.waitForReadyRead(100)) {
+    if (socket.waitForConnected(100) && socket.waitForReadyRead(100)) {
         // 读取数据
         qint8 version;
         qint64 pid;
