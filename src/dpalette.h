@@ -43,6 +43,7 @@ public:
         FrameBorder,        //控件边框颜色
         PlaceholderText,    //占位类型的文本颜色，可用于输入框占位内容等提示性文字
         FrameShadowBorder,  //用于跟阴影叠加的边框颜色
+        ObviousBackground,  //明显的背景色
         NColorTypes
     };
 
