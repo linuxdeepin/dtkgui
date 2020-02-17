@@ -19,7 +19,8 @@ HEADERS += \
     $$PWD/dfiledrag.h \
     $$PWD/dfiledragclient.h \
     $$PWD/dsvgrenderer.h \
-    $$PWD/dthumbnailprovider.h
+    $$PWD/dthumbnailprovider.h \
+    $$PWD/dtaskbarcontrol.h
 
 SOURCES += \
     $$PWD/dnativesettings.cpp \
@@ -33,7 +34,8 @@ SOURCES += \
     $$PWD/dfiledragserver.cpp \
     $$PWD/dfiledrag.cpp \
     $$PWD/dfiledragclient.cpp \
-    $$PWD/dthumbnailprovider.cpp
+    $$PWD/dthumbnailprovider.cpp \
+    $$PWD/dtaskbarcontrol.cpp
 
 includes.files += \
     $$PWD/*.h \
@@ -51,7 +53,8 @@ includes.files += \
     $$PWD/DFileDrag \
     $$PWD/DFileDragClient \
     $$PWD/DSvgRenderer \
-    $$PWD/DThumbnailProvider
+    $$PWD/DThumbnailProvider \
+    $$PWD/DTaskbarControl
 
 linux* {
     CONFIG += link_pkgconfig

@@ -4,4 +4,5 @@ HEADERS += \
     $$PWD/dplatformtheme_p.h \
     $$PWD/dfiledragcommon_p.h \
     $$PWD/dfiledragserver_p.h \
-    $$PWD/dregionmonitor_p.h
+    $$PWD/dregionmonitor_p.h \
+    $$PWD/dtaskbarcontrol_p.h
