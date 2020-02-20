@@ -887,7 +887,7 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     case GroupScope:
         _d_singleServer->setSocketOptions(QLocalServer::GroupAccessOption);
 #ifdef Q_OS_LINUX
-        socket_key += QString("%1_").arg(getuid());
+        socket_key += QString("%1_").arg(getgid());
 #endif
         break;
     case WorldScope:
@@ -896,7 +896,7 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     default:
         _d_singleServer->setSocketOptions(QLocalServer::UserAccessOption);
 #ifdef Q_OS_LINUX
-        socket_key += QString("%1_").arg(getgid());
+        socket_key += QString("%1_").arg(getuid());
 #endif
         break;
     }
