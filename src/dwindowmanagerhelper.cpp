@@ -23,7 +23,11 @@
 #include "dforeignwindow.h"
 
 #include <DObjectPrivate>
+#include <DGuiApplicationHelper>
 #include <QGuiApplication>
+#ifdef Q_OS_LINUX
+#include <QX11Info>
+#endif
 
 #include <qpa/qplatformwindow.h>
 
@@ -502,7 +506,17 @@ bool DWindowManagerHelper::hasComposite() const
     hasComposite = qApp->platformFunction(_hasComposite);
 #endif
 
-    return hasComposite && reinterpret_cast<bool(*)()>(hasComposite)();
+    if (!hasComposite) {
+#ifdef Q_OS_LINUX
+        if (DGuiApplicationHelper::isXWindowPlatform()) {
+            return QX11Info::isCompositingManagerRunning();
+        }
+#endif
+        // 在其它平台上默认认为混成是开启的
+        return true;
+    }
+
+    return reinterpret_cast<bool(*)()>(hasComposite)();
 }
 
 /*!
