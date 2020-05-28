@@ -47,6 +47,7 @@ static quint8 _d_singleServerVersion = 1;
 
 bool DGuiApplicationHelperPrivate::useInactiveColor = true;
 bool DGuiApplicationHelperPrivate::compositingColor = false;
+int DGuiApplicationHelperPrivate::waitTime = 1000;
 
 DGuiApplicationHelperPrivate::DGuiApplicationHelperPrivate(DGuiApplicationHelper *qq)
     : DObjectPrivate(qq)
@@ -908,7 +909,7 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     socket.connectToServer(socket_key);
 
     // 等待到有效数据时认为server实例有效
-    if (socket.waitForConnected(100) && socket.waitForReadyRead(100)) {
+    if (socket.waitForConnected(DGuiApplicationHelperPrivate::waitTime) && socket.waitForReadyRead(DGuiApplicationHelperPrivate::waitTime)) {
         // 读取数据
         qint8 version;
         qint64 pid;
@@ -961,6 +962,15 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     }
 
     return true;
+}
+
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间
+ * \~chinese \param interval等待时间
+ */
+void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
+{
+    DGuiApplicationHelperPrivate::waitTime = interval;
 }
 
 /*!

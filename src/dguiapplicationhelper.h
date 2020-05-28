@@ -85,6 +85,7 @@ public:
     ColorType paletteType() const;
 
     static bool setSingleInstance(const QString &key, SingleScope singleScope = UserScope);
+    static void setSingelInstanceInterval(int interval = 1000);
 
 public Q_SLOTS:
     void setThemeType(ColorType themeType);

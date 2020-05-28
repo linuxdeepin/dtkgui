@@ -55,6 +55,8 @@ public:
     static bool useInactiveColor;
     // 是否采用半透明样式的调色板
     static bool compositingColor;
+    // 获取QLocalSever消息的等待时间
+    static int waitTime;
 };
 
 DGUI_END_NAMESPACE
