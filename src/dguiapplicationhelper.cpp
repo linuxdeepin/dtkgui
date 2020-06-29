@@ -47,7 +47,7 @@ static quint8 _d_singleServerVersion = 1;
 
 bool DGuiApplicationHelperPrivate::useInactiveColor = true;
 bool DGuiApplicationHelperPrivate::compositingColor = false;
-int DGuiApplicationHelperPrivate::waitTime = 1000;
+int DGuiApplicationHelperPrivate::waitTime = 3000;
 
 DGuiApplicationHelperPrivate::DGuiApplicationHelperPrivate(DGuiApplicationHelper *qq)
     : DObjectPrivate(qq)
@@ -963,10 +963,20 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
 
     return true;
 }
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间
+ * \~chinese \param interval等待时间，如 interval 为 -1 则没有超时一直等待，默认和 QLocalSocket 一致 3000ms
+ * \~chinese \note 需要在 DGuiApplicationHelper::setSingleInstance 之前调用否则无效。
+ */
+void DGuiApplicationHelper::setSingleInstanceInterval(int interval)
+{
+    Q_ASSERT_X(!_d_singleServer->isListening(), "DGuiApplicationHelper::setSingleInstanceInterval","Must call before setSingleInstance");
+    DGuiApplicationHelperPrivate::waitTime = interval;
+}
 
 /*!
  * \~chinese \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间
- * \~chinese \param interval等待时间
+ * \~chinese \param interval等待时间， typo 请使用 DGuiApplicationHelper::setSingleInstanceInterval
  */
 void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
 {
