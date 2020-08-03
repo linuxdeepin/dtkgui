@@ -50,6 +50,7 @@ DEFINE_CONST_CHAR(connectHasCompositeChanged);
 DEFINE_CONST_CHAR(connectHasNoTitlebarChanged);
 DEFINE_CONST_CHAR(getCurrentWorkspaceWindows);
 DEFINE_CONST_CHAR(getWindows);
+DEFINE_CONST_CHAR(windowFromPoint);
 DEFINE_CONST_CHAR(connectWindowListChanged);
 DEFINE_CONST_CHAR(setMWMFunctions);
 DEFINE_CONST_CHAR(getMWMFunctions);
@@ -653,6 +654,25 @@ QList<DForeignWindow *> DWindowManagerHelper::currentWorkspaceWindows() const
     }
 
     return d->windowList;
+}
+
+/*!
+ * \~chinese \brief DWindowManagerHelper::windowFromPoint
+ * \~chinese \return 返回 point 位置的窗口 Id，如果出错返回 0
+ * \~chinese \note 可以通过 DForeignWindow::fromWinId 创建窗口对象
+ */
+quint32 DWindowManagerHelper::windowFromPoint(const QPoint &p)
+{
+    QFunctionPointer winFromPoint = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    winFromPoint = qApp->platformFunction(_windowFromPoint);
+#endif
+
+    if (!winFromPoint)
+        return 0;
+
+    return reinterpret_cast<quint32 (*)(const QPoint &)>(winFromPoint)(p);
 }
 
 /*!
