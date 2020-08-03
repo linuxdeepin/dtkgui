@@ -90,6 +90,7 @@ public:
     QVector<quint32> allWindowIdList() const;
     QVector<quint32> currentWorkspaceWindowIdList() const;
     QList<DForeignWindow*> currentWorkspaceWindows() const;
+    quint32 windowFromPoint(const QPoint &p);
 
 Q_SIGNALS:
     void windowManagerChanged();
