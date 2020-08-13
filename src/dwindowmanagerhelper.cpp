@@ -341,8 +341,13 @@ void DWindowManagerHelper::setMotifFunctions(const QWindow *window, MotifFunctio
 #endif
 
     if (setMWMFunctions && window->handle()) {
-        if (hints == FUNC_ALL)
-            hints = (MotifFunction)MWM_FUNC_ALL;
+        /*
+     * fix bug: 18775, 3391
+     *  当所有function标志都设置时,用MWM_FUNC_ALL代替会导致窗管无法正确处理 dock栏发送的关闭消息.所以取消此设置
+     *
+     if (hints == FUNC_ALL)
+         hints = (MotifFunction)MWM_FUNC_ALL;
+    */
 
         reinterpret_cast<void(*)(quint32, quint32)>(setMWMFunctions)(window->handle()->winId(), (quint32)hints);
     }
