@@ -24,10 +24,75 @@
 #include <QFile>
 #include <QDebug>
 #include <QGuiApplication>
+#include <QLibrary>
 
 DCORE_USE_NAMESPACE
 
 DGUI_BEGIN_NAMESPACE
+
+class RSvg
+{
+public:
+    RSvg()
+    {
+        rsvg = new QLibrary("rsvg-2");
+
+        if (!rsvg->load()) {
+            delete rsvg;
+            rsvg = nullptr;
+            return;
+        }
+
+#define INIT_FUNCTION(Name) *reinterpret_cast<QFunctionPointer*>(&Name) = rsvg->resolve(#Name); Q_ASSERT(Name)
+
+        INIT_FUNCTION(cairo_image_surface_create_for_data);
+        INIT_FUNCTION(cairo_create);
+        INIT_FUNCTION(cairo_scale);
+        INIT_FUNCTION(cairo_translate);
+        INIT_FUNCTION(cairo_destroy);
+        INIT_FUNCTION(cairo_surface_destroy);
+        INIT_FUNCTION(g_object_unref);
+        INIT_FUNCTION(rsvg_handle_render_cairo);
+        INIT_FUNCTION(rsvg_handle_render_cairo_sub);
+        INIT_FUNCTION(rsvg_handle_get_dimensions_sub);
+        INIT_FUNCTION(rsvg_handle_get_position_sub);
+        INIT_FUNCTION(rsvg_handle_has_sub);
+        INIT_FUNCTION(rsvg_handle_new_from_data);
+        INIT_FUNCTION(rsvg_handle_get_dimensions);
+    }
+
+    bool isValid() const
+    {
+        return rsvg;
+    }
+
+    ~RSvg()
+    {
+        if (rsvg)
+            delete rsvg;
+    }
+
+    cairo_surface_t *(*cairo_image_surface_create_for_data)(unsigned char *data, cairo_format_t format, int width, int height, int stride);
+    cairo_t *(*cairo_create)(cairo_surface_t *target);
+    void (*cairo_scale)(cairo_t *cr, double sx, double sy);
+    void (*cairo_translate)(cairo_t *cr, double tx, double ty);
+    void (*cairo_destroy)(cairo_t *cr);
+    void (*cairo_surface_destroy)(cairo_surface_t *surface);
+    void (*g_object_unref)(gpointer object);
+
+    gboolean (*rsvg_handle_render_cairo)(RsvgHandle *handle, cairo_t *cr);
+    gboolean (*rsvg_handle_render_cairo_sub)(RsvgHandle *handle, cairo_t *cr, const char *id);
+    gboolean (*rsvg_handle_get_dimensions_sub)(RsvgHandle *handle, RsvgDimensionData *dimension_data, const char *id);
+    gboolean (*rsvg_handle_get_position_sub)(RsvgHandle *handle, RsvgPositionData *position_data, const char *id);
+    gboolean (*rsvg_handle_has_sub)(RsvgHandle *handle, const char *id);
+    RsvgHandle *(*rsvg_handle_new_from_data)(const guint8 *data, gsize data_len, GError **error);
+    void (*rsvg_handle_get_dimensions)(RsvgHandle *handle, RsvgDimensionData *dimension_data);
+
+private:
+    QLibrary *rsvg = nullptr;
+};
+
+Q_GLOBAL_STATIC(RSvg, __rsvg)
 
 class DSvgRendererPrivate : public DObjectPrivate
 {
@@ -50,22 +115,25 @@ DSvgRendererPrivate::DSvgRendererPrivate(DObject *qq)
 
 QImage DSvgRendererPrivate::getImage(const QSize &size, const QString &elementId) const
 {
+    if (!__rsvg->isValid())
+        return QImage();
+
     QImage image(size, QImage::Format_ARGB32_Premultiplied);
 
     image.fill(Qt::transparent);
 
-    cairo_surface_t *surface = cairo_image_surface_create_for_data(image.bits(), CAIRO_FORMAT_ARGB32, image.width(), image.height(), image.bytesPerLine());
-    cairo_t *cairo = cairo_create(surface);
-    cairo_scale(cairo, image.width() / viewBox.width(), image.height() / viewBox.height());
-    cairo_translate(cairo, -viewBox.x(), -viewBox.y());
+    cairo_surface_t *surface = __rsvg->cairo_image_surface_create_for_data(image.bits(), CAIRO_FORMAT_ARGB32, image.width(), image.height(), image.bytesPerLine());
+    cairo_t *cairo = __rsvg->cairo_create(surface);
+    __rsvg->cairo_scale(cairo, image.width() / viewBox.width(), image.height() / viewBox.height());
+    __rsvg->cairo_translate(cairo, -viewBox.x(), -viewBox.y());
 
     if (elementId.isEmpty())
-        rsvg_handle_render_cairo(handle, cairo);
+        __rsvg->rsvg_handle_render_cairo(handle, cairo);
     else
-        rsvg_handle_render_cairo_sub(handle, cairo, elementId.toUtf8().constData());
+        __rsvg->rsvg_handle_render_cairo_sub(handle, cairo, elementId.toUtf8().constData());
 
-    cairo_destroy(cairo);
-    cairo_surface_destroy(surface);
+    __rsvg->cairo_destroy(cairo);
+    __rsvg->cairo_surface_destroy(surface);
 
     return image;
 }
@@ -103,8 +171,10 @@ DSvgRenderer::~DSvgRenderer()
 {
     D_D(DSvgRenderer);
 
-    if (d->handle)
-        g_object_unref(d->handle);
+    if (d->handle) {
+        Q_ASSERT(__rsvg->isValid());
+        __rsvg->g_object_unref(d->handle);
+    }
 }
 
 bool DSvgRenderer::isValid() const
@@ -159,12 +229,12 @@ QRectF DSvgRenderer::boundsOnElement(const QString &id) const
 
     RsvgDimensionData dimension_data;
 
-    if (!rsvg_handle_get_dimensions_sub(d->handle, &dimension_data, id_data.constData()))
+    if (!__rsvg->rsvg_handle_get_dimensions_sub(d->handle, &dimension_data, id_data.constData()))
         return QRectF();
 
     RsvgPositionData pos_data;
 
-    if (!rsvg_handle_get_position_sub(d->handle, &pos_data, id_data.constData()))
+    if (!__rsvg->rsvg_handle_get_position_sub(d->handle, &pos_data, id_data.constData()))
         return QRectF();
 
     return QRectF(pos_data.x, pos_data.y, dimension_data.width, dimension_data.height);
@@ -177,7 +247,7 @@ bool DSvgRenderer::elementExists(const QString &id) const
     if (!d->handle)
         return false;
 
-    return rsvg_handle_has_sub(d->handle, id.toUtf8().constData());
+    return __rsvg->rsvg_handle_has_sub(d->handle, id.toUtf8().constData());
 }
 
 QImage DSvgRenderer::toImage(const QSize sz, const QString &elementId) const
@@ -202,13 +272,16 @@ bool DSvgRenderer::load(const QByteArray &contents)
 {
     D_D(DSvgRenderer);
 
+    if (!__rsvg->isValid())
+        return false;
+
     if (d->handle) {
-        g_object_unref(d->handle);
+        __rsvg->g_object_unref(d->handle);
         d->handle = NULL;
     }
 
     GError *error = 0;
-    d->handle = rsvg_handle_new_from_data((const guint8*)contents.constData(), contents.length(), &error);
+    d->handle = __rsvg->rsvg_handle_new_from_data((const guint8*)contents.constData(), contents.length(), &error);
 
     if (error) {
         qWarning("DSvgRenderer::load: %s", error->message);
@@ -219,7 +292,7 @@ bool DSvgRenderer::load(const QByteArray &contents)
 
     RsvgDimensionData rsvg_data;
 
-    rsvg_handle_get_dimensions(d->handle, &rsvg_data);
+    __rsvg->rsvg_handle_get_dimensions(d->handle, &rsvg_data);
 
     d->defaultSize.setWidth(rsvg_data.width);
     d->defaultSize.setHeight(rsvg_data.height);

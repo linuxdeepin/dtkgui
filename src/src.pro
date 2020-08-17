@@ -57,8 +57,8 @@ includes.files += \
     $$PWD/DTaskbarControl
 
 linux* {
-    CONFIG += link_pkgconfig
-    PKGCONFIG += librsvg-2.0
+    # don't link library
+    QMAKE_CXXFLAGS += $$system(pkg-config --cflags-only-I librsvg-2.0)
 
     HEADERS += \
         $$PWD/dregionmonitor.h
