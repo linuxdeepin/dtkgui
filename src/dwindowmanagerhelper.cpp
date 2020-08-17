@@ -25,11 +25,9 @@
 #include <DObjectPrivate>
 #include <DGuiApplicationHelper>
 #include <QGuiApplication>
-#ifdef Q_OS_LINUX
-#include <QX11Info>
-#endif
 
 #include <qpa/qplatformwindow.h>
+#include <qpa/qplatformnativeinterface.h>
 
 #include <functional>
 
@@ -515,7 +513,11 @@ bool DWindowManagerHelper::hasComposite() const
     if (!hasComposite) {
 #ifdef Q_OS_LINUX
         if (DGuiApplicationHelper::isXWindowPlatform()) {
-            return QX11Info::isCompositingManagerRunning();
+            QPlatformNativeInterface *native = qApp->platformNativeInterface();
+            if (Q_LIKELY(native)) {
+                QScreen *scr = QGuiApplication::primaryScreen();
+                return native->nativeResourceForScreen(QByteArray("compositingEnabled"), scr);
+            }
         }
 #endif
         // 在其它平台上默认认为混成是开启的
