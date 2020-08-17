@@ -43,7 +43,7 @@ public:
             return;
         }
 
-#define INIT_FUNCTION(Name) *reinterpret_cast<QFunctionPointer*>(&Name) = rsvg->resolve(#Name); Q_ASSERT(Name)
+#define INIT_FUNCTION(Name) Name = reinterpret_cast<decltype (Name)>(rsvg->resolve(#Name)); Q_ASSERT(Name)
 
         INIT_FUNCTION(cairo_image_surface_create_for_data);
         INIT_FUNCTION(cairo_create);
@@ -101,7 +101,7 @@ public:
 
     QImage getImage(const QSize &size, const QString &elementId) const;
 
-    RsvgHandle *handle = NULL;
+    RsvgHandle *handle = nullptr;
     QSize defaultSize;
 
     mutable QRectF viewBox;
@@ -277,10 +277,10 @@ bool DSvgRenderer::load(const QByteArray &contents)
 
     if (d->handle) {
         __rsvg->g_object_unref(d->handle);
-        d->handle = NULL;
+        d->handle = nullptr;
     }
 
-    GError *error = 0;
+    GError *error = nullptr;
     d->handle = __rsvg->rsvg_handle_new_from_data((const guint8*)contents.constData(), contents.length(), &error);
 
     if (error) {
