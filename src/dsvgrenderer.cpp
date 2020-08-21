@@ -35,7 +35,8 @@ class RSvg
 public:
     RSvg()
     {
-        rsvg = new QLibrary("rsvg-2");
+        // fix found lib was librsvg2-dev without version number
+        rsvg = new QLibrary("rsvg-2", "2");
 
         if (!rsvg->load()) {
             delete rsvg;
