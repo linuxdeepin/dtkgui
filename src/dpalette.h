@@ -23,6 +23,7 @@
 
 #include <dtkgui_global.h>
 
+#include <QDebug>
 #include <QPalette>
 
 DGUI_BEGIN_NAMESPACE
@@ -99,6 +100,11 @@ QT_BEGIN_NAMESPACE
 Q_GUI_EXPORT QDataStream &operator<<(QDataStream &ds, const DTK_GUI_NAMESPACE::DPalette &p);
 Q_GUI_EXPORT QDataStream &operator>>(QDataStream &ds, DTK_GUI_NAMESPACE::DPalette &p);
 #endif // QT_NO_DATASTREAM
+
+#ifndef QT_NO_DEBUG_STREAM
+Q_GUI_EXPORT QDebug operator<<(QDebug, const DTK_GUI_NAMESPACE::DPalette &);
+#endif
+
 QT_END_NAMESPACE
 
 #endif // DPALETTE_H
