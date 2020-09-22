@@ -1,10 +1,15 @@
 Name:           dtkgui
-Version:        5.2.2.1
+Version:        5.2.2.18
 Release:        1%{?dist}
 Summary:        Deepin dtkgui
-License:        GPLv3
+License:        LGPLv3+
 URL:            https://github.com/linuxdeepin/dtkgui
+
+%if 0%{?fedora}
+Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
+%else
 Source0:        %{name}_%{version}.orig.tar.xz
+%endif
 BuildRequires:  qt5-qtx11extras-devel
 BuildRequires:  dtkcore-devel
 BuildRequires:  librsvg2-devel
@@ -12,26 +17,23 @@ BuildRequires:  gcc-c++
 BuildRequires:  annobin
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(gsettings-qt)
-
-
+%if 0%{?fedora}
+BuildRequires:  qt5-qtbase-private-devel
+%{?_qt5:Requires: %{_qt5}%{?_isa} = %{_qt5_version}}
+%endif
 %description
-Deepin tool kit core modules.libdtkcore5/experimentallibdtkcore5/experimentallibdtkcore5/experimentallibdtkcore5/experimental
+Dtkgui is the GUI module for DDE look and feel.
 
 %package devel
 Summary:        Development package for %{name}
 Requires:       %{name}%{?_isa} = %{version}-%{release}
-Requires:       qt5-qtbase-devel
+Requires:       dtkcore-devel%{?_isa}
 
 %description devel
 Header files and libraries for %{name}.
 
 %prep
-%setup -q
-
-#sed -i 's|/lib|/libexec|' tools/settings/settings.pro
-## consider relying on %%_qt5_bindir (see %%build below) instead of patching -- rex
-#sed -i 's|qmake|qmake-qt5|' src/dtk_module.prf
-#sed -i 's|lrelease|lrelease-qt5|' tools/script/dtk-translate.py src/dtk_translation.prf
+%autosetup
 
 %build
 # help find (and prefer) qt5 utilities, e.g. qmake, lrelease
@@ -46,22 +48,20 @@ export PATH=%{_qt5_bindir}:$PATH
 %install
 %make_install INSTALL_ROOT=%{buildroot}
 
-%ldconfig_scriptlets
-
-
 %files
 %doc README.md
 %license LICENSE
-%{_libdir}/libdtkgui.so*
+%{_libdir}/lib%{name}.so.5*
 %{_libexecdir}/dtk5/deepin-gui-settings
 %{_libexecdir}/dtk5/taskbar
-/etc/dbus-1/system.d/com.deepin.dtk.FileDrag.conf
+%{_sysconfdir}/dbus-1/system.d/com.deepin.dtk.FileDrag.conf
 
 %files devel
 %{_includedir}/libdtk-*/
 %{_libdir}/pkgconfig/dtkgui.pc
-%{_libdir}/qt5/mkspecs/modules/qt_lib_dtkgui.pri
+%{_qt5_archdatadir}/mkspecs/modules/qt_lib_dtkgui.pri
 %{_libdir}/cmake/DtkGui/
+%{_libdir}/lib%{name}.so
 
 %changelog
 * Thu Jun 09 2020 uoser <uoser@uniontech.com> - 5.2.2.1-1
