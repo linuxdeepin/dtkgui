@@ -19,12 +19,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "dguiapplicationhelper.h"
 #include "dplatformhandle.h"
+#include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
 
 #include <QWindow>
 #include <QGuiApplication>
 #include <QDebug>
+#include <QPlatformSurfaceEvent>
 
 DGUI_BEGIN_NAMESPACE
 
@@ -540,6 +543,36 @@ bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
     return window->property(_useDxcb).toBool();
 }
 
+static void initWindowRadius(QWindow *window)
+{
+    auto theme = DGuiApplicationHelper::instance()->windowTheme(window);
+    //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
+    int radius = theme->windowRadius(18);
+
+    setWindowProperty(window, _windowRadius, radius);
+    window->connect(theme, &DPlatformTheme::windowRadiusChanged, window, [=] (int radius) {
+        setWindowProperty(window, _windowRadius, radius);
+    }, Qt::UniqueConnection);
+}
+
+class Q_DECL_HIDDEN CreatorWindowEventFile : public QObject {
+public:
+    CreatorWindowEventFile(QObject *par= nullptr): QObject(par){}
+
+public:
+    bool eventFilter(QObject *watched, QEvent *event) override {
+        if (event->type() == QEvent::PlatformSurface) {
+            QPlatformSurfaceEvent *se = static_cast<QPlatformSurfaceEvent*>(event);
+            if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {  // 若收到此信号， 则 WinID 已被创建
+                initWindowRadius(qobject_cast<QWindow *>(watched));
+                deleteLater();
+            }
+        }
+
+        return QObject::eventFilter(watched, event);
+    }
+};
+
 /*!
  * \~chinese \brief DWindowHandle::setEnableNoTitlebarForWindow
  * \~chinese 使用窗口管理器提供的方式隐藏窗口的标题栏，目前已适配 DDE KWin 窗管，在窗口管理器支持的前提下，
@@ -562,10 +595,12 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
 
     if (enable_no_titlear) {
         bool ok = (*reinterpret_cast<bool(*)(QWindow*, bool)>(enable_no_titlear))(window, enable);
-
         if (ok) {
-            //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
-            setWindowProperty(window, _windowRadius, 18);
+            if (window->handle()) {
+                initWindowRadius(window);
+            } else {
+                window->installEventFilter(new CreatorWindowEventFile(window));
+            }
         }
 
         return ok;
