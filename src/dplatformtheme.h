@@ -40,6 +40,7 @@ class DPlatformTheme : public DNativeSettings
     Q_PROPERTY(int doubleClickDistance READ doubleClickDistance WRITE setDoubleClickDistance NOTIFY doubleClickDistanceChanged)
     Q_PROPERTY(int doubleClickTime READ doubleClickTime WRITE setDoubleClickTime NOTIFY doubleClickTimeChanged)
     Q_PROPERTY(int dndDragThreshold READ dndDragThreshold WRITE setDndDragThreshold NOTIFY dndDragThresholdChanged)
+    Q_PROPERTY(int windowRadius READ windowRadius WRITE setWindowRadius NOTIFY windowRadiusChanged)
     Q_PROPERTY(QByteArray themeName READ themeName WRITE setThemeName NOTIFY themeNameChanged)
     Q_PROPERTY(QByteArray iconThemeName READ iconThemeName WRITE setIconThemeName NOTIFY iconThemeNameChanged)
     Q_PROPERTY(QByteArray soundThemeName READ soundThemeName WRITE setSoundThemeName NOTIFY soundThemeNameChanged)
@@ -99,6 +100,8 @@ public:
     int doubleClickDistance() const;
     int doubleClickTime() const;
     int dndDragThreshold() const;
+    int windowRadius() const;
+    int windowRadius(int defaultValue) const;
     QByteArray themeName() const;
     QByteArray iconThemeName() const;
     QByteArray soundThemeName() const;
@@ -186,6 +189,7 @@ public Q_SLOTS:
     void setFrameBorder(const QColor &frameBorder);
 
     void setDotsPerInch(const QString &screenName, int dpi);
+    void setWindowRadius(int windowRadius);
 
 Q_SIGNALS:
     void cursorBlinkTimeChanged(int cursorBlinkTime);
@@ -231,6 +235,7 @@ Q_SIGNALS:
     void darkLivelyChanged(QColor darkLively);
     void frameBorderChanged(QColor frameBorder);
     void dotsPerInchChanged(const QString &screen, int dpi);
+    void windowRadiusChanged(int r);
 
 private:
     friend class DPlatformThemePrivate;

@@ -384,6 +384,21 @@ int DPlatformTheme::dndDragThreshold() const
     return value.toInt();
 }
 
+int DPlatformTheme::windowRadius() const
+{
+    return windowRadius(-1);
+}
+
+int DPlatformTheme::windowRadius(int defaultValue) const
+{
+    FETCH_PROPERTY("DTK/WindowRadius", windowRadius)
+
+    bool ok = false;
+    int radius = value.toInt(&ok);
+
+    return ok ? radius : defaultValue;
+}
+
 QByteArray DPlatformTheme::themeName() const
 {
     FETCH_PROPERTY("Net/ThemeName", themeName)
@@ -843,6 +858,13 @@ void DPlatformTheme::setDotsPerInch(const QString &screenName, int dpi)
     } else {
         d->theme->setSetting("Qt/DPI/" + screenName.toLocal8Bit(), dpi);
     }
+}
+
+void DPlatformTheme::setWindowRadius(int windowRadius)
+{
+    D_D(DPlatformTheme);
+
+    d->theme->setSetting("DTK/WindowRadius", windowRadius);
 }
 
 DGUI_END_NAMESPACE
