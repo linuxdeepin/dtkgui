@@ -391,10 +391,8 @@ int DPlatformTheme::windowRadius() const
 
 int DPlatformTheme::windowRadius(int defaultValue) const
 {
-    FETCH_PROPERTY("DTK/WindowRadius", windowRadius)
-
     bool ok = false;
-    int radius = value.toInt(&ok);
+    int radius = this->property("windowRadius").toInt(&ok);
 
     return ok ? radius : defaultValue;
 }
