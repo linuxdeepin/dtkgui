@@ -546,8 +546,10 @@ bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
 static void initWindowRadius(QWindow *window)
 {
     auto theme = DGuiApplicationHelper::instance()->windowTheme(window);
-    //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
-    int radius = theme->windowRadius(18);
+    int radius = theme->windowRadius();
+
+    if (radius == -1)
+        radius =theme->windowRadius(18); //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
 
     setWindowProperty(window, _windowRadius, radius);
     window->connect(theme, &DPlatformTheme::windowRadiusChanged, window, [=] (int radius) {
