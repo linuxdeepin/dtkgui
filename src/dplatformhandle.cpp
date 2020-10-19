@@ -545,6 +545,9 @@ bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
 
 static void initWindowRadius(QWindow *window)
 {
+    if (window->property(_windowRadius).isValid())
+        return;
+
     auto theme = DGuiApplicationHelper::instance()->windowTheme(window);
     int radius = theme->windowRadius();
 
