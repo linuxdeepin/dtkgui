@@ -391,8 +391,15 @@ int DPlatformTheme::windowRadius() const
 
 int DPlatformTheme::windowRadius(int defaultValue) const
 {
+    Q_D(const DPlatformTheme);
+
+    QVariant value = d->theme->getSetting(QByteArrayLiteral("DTK/WindowRadius"));
     bool ok = false;
-    int radius = this->property("windowRadius").toInt(&ok);
+
+    if (d->fallbackProperty && !value.isValid() && d->parent)
+        return d->parent->windowRadius(defaultValue);
+
+    int radius = value.toInt(&ok);
 
     return ok ? radius : defaultValue;
 }
