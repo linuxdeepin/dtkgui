@@ -565,6 +565,12 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
     const QColor &color = base.color(QPalette::Normal, role);
     base.setColor(QPalette::Disabled, role, DGuiApplicationHelper::blendColor(color, disable_mask_color));
 
+    QPalette::ColorRole qr = static_cast<QPalette::ColorRole>(role);
+    if (qr == QPalette::Text) {
+        // disable text color olny -60% alpha
+        base.setColor(QPalette::Disabled, role, DGuiApplicationHelper::adjustColor(color, 0, 0, 0, 0, 0, 0, -60));
+    }
+
     if (DGuiApplicationHelperPrivate::useInactiveColor)
         base.setColor(QPalette::Inactive, role, DGuiApplicationHelper::blendColor(color, inactive_mask_color));
     else
