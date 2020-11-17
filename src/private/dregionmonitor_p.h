@@ -23,12 +23,6 @@ public:
     DRegionMonitorPrivate(DRegionMonitor *q);
     ~DRegionMonitorPrivate();
 
-    enum Flag{
-        Motion = 1 << 0,
-        Button = 1 << 1,
-        Key    = 1 << 2
-    };
-
     bool registered() const { return !registerKey.isEmpty(); }
 
     void init();
@@ -38,6 +32,8 @@ public:
     void _q_ButtonPress(const int flag, const int x, const int y, const QString &key);
     void _q_ButtonRelease(const int flag, const int x, const int y, const QString &key);
     void _q_CursorMove(const int x, const int y, const QString &key);
+    void _q_CursorEnter(const int x, const int y, const QString &key);
+    void _q_CursorLeave(const int x, const int y, const QString &key);
     void _q_KeyPress(const QString &keyname, const int x, const int y, const QString &key);
     void _q_KeyRelease(const QString &keyname, const int x, const int y, const QString &key);
 
@@ -47,6 +43,7 @@ public:
     QRegion watchedRegion;
     QString registerKey;
     DRegionMonitor::CoordinateType type = DRegionMonitor::ScaleRatio;
+    DRegionMonitor::RegisterdFlags registerdFlags = DRegionMonitor::Motion | DRegionMonitor::Button | DRegionMonitor::Key;
 };
 
 DGUI_END_NAMESPACE
