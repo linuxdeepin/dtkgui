@@ -42,11 +42,13 @@ DGUI_BEGIN_NAMESPACE
 DEFINE_CONST_CHAR(hasBlurWindow);
 DEFINE_CONST_CHAR(hasComposite);
 DEFINE_CONST_CHAR(hasNoTitlebar);
+DEFINE_CONST_CHAR(hasWallpaperEffect);
 DEFINE_CONST_CHAR(windowManagerName);
 DEFINE_CONST_CHAR(connectWindowManagerChangedSignal);
 DEFINE_CONST_CHAR(connectHasBlurWindowChanged);
 DEFINE_CONST_CHAR(connectHasCompositeChanged);
 DEFINE_CONST_CHAR(connectHasNoTitlebarChanged);
+DEFINE_CONST_CHAR(connectHasWallpaperEffectChanged);
 DEFINE_CONST_CHAR(getCurrentWorkspaceWindows);
 DEFINE_CONST_CHAR(getWindows);
 DEFINE_CONST_CHAR(windowFromPoint);
@@ -100,6 +102,17 @@ static bool connectHasNoTitlebarChanged(QObject *object, std::function<void ()> 
 #endif
 
     return connectHasNoTitlebarChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectHasNoTitlebarChanged)(object, slot);
+}
+
+static bool connectHasWallpaperEffectChanged(QObject *object, std::function<void ()> slot)
+{
+    QFunctionPointer connectHasWallpaperEffectChanged = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    connectHasWallpaperEffectChanged = qApp->platformFunction(_connectHasWallpaperEffectChanged);
+#endif
+
+    return connectHasWallpaperEffectChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectHasWallpaperEffectChanged)(object, slot);
 }
 
 static bool connectWindowListChanged(QObject *object, std::function<void ()> slot)
@@ -169,6 +182,14 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
  * \~chinese 会优先使用此方法支持自定义窗口标题栏。
  * \~chinese \note 只读
  * \~chinese \sa DPlatformWindowHandle::enableNoTitlebarForWindow
+ */
+
+/*!
+ * \~chinese \property DWindowManagerHelper::hasWallpaperEffect
+ * \~chinese \brief 窗口管理器是否支持窗口背景特效绘制。如果支持，则 绘制背景到透明窗口
+ * \~chinese 会使用此方法开启特效窗口壁纸背景绘制。
+ * \~chinese \note 只读
+ * \~chinese \sa DPlatformWindowHandle::hasWallpaperEffectChanged
  */
 
 /*!
@@ -297,6 +318,8 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
  * \~chinese \brief 信号会在 hasComposite 属性的值改变时被发送
  * \~chinese \fn DWindowManagerHelper::hasNoTitlebarChanged
  * \~chinese \brief 信号会在 hasNoTitlebar 属性的值改变时被发送
+ * \~chinese \fn DWindowManagerHelper::hasWallpaperEffectChanged
+ * \~chinese \brief 信号会在 hasWallpaperEffect 属性的值改变时被发送
  * \~chinese \fn DWindowManagerHelper::windowListChanged
  * \~chinese \brief 信号会在当前环境本地窗口列表变化时被发送。包含打开新窗口、关闭窗口、改变窗口的
  * \~chinese 层叠顺序
@@ -557,6 +580,21 @@ bool DWindowManagerHelper::hasNoTitlebar() const
 }
 
 /*!
+ * \~chinese \brief DWindowManagerHelper::hasWallpaperEffect
+ * \~chinese \return 如果窗口管理器当前支持背景图片特效绘制返回 true，否则返回 false
+ */
+bool DWindowManagerHelper::hasWallpaperEffect() const
+{
+    QFunctionPointer hasWallpaperEffect = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    hasWallpaperEffect = qApp->platformFunction(_hasWallpaperEffect);
+#endif
+
+    return hasWallpaperEffect && reinterpret_cast<bool(*)()>(hasWallpaperEffect)();
+}
+
+/*!
  * \~chinese \brief DWindowManagerHelper::windowManagerNameString
  * \~chinese \return 返回窗口管理器名称。在X11平台上，此值为窗口管理器对应窗口的 _NET_WM_NAME
  * \~chinese 的值
@@ -717,6 +755,9 @@ DWindowManagerHelper::DWindowManagerHelper(QObject *parent)
     });
     connectHasNoTitlebarChanged(this, [this] {
         Q_EMIT hasNoTitlebarChanged();
+    });
+    connectHasWallpaperEffectChanged(this, [this] {
+        Q_EMIT hasWallpaperEffectChanged();
     });
     connectWindowListChanged(this, [this] {
         Q_EMIT windowListChanged();

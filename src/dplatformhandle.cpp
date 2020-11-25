@@ -54,12 +54,14 @@ DEFINE_CONST_CHAR(enableSystemMove);
 DEFINE_CONST_CHAR(enableBlurWindow);
 DEFINE_CONST_CHAR(windowBlurAreas);
 DEFINE_CONST_CHAR(windowBlurPaths);
+DEFINE_CONST_CHAR(windowWallpaperParas);
 DEFINE_CONST_CHAR(autoInputMaskByClipPath);
 
 // functions
 DEFINE_CONST_CHAR(setWmBlurWindowBackgroundArea);
 DEFINE_CONST_CHAR(setWmBlurWindowBackgroundPathList);
 DEFINE_CONST_CHAR(setWmBlurWindowBackgroundMaskImage);
+DEFINE_CONST_CHAR(setWmWallpaperParameter);
 DEFINE_CONST_CHAR(setWindowProperty);
 DEFINE_CONST_CHAR(pluginVersion);
 DEFINE_CONST_CHAR(disableOverrideCursor);
@@ -841,6 +843,90 @@ bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QList<QPainte
     }
 
     return reinterpret_cast<bool(*)(const quint32, const QList<QPainterPath>&)>(setWmBlurWindowBackgroundPathList)(window->winId(), new_paths);
+}
+
+/*!
+ * \~chinese \brief DWindowHandle::setWindowWallpaperParaByWM
+ * \~chinese 设置窗口背景壁纸，示例：
+ * \~chinese \code
+ * QWindow w;
+ * QRect area;
+ * WallpaperScaleMode sMode
+ * WallpaperFillMode fMode
+ *
+ * area.setRect(50, 50, 200, 200);
+ * bMode = WallpaperScaleFlag::FollowWindow | WallpaperFillFlag::PreserveAspectCrop;
+ *
+ * DWindowHandle::setWindowWallpaperParaByWM(&w, area, bMode);
+ *
+ * QSurfaceFormat format = w.format();
+ * format.setAlphaBufferSize(8);
+ *
+ * w.setFormat(format);
+ * w.resize(300, 300);
+ * w.show();
+ *
+ * \endcode
+ * \~chinese \param window 目标窗口对象
+ * \~chinese \param area 壁纸区域，此区域范围内的窗口背景将填充为用户设置的当前工作区窗口壁纸
+ * \~Chinese \param sMode 控制壁纸缩放是随屏幕还是随窗口
+ * \~Chinese \param fMode 控制壁纸是缩放还是裁剪
+ * \~chinese \return 如果设置成功则返回 true，否则返回 false
+ * \~chinese \note 对于需要显示opengl壁纸特效的窗口，需要将其 QSurfaceFormat 的 alpha 通道设置为8
+ * \~chinese \note 需要在window handle有效之后调用否则3d下失效
+ * \~chinese \note 调用此接口设置窗口背景壁纸区域后将覆盖之前所设置的区域
+ * \~chinese \note 此功能依赖于窗口管理器的实现，目前仅支持 kwin 窗口管理器
+ * \~chinese \sa DBlurEffectWidget
+ * \~chinese \sa QSurfaceFormat::setAlphaBufferSize
+ * \~chinese \sa QWindow::setFormat
+ * \~chinese \sa DWindowManagerHelper::hasBlurWindow
+ * \~chinese \sa DWindowHandle::setWindowBlurAreaByWM(QWindow *, const QList<QPainterPath> &)
+ */
+bool DPlatformHandle::setWindowWallpaperParaByWM(QWindow *window, const QRect &area, WallpaperScaleMode sMode, WallpaperFillMode fMode)
+{
+    if (!window) {
+        return false;
+    }
+
+    QFunctionPointer setWmWallpaperParameter = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    setWmWallpaperParameter = qApp->platformFunction(_setWmWallpaperParameter);
+#endif
+
+    if (!setWmWallpaperParameter) {
+        qWarning("setWindowWallpaperParaByWM is not support");
+
+        return false;
+    }
+
+    QSurfaceFormat format = window->format();
+
+    format.setAlphaBufferSize(8);
+    window->setFormat(format);
+
+    quint32 bMode = sMode | fMode;
+
+    // 激活 backing store
+    window->setProperty("_d_dxcb_wallpaper", QVariant::fromValue(QPair<QRect, int>(area, bMode)));
+
+    if (!DWindowManagerHelper::instance()->hasComposite() && !window->handle())  {
+        return true;
+    } else {
+        qWarning() << "because the window handle has been created, so 2D mode will have no effect";
+    }
+
+    const qreal device_ratio = window->devicePixelRatio();
+    if (qFuzzyCompare(device_ratio, 1.0) || !area.isValid()) {
+        return reinterpret_cast<bool(*)(const quint32, const QRect&, const quint32)>(setWmWallpaperParameter)(window->winId(), area, bMode);
+    }
+
+    QRect new_area(area.x() * device_ratio,
+                   area.y() * device_ratio,
+                   area.width() * device_ratio,
+                   area.height() * device_ratio);
+
+    return reinterpret_cast<bool(*)(const quint32, const QRect&, const quint32)>(setWmWallpaperParameter)(window->winId(), new_area, bMode);
 }
 
 /*!

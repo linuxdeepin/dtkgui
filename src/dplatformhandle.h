@@ -79,8 +79,19 @@ public:
         qint32 yRaduis = 0;
     };
 
+    enum WallpaperScaleMode {
+        FollowScreen = 0x00000000,
+        FollowWindow = 0x00010000
+    };
+
+    enum WallpaperFillMode {
+        PreserveAspectCrop = 0x00000000,
+        PreserveAspectFit = 0x00000001
+    };
+
     static bool setWindowBlurAreaByWM(QWindow *window, const QVector<WMBlurArea> &area);
     static bool setWindowBlurAreaByWM(QWindow *window, const QList<QPainterPath> &paths);
+    static bool setWindowWallpaperParaByWM(QWindow *window, const QRect &area, WallpaperScaleMode sMode, WallpaperFillMode fMode);
     static bool connectWindowManagerChangedSignal(QObject *object, std::function<void ()> slot);
     static bool connectHasBlurWindowChanged(QObject *object, std::function<void ()> slot);
 
