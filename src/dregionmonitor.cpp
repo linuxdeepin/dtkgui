@@ -154,8 +154,8 @@ void DRegionMonitorPrivate::init()
     QObject::connect(eventInter, SIGNAL(ButtonPress(int,int,int,QString)), q, SLOT(_q_ButtonPress(const int, const int, const int, const QString&)));
     QObject::connect(eventInter, SIGNAL(ButtonRelease(int,int,int,QString)), q, SLOT(_q_ButtonRelease(const int, const int, const int, const QString&)));
     QObject::connect(eventInter, SIGNAL(CursorMove(int,int,QString)), q, SLOT(_q_CursorMove(const int, const int, const QString&)));
-    QObject::connect(eventInter, SIGNAL(CursorEnter(int,int,QString)), q, SLOT(_q_CursorEnter(const int, const int, const QString&)));
-    QObject::connect(eventInter, SIGNAL(CursorLeave(int,int,QString)), q, SLOT(_q_CursorLeave(const int, const int, const QString&)));
+    QObject::connect(eventInter, SIGNAL(CursorInto(int,int,QString)), q, SLOT(_q_CursorEnter(const int, const int, const QString&)));
+    QObject::connect(eventInter, SIGNAL(CursorOut(int,int,QString)), q, SLOT(_q_CursorLeave(const int, const int, const QString&)));
     QObject::connect(eventInter, SIGNAL(KeyPress(QString,int,int,QString)), q, SLOT(_q_KeyPress(const QString&, const int, const int, const QString&)));
     QObject::connect(eventInter, SIGNAL(KeyRelease(QString,int,int,QString)), q, SLOT(_q_KeyRelease(const QString&, const int, const int, const QString&)));
 }
