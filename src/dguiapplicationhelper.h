@@ -54,7 +54,7 @@ public:
     };
 
     typedef DGuiApplicationHelper *(*HelperCreator)();
-    static void registerInstanceCreator(HelperCreator creator);
+    D_DECL_DEPRECATED static void registerInstanceCreator(HelperCreator creator);
     static DGuiApplicationHelper *instance();
     ~DGuiApplicationHelper();
 
