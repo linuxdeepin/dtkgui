@@ -88,6 +88,7 @@ public:
     };
     Q_ENUM(WmWindowType)
     Q_DECLARE_FLAGS(WmWindowTypes, WmWindowType)
+    Q_FLAG(WmWindowTypes)
 
     ~DWindowManagerHelper();
 
