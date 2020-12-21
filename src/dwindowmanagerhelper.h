@@ -68,6 +68,27 @@ public:
     };
     Q_ENUM(WMName)
 
+    enum WmWindowType {
+        UnknowWindowType = 0x000000,
+        NormalType       = 0x000001,
+        DesktopType      = 0x000002,
+        DockType         = 0x000004,
+        ToolbarType      = 0x000008,
+        MenuType         = 0x000010,
+        UtilityType      = 0x000020,
+        SplashType       = 0x000040,
+        DialogType       = 0x000080,
+        DropDownMenuType = 0x000100,
+        PopupMenuType    = 0x000200,
+        TooltipType      = 0x000400,
+        NotificationType = 0x000800,
+        ComboType        = 0x001000,
+        DndType          = 0x002000,
+        KdeOverrideType  = 0x004000
+    };
+    Q_ENUM(WmWindowType)
+    Q_DECLARE_FLAGS(WmWindowTypes, WmWindowType)
+
     ~DWindowManagerHelper();
 
     static DWindowManagerHelper *instance();
@@ -78,6 +99,7 @@ public:
     static void setMotifDecorations(const QWindow *window, MotifDecorations hints);
     static MotifDecorations setMotifDecorations(const QWindow *window, MotifDecorations hints, bool on);
     static MotifDecorations getMotifDecorations(const QWindow *window);
+    static void setWmWindowTypes(QWindow *window, WmWindowTypes types);
 
     static void popupSystemWindowMenu(const QWindow *window);
 
@@ -111,5 +133,6 @@ DGUI_END_NAMESPACE
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(DTK_GUI_NAMESPACE::DWindowManagerHelper::MotifFunctions)
 Q_DECLARE_OPERATORS_FOR_FLAGS(DTK_GUI_NAMESPACE::DWindowManagerHelper::MotifDecorations)
+Q_DECLARE_OPERATORS_FOR_FLAGS(DTK_GUI_NAMESPACE::DWindowManagerHelper::WmWindowTypes)
 
 #endif // DWINDOWMANAGERHELPER_H

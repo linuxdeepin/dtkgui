@@ -26,6 +26,7 @@
 #include <DGuiApplicationHelper>
 #include <QGuiApplication>
 
+#include <QtPlatformHeaders/QXcbWindowFunctions>
 #include <qpa/qplatformwindow.h>
 #include <qpa/qplatformnativeinterface.h>
 
@@ -461,6 +462,19 @@ DWindowManagerHelper::MotifDecorations DWindowManagerHelper::getMotifDecorations
     }
 
     return DECOR_ALL;
+}
+
+/*!
+ * \~chinese \brief DWindowManagerHelper::setWmWindowTypes
+ * \~chinese 直接设置窗口管理器层级提供的窗口类型，如DesktopType和DockType类型也被
+ * \~chinese 桌面环境需要，但是Qt自身并没有提供对应的设置接口
+ * \~chinese \param window
+ * \~chinese \param types
+ */
+void DWindowManagerHelper::setWmWindowTypes(QWindow *window, WmWindowTypes types)
+{
+    const int _types = static_cast<int>(types);
+    QXcbWindowFunctions::setWmWindowType(window, static_cast<QXcbWindowFunctions::WmWindowType>(_types));
 }
 
 /*!
