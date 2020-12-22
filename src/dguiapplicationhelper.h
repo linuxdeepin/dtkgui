@@ -96,6 +96,7 @@ Q_SIGNALS:
     void themeTypeChanged(ColorType themeType);
     void paletteTypeChanged(ColorType paletteType);
     void newProcessInstance(qint64 pid, const QStringList &arguments);
+    void fontChanged(const QFont &font);
 
 protected:
     explicit DGuiApplicationHelper();

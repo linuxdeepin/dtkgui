@@ -23,7 +23,8 @@ HEADERS += \
     $$PWD/dfiledragclient.h \
     $$PWD/dsvgrenderer.h \
     $$PWD/dthumbnailprovider.h \
-    $$PWD/dtaskbarcontrol.h
+    $$PWD/dtaskbarcontrol.h \
+    $$PWD/dfontmanager.h
 
 SOURCES += \
     $$PWD/dnativesettings.cpp \
@@ -38,7 +39,8 @@ SOURCES += \
     $$PWD/dfiledrag.cpp \
     $$PWD/dfiledragclient.cpp \
     $$PWD/dthumbnailprovider.cpp \
-    $$PWD/dtaskbarcontrol.cpp
+    $$PWD/dtaskbarcontrol.cpp \
+    $$PWD/dfontmanager.cpp
 
 includes.files += \
     $$PWD/*.h \
@@ -57,7 +59,8 @@ includes.files += \
     $$PWD/DFileDragClient \
     $$PWD/DSvgRenderer \
     $$PWD/DThumbnailProvider \
-    $$PWD/DTaskbarControl
+    $$PWD/DTaskbarControl \
+    $$PWD/DFontManager
 
 linux* {
     # don't link library

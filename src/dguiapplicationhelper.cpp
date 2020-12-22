@@ -79,6 +79,9 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
             Q_EMIT q->themeTypeChanged(q->toColorType(app->palette()));
     });
 
+    q->connect(app, &QGuiApplication::fontChanged, q, [q](const QFont &font) {
+        Q_EMIT q->fontChanged(font);
+    });
 
     app->connect(systemTheme, &DPlatformTheme::themeNameChanged, app, [this, app] {
         if (appTheme == systemTheme)

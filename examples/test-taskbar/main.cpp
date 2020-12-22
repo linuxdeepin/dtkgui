@@ -1,3 +1,5 @@
+#include <DFontManager>
+
 #include <QApplication>
 #include <QDesktopWidget>
 
@@ -23,6 +25,11 @@ int main(int argc, char *argv[])
 
     TestTaskbarWindow *pTaskbarWindow = new TestTaskbarWindow;
     pTaskbarWindow->showMaximized();
+
+    //控制中心修改字体大小可以看到打印输出
+    QObject::connect(DFontManager::instance(), &DFontManager::fontGenericPixelSizeChanged, [] {
+        qDebug() << DFontManager::instance()->fontGenericPixelSize();
+    });
 
     return a.exec();
 }
