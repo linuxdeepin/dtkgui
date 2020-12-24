@@ -43,7 +43,7 @@ class DFontManager : public QObject
     Q_PROPERTY(QFont t9 READ t9 NOTIFY t9Changed)
     Q_PROPERTY(QFont t10 READ t10 NOTIFY t10Changed)
 
-    Q_PROPERTY(quint16 fontGenericPixelSize READ fontGenericPixelSize WRITE setFontGenericPixelSize NOTIFY fontGenericPixelSizeChanged)
+    Q_PROPERTY(int fontGenericPixelSize READ fontGenericPixelSize WRITE setFontGenericPixelSize NOTIFY fontGenericPixelSizeChanged)
 
 public:
     enum SizeType {
@@ -66,11 +66,11 @@ public:
 
     static DFontManager *instance();
 
-    Q_INVOKABLE quint16 fontPixelSize(SizeType type) const;
-    Q_INVOKABLE void setFontPixelSize(SizeType type, quint16 size);
+    Q_INVOKABLE int fontPixelSize(SizeType type) const;
+    Q_INVOKABLE void setFontPixelSize(SizeType type, int size);
 
-    void setFontGenericPixelSize(quint16 size);
-    quint16 fontGenericPixelSize() const;
+    void setFontGenericPixelSize(int size);
+    int fontGenericPixelSize() const;
 
     Q_INVOKABLE static int fontPixelSize(const QFont &font);
 

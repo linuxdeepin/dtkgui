@@ -30,10 +30,10 @@ class DFontManagerPrivate : public DTK_CORE_NAMESPACE::DObjectPrivate
 public:
     DFontManagerPrivate(DFontManager *qq);
 
-    quint16 fontPixelSize[DFontManager::NSizeTypes] = {40, 30, 24, 20, 17, 14, 13, 12, 11, 10};
-    quint8 fontGenericSizeType = DFontManager::T6;
+    int fontPixelSize[DFontManager::NSizeTypes] = {40, 30, 24, 20, 17, 14, 13, 12, 11, 10};
+    int fontGenericSizeType = DFontManager::T6;
     // 字号的差值
-    quint16 fontPixelSizeDiff = 0;
+    int fontPixelSizeDiff = 0;
 
 private:
     D_DECLARE_PUBLIC(DFontManager)

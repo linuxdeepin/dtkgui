@@ -37,7 +37,7 @@ static DFontManager *g_instance = nullptr;
 DFontManagerPrivate::DFontManagerPrivate(DFontManager *qq)
     : DTK_CORE_NAMESPACE::DObjectPrivate(qq)
 {
-    fontPixelSizeDiff = static_cast<quint16>(DFontManager::fontPixelSize(qGuiApp->font()) - fontPixelSize[DFontManager::T6]);
+    fontPixelSizeDiff = DFontManager::fontPixelSize(qGuiApp->font()) - fontPixelSize[DFontManager::T6];
 }
 
 /*!
@@ -110,7 +110,7 @@ DFontManager *DFontManager::instance()
  * \~chinese \param[in] type 字体枚举类型
  * \~chinese \return 返回字体像素的大小
  */
-quint16 DFontManager::fontPixelSize(DFontManager::SizeType type) const
+int DFontManager::fontPixelSize(DFontManager::SizeType type) const
 {
     D_DC(DFontManager);
 
@@ -126,7 +126,7 @@ quint16 DFontManager::fontPixelSize(DFontManager::SizeType type) const
  * \~chinese \param[in] type 字体枚举类型
  * \~chinese \param[in] size 字体大小
  */
-void DFontManager::setFontPixelSize(DFontManager::SizeType type, quint16 size)
+void DFontManager::setFontPixelSize(DFontManager::SizeType type, int size)
 {
     D_D(DFontManager);
 
@@ -145,20 +145,32 @@ void DFontManager::setFontPixelSize(DFontManager::SizeType type, quint16 size)
  * \~chinese \brief 设置字体的通用像素大小
  * \~chinese \param[in] size 预设计的字体像素的大小
  */
-void DFontManager::setFontGenericPixelSize(quint16 size)
+void DFontManager::setFontGenericPixelSize(int size)
 {
     D_D(DFontManager);
 
-    quint16 diff = size - d->fontPixelSize[d->fontGenericSizeType];
+    int diff = size - d->fontPixelSize[d->fontGenericSizeType];
 
     if (diff == d->fontPixelSizeDiff)
         return;
 
     d->fontPixelSizeDiff = diff;
+
+    Q_EMIT t1Changed();
+    Q_EMIT t2Changed();
+    Q_EMIT t3Changed();
+    Q_EMIT t4Changed();
+    Q_EMIT t5Changed();
+    Q_EMIT t6Changed();
+    Q_EMIT t7Changed();
+    Q_EMIT t8Changed();
+    Q_EMIT t9Changed();
+    Q_EMIT t10Changed();
+
     Q_EMIT fontGenericPixelSizeChanged();
 }
 
-quint16 DFontManager::fontGenericPixelSize() const
+int DFontManager::fontGenericPixelSize() const
 {
     D_DC(DFontManager);
 
