@@ -102,6 +102,7 @@ public:
     static MotifDecorations setMotifDecorations(const QWindow *window, MotifDecorations hints, bool on);
     static MotifDecorations getMotifDecorations(const QWindow *window);
     static void setWmWindowTypes(QWindow *window, WmWindowTypes types);
+    static void setWmClassName(const QByteArray &name);
 
     static void popupSystemWindowMenu(const QWindow *window);
 

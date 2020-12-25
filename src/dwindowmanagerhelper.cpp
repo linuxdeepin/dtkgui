@@ -59,6 +59,7 @@ DEFINE_CONST_CHAR(setMWMDecorations);
 DEFINE_CONST_CHAR(getMWMDecorations);
 DEFINE_CONST_CHAR(connectWindowMotifWMHintsChanged);
 DEFINE_CONST_CHAR(popupSystemWindowMenu);
+DEFINE_CONST_CHAR(setWMClassName);
 
 static bool connectWindowManagerChangedSignal(QObject *object, std::function<void ()> slot)
 {
@@ -498,6 +499,19 @@ void DWindowManagerHelper::setWmWindowTypes(QWindow *window, WmWindowTypes types
 {
     const int _types = static_cast<int>(types);
     QXcbWindowFunctions::setWmWindowType(window, static_cast<QXcbWindowFunctions::WmWindowType>(_types));
+}
+
+/*!
+ * \~chinese \brief DWindowManagerHelper::setWmClassName
+ * \~chinese 设置x11环境上默认使用的wm class name，主要是在窗口创建时用于设置WM_CLASS窗口属性
+ * \~chinese \param name
+ * \~chinese \note 如果值为空，Qt将在下次使用此值时根据程序名称再次初始化此值
+ * \~chinese \sa QCoreApplication::applicationName
+ */
+void DWindowManagerHelper::setWmClassName(const QByteArray &name)
+{
+    typedef void (*SetWmNameType)(const QByteArray&);
+    return QPlatformHeaderHelper::callPlatformFunction<void, SetWmNameType>(_setWMClassName, name);
 }
 
 /*!
