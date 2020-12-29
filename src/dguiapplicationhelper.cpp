@@ -33,6 +33,8 @@
 #include <QLocalSocket>
 
 #include <private/qguiapplication_p.h>
+#include <qpa/qplatformservices.h>
+#include <qpa/qplatformintegration.h>
 
 #ifdef Q_OS_LINUX
 #include <unistd.h>
@@ -679,6 +681,15 @@ bool DGuiApplicationHelper::isXWindowPlatform()
     static bool isX = qGuiApp->platformName() == "xcb" || qGuiApp->platformName() == "dxcb";
 
     return isX;
+}
+
+/*!
+ * \~chinese \brief isTabletEnvironment 用于判断当前桌面环境是否是平板电脑环境
+ * \~chinese \return true 是平板电脑环境 false不是平板电脑环境
+ */
+bool DGuiApplicationHelper::isTabletEnvironment()
+{
+    return QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment().toLower().endsWith("tablet");
 }
 
 /*!

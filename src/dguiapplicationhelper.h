@@ -69,6 +69,7 @@ public:
     static void setUseInactiveColorGroup(bool on);
     static void setColorCompositingEnabled(bool on);
     static bool isXWindowPlatform();
+    static bool isTabletEnvironment();
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;
