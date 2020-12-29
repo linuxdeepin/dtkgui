@@ -30,6 +30,8 @@
 
 DGUI_BEGIN_NAMESPACE
 
+// "/deepin/palette" 为调色板属性的存储位置
+// 在x11平台下，将使用_DEEPIN_PALETTE作为存储调色板数据的窗口属性
 DPlatformThemePrivate::DPlatformThemePrivate(Dtk::Gui::DPlatformTheme *qq)
     : DNativeSettingsPrivate(qq, QByteArrayLiteral("/deepin/palette"))
 {
@@ -39,6 +41,11 @@ DPlatformThemePrivate::DPlatformThemePrivate(Dtk::Gui::DPlatformTheme *qq)
 void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, const QVariant &value)
 {
     D_Q(DPlatformTheme);
+
+    // 转发属性变化的信号，此信号来源可能为parent theme或“非调色板”的属性变化。
+    // 使用队列的形式转发，避免多次发出同样的信号
+    q->staticMetaObject.invokeMethod(q, "propertyChanged", Qt::QueuedConnection,
+                                     Q_ARG(const QByteArray&, name), Q_ARG(const QVariant&, value));
 
     if (QByteArrayLiteral("Gtk/FontName") == name) {
         Q_EMIT q->gtkFontNameChanged(value.toByteArray());
@@ -87,7 +94,7 @@ void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, co
     const QMetaProperty &p = mo->property(index);
     bool is_parent_signal = q->sender() != theme;
 
-    // 当自己属性有效时应该忽略父对象属性的信号
+    // 当自己的属性有效时应该忽略父主题的属性变化信号，优先以自身的属性值为准。
     if (is_parent_signal && p.read(q).isValid()) {
         return;
     }

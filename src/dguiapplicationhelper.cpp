@@ -79,39 +79,8 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
             Q_EMIT q->themeTypeChanged(q->toColorType(app->palette()));
     });
 
-    q->connect(app, &QGuiApplication::fontChanged, q, [q](const QFont &font) {
-        Q_EMIT q->fontChanged(font);
-    });
-
-    app->connect(systemTheme, &DPlatformTheme::themeNameChanged, app, [this, app] {
-        if (appTheme == systemTheme)
-            return;
-
-        appTheme->setFallbackProperty(false);
-        const QByteArray &theme_name = appTheme->themeName();
-        appTheme->setFallbackProperty(true);
-
-        if (!theme_name.isEmpty())
-            notifyAppThemeChanged(app);
-    });
-    app->connect(systemTheme, &DPlatformTheme::activeColorChanged, app, [this, app] {
-        if (appTheme == systemTheme)
-            return;
-
-        appTheme->setFallbackProperty(false);
-        const QColor &active_color = appTheme->activeColor();
-        appTheme->setFallbackProperty(true);
-
-        if (!active_color.isValid())
-            notifyAppThemeChanged(app, true);
-    });
-    app->connect(systemTheme, &DPlatformTheme::paletteChanged, app, [this, app] {
-        if (appTheme == systemTheme)
-            return;
-
-        if (!appTheme->isValid())
-            notifyAppThemeChanged(app);
-    });
+    // 转发程序自己变化的信号
+    q->connect(app, &QGuiApplication::fontChanged, q, &DGuiApplicationHelper::fontChanged);
 
     if (QGuiApplicationPrivate::is_app_running) {
         _q_initApplicationTheme();
@@ -134,7 +103,7 @@ DPlatformTheme *DGuiApplicationHelperPrivate::initWindow(QWindow *window) const
     window->setProperty(WINDOW_THEME_KEY, QVariant::fromValue(theme));
     theme->setParent(window); // 跟随窗口销毁
 
-    auto onWindowThemeChanged = [theme, window] {
+    auto onWindowThemeChanged = [window] {
         qGuiApp->postEvent(window, new QEvent(QEvent::ThemeChange));
     };
 
@@ -153,6 +122,7 @@ void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
     appTheme = new DPlatformTheme(DPlatformHandle::windowLeader(), systemTheme);
     QGuiApplication *app = qGuiApp;
     auto onAppThemeChanged = std::bind(&DGuiApplicationHelperPrivate::notifyAppThemeChanged, this, app, false);
+    // 监听与程序主题相关的改变
     QObject::connect(appTheme, &DPlatformTheme::themeNameChanged, app, onAppThemeChanged);
     QObject::connect(appTheme, &DPlatformTheme::activeColorChanged, app, onAppThemeChanged);
     QObject::connect(appTheme, &DPlatformTheme::paletteChanged, app, onAppThemeChanged);
