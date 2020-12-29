@@ -190,8 +190,10 @@ DPlatformTheme::DPlatformTheme(quint32 window, DPlatformTheme *parent)
 {
     d_func()->parent = parent;
 
+    // 将主题相关的属性改变信号从父主题中继承
+    // 假设 A 被 B 继承，B 被 C 继承，当 A 中出发属性变化时，不仅要能通知到B，还要能通知到C
     connect(parent->d_func()->theme, SIGNAL(propertyChanged(const QByteArray &, const QVariant &)),
-            this, SLOT(_q_onThemePropertyChanged(const QByteArray &, const QVariant &)));
+            d_func()->theme, SIGNAL(propertyChanged(const QByteArray &, const QVariant &)));
 }
 
 DPlatformTheme::~DPlatformTheme()

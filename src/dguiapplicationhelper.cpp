@@ -99,6 +99,14 @@ void DGuiApplicationHelperPrivate::staticInitApplication()
 
 DPlatformTheme *DGuiApplicationHelperPrivate::initWindow(QWindow *window) const
 {
+    // 如果appTheme还未初始化，应当先初始化appTheme
+    if (appTheme == systemTheme) {
+        // 此时QGuiApplication必须是已经初始化完成的状态
+        Q_ASSERT(QGuiApplicationPrivate::is_app_running);
+        // 初始程序级别的主题对象
+        const_cast<DGuiApplicationHelperPrivate*>(this)->_q_initApplicationTheme(true);
+    }
+
     DPlatformTheme *theme = new DPlatformTheme(window->winId(), appTheme);
     window->setProperty(WINDOW_THEME_KEY, QVariant::fromValue(theme));
     theme->setParent(window); // 跟随窗口销毁
@@ -127,6 +135,8 @@ void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
     QObject::connect(appTheme, &DPlatformTheme::activeColorChanged, app, onAppThemeChanged);
     QObject::connect(appTheme, &DPlatformTheme::paletteChanged, app, onAppThemeChanged);
 
+    // appTheme在此之前可能由systemTheme所代替被使用，此时在创建appTheme
+    // 并初始化之后，应当发送信号通知程序主题的改变
     if (notifyChange && appTheme->isValid()) {
         notifyAppThemeChanged(app);
     }
