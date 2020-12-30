@@ -26,6 +26,11 @@ int main(int argc, char *argv[])
     TestTaskbarWindow *pTaskbarWindow = new TestTaskbarWindow;
     pTaskbarWindow->showMaximized();
 
+    //这里删除用于测试的desktop文件
+    QObject::connect(pTaskbarWindow, &TestTaskbarWindow::closeWindow, [&desktopFile] {
+        QFile::remove(desktopFile.fileName());
+    });
+
     //控制中心修改字体大小可以看到打印输出
     QObject::connect(DFontManager::instance(), &DFontManager::fontGenericPixelSizeChanged, [] {
         qDebug() << DFontManager::instance()->fontGenericPixelSize();
