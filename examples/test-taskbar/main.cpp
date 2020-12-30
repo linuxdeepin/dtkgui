@@ -24,5 +24,10 @@ int main(int argc, char *argv[])
     TestTaskbarWindow *pTaskbarWindow = new TestTaskbarWindow;
     pTaskbarWindow->showMaximized();
 
+    //这里删除用于测试的desktop文件
+    QObject::connect(pTaskbarWindow, &TestTaskbarWindow::closeWindow, [&desktopFile] {
+        QFile::remove(desktopFile.fileName());
+    });
+
     return a.exec();
 }

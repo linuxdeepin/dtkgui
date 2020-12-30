@@ -23,6 +23,7 @@
 
 #include <QIntValidator>
 #include <QApplication>
+#include <QCloseEvent>
 
 TestTaskbarWindow::TestTaskbarWindow(QWidget *parent)
     : QWidget(parent)
@@ -85,4 +86,10 @@ TestTaskbarWindow::TestTaskbarWindow(QWidget *parent)
 TestTaskbarWindow::~TestTaskbarWindow()
 {
 
+}
+
+void TestTaskbarWindow::closeEvent(QCloseEvent *event)
+{
+    Q_EMIT closeWindow();
+    event->accept();
 }

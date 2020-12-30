@@ -48,6 +48,12 @@ public:
     TestTaskbarWindow(QWidget *parent = nullptr);
     ~TestTaskbarWindow();
 
+protected:
+    void closeEvent(QCloseEvent *event);
+
+Q_SIGNALS:
+    void closeWindow();
+
 private:
     DTaskbarControl *m_pTaskbarControl;
     QCheckBox *m_pProgressBox;
