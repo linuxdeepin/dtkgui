@@ -38,7 +38,7 @@ class DGuiApplicationHelper : public QObject, public DCORE_NAMESPACE::DObject
     D_DECLARE_PRIVATE(DGuiApplicationHelper)
 
     Q_PROPERTY(ColorType themeType READ themeType WRITE setThemeType NOTIFY themeTypeChanged)
-    Q_PROPERTY(ColorType paletteType READ paletteType WRITE setPaletteType NOTIFY paletteTypeChanged)
+    Q_PROPERTY(ColorType paletteType READ paletteType WRITE setPaletteType NOTIFY paletteTypeChanged) // 同 themeType
 
 public:
     enum ColorType {
@@ -46,12 +46,14 @@ public:
         LightType,
         DarkType
     };
+    Q_ENUM(ColorType)
 
     enum SingleScope {
         UserScope,
         GroupScope,
         WorldScope
     };
+    Q_ENUM(SingleScope)
 
     typedef DGuiApplicationHelper *(*HelperCreator)();
     D_DECL_DEPRECATED static void registerInstanceCreator(HelperCreator creator);
@@ -73,17 +75,16 @@ public:
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;
-    DPlatformTheme *windowTheme(QWindow *window) const;
+    D_DECL_DEPRECATED DPlatformTheme *windowTheme(QWindow *window) const;
 
     DPalette applicationPalette() const;
     void setApplicationPalette(const DPalette &palette);
-    DPalette windowPalette(QWindow *window) const;
+    D_DECL_DEPRECATED DPalette windowPalette(QWindow *window) const;
 
     static ColorType toColorType(const QColor &color);
     static ColorType toColorType(const QPalette &palette);
     ColorType themeType() const;
-
-    ColorType paletteType() const;
+    D_DECL_DEPRECATED_X("Use themeType") ColorType paletteType() const;
 
     static bool setSingleInstance(const QString &key, SingleScope singleScope = UserScope);
     static void setSingleInstanceInterval(int interval = 3000);
@@ -91,13 +92,14 @@ public:
 
 public Q_SLOTS:
     void setThemeType(ColorType themeType);
-    void setPaletteType(ColorType paletteType);
+    D_DECL_DEPRECATED_X("Use setThemeType") void setPaletteType(ColorType paletteType);
 
 Q_SIGNALS:
     void themeTypeChanged(ColorType themeType);
-    void paletteTypeChanged(ColorType paletteType);
+    D_DECL_DEPRECATED_X("Use themeTypeChanged") void paletteTypeChanged(ColorType paletteType); // 同themeTypeChanged
     void newProcessInstance(qint64 pid, const QStringList &arguments);
     void fontChanged(const QFont &font);
+    void applicationPaletteChanged();
 
 protected:
     explicit DGuiApplicationHelper();

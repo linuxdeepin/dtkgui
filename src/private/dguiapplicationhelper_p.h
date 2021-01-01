@@ -43,20 +43,23 @@ public:
     static void staticInitApplication();
     DPlatformTheme *initWindow(QWindow *window) const;
     void _q_initApplicationTheme(bool notifyChange = false);
-    void notifyAppThemeChanged(QGuiApplication *app, bool ignorePaletteType = false);
+    void notifyAppThemeChanged();
+    // 返回程序是否自定义了调色板
+    inline bool isCustomPalette() const;
 
     DGuiApplicationHelper::ColorType themeType = DGuiApplicationHelper::UnknownType;
-    DGuiApplicationHelper::ColorType paletteType = DGuiApplicationHelper::UnknownType;
     // 系统级别的主题设置
     DPlatformTheme *systemTheme;
-    // 应用程序级别的主题设置
-    DPlatformTheme *appTheme = nullptr;
-    DPalette *appPalette = nullptr;
+    QScopedPointer<DPalette> appPalette;
     static bool useInactiveColor;
     // 是否采用半透明样式的调色板
     static bool compositingColor;
     // 获取QLocalSever消息的等待时间
     static int waitTime;
+
+private:
+    // 应用程序级别的主题设置
+    DPlatformTheme *appTheme = nullptr;
 };
 
 DGUI_END_NAMESPACE
