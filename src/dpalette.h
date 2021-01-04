@@ -31,6 +31,7 @@ DGUI_BEGIN_NAMESPACE
 class DPalettePrivate;
 class DPalette : public QPalette
 {
+    Q_GADGET
 public:
     enum ColorType {
         NoType,
@@ -47,6 +48,7 @@ public:
         ObviousBackground,  //明显的背景色
         NColorTypes
     };
+    Q_ENUM(ColorType)
 
     DPalette();
     DPalette(const QPalette &palette);
