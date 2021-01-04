@@ -62,6 +62,11 @@ public:
         INIT_FUNCTION(rsvg_handle_get_dimensions);
     }
 
+    static RSvg *instance() {
+        static RSvg *global = new RSvg();
+        return global;
+    }
+
     bool isValid() const
     {
         return rsvg;
@@ -93,8 +98,6 @@ private:
     QLibrary *rsvg = nullptr;
 };
 
-Q_GLOBAL_STATIC(RSvg, __rsvg)
-
 class DSvgRendererPrivate : public DObjectPrivate
 {
 public:
@@ -116,25 +119,25 @@ DSvgRendererPrivate::DSvgRendererPrivate(DObject *qq)
 
 QImage DSvgRendererPrivate::getImage(const QSize &size, const QString &elementId) const
 {
-    if (!__rsvg->isValid())
+    if (!RSvg::instance()->isValid())
         return QImage();
 
     QImage image(size, QImage::Format_ARGB32_Premultiplied);
 
     image.fill(Qt::transparent);
 
-    cairo_surface_t *surface = __rsvg->cairo_image_surface_create_for_data(image.bits(), CAIRO_FORMAT_ARGB32, image.width(), image.height(), image.bytesPerLine());
-    cairo_t *cairo = __rsvg->cairo_create(surface);
-    __rsvg->cairo_scale(cairo, image.width() / viewBox.width(), image.height() / viewBox.height());
-    __rsvg->cairo_translate(cairo, -viewBox.x(), -viewBox.y());
+    cairo_surface_t *surface = RSvg::instance()->cairo_image_surface_create_for_data(image.bits(), CAIRO_FORMAT_ARGB32, image.width(), image.height(), image.bytesPerLine());
+    cairo_t *cairo = RSvg::instance()->cairo_create(surface);
+    RSvg::instance()->cairo_scale(cairo, image.width() / viewBox.width(), image.height() / viewBox.height());
+    RSvg::instance()->cairo_translate(cairo, -viewBox.x(), -viewBox.y());
 
     if (elementId.isEmpty())
-        __rsvg->rsvg_handle_render_cairo(handle, cairo);
+        RSvg::instance()->rsvg_handle_render_cairo(handle, cairo);
     else
-        __rsvg->rsvg_handle_render_cairo_sub(handle, cairo, elementId.toUtf8().constData());
+        RSvg::instance()->rsvg_handle_render_cairo_sub(handle, cairo, elementId.toUtf8().constData());
 
-    __rsvg->cairo_destroy(cairo);
-    __rsvg->cairo_surface_destroy(surface);
+    RSvg::instance()->cairo_destroy(cairo);
+    RSvg::instance()->cairo_surface_destroy(surface);
 
     return image;
 }
@@ -173,8 +176,8 @@ DSvgRenderer::~DSvgRenderer()
     D_D(DSvgRenderer);
 
     if (d->handle) {
-        Q_ASSERT(__rsvg->isValid());
-        __rsvg->g_object_unref(d->handle);
+        Q_ASSERT(RSvg::instance()->isValid());
+        RSvg::instance()->g_object_unref(d->handle);
     }
 }
 
@@ -230,12 +233,12 @@ QRectF DSvgRenderer::boundsOnElement(const QString &id) const
 
     RsvgDimensionData dimension_data;
 
-    if (!__rsvg->rsvg_handle_get_dimensions_sub(d->handle, &dimension_data, id_data.constData()))
+    if (!RSvg::instance()->rsvg_handle_get_dimensions_sub(d->handle, &dimension_data, id_data.constData()))
         return QRectF();
 
     RsvgPositionData pos_data;
 
-    if (!__rsvg->rsvg_handle_get_position_sub(d->handle, &pos_data, id_data.constData()))
+    if (!RSvg::instance()->rsvg_handle_get_position_sub(d->handle, &pos_data, id_data.constData()))
         return QRectF();
 
     return QRectF(pos_data.x, pos_data.y, dimension_data.width, dimension_data.height);
@@ -248,7 +251,7 @@ bool DSvgRenderer::elementExists(const QString &id) const
     if (!d->handle)
         return false;
 
-    return __rsvg->rsvg_handle_has_sub(d->handle, id.toUtf8().constData());
+    return RSvg::instance()->rsvg_handle_has_sub(d->handle, id.toUtf8().constData());
 }
 
 QImage DSvgRenderer::toImage(const QSize sz, const QString &elementId) const
@@ -273,16 +276,16 @@ bool DSvgRenderer::load(const QByteArray &contents)
 {
     D_D(DSvgRenderer);
 
-    if (!__rsvg->isValid())
+    if (!RSvg::instance()->isValid())
         return false;
 
     if (d->handle) {
-        __rsvg->g_object_unref(d->handle);
+        RSvg::instance()->g_object_unref(d->handle);
         d->handle = nullptr;
     }
 
     GError *error = nullptr;
-    d->handle = __rsvg->rsvg_handle_new_from_data((const guint8*)contents.constData(), contents.length(), &error);
+    d->handle = RSvg::instance()->rsvg_handle_new_from_data((const guint8*)contents.constData(), contents.length(), &error);
 
     if (error) {
         qWarning("DSvgRenderer::load: %s", error->message);
@@ -293,7 +296,7 @@ bool DSvgRenderer::load(const QByteArray &contents)
 
     RsvgDimensionData rsvg_data;
 
-    __rsvg->rsvg_handle_get_dimensions(d->handle, &rsvg_data);
+    RSvg::instance()->rsvg_handle_get_dimensions(d->handle, &rsvg_data);
 
     d->defaultSize.setWidth(rsvg_data.width);
     d->defaultSize.setHeight(rsvg_data.height);
