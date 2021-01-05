@@ -92,13 +92,16 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
     // 转发程序自己变化的信号
     q->connect(app, &QGuiApplication::fontChanged, q, &DGuiApplicationHelper::fontChanged);
 
-    if (Q_UNLIKELY(!appTheme)) {
+    if (Q_UNLIKELY(!appTheme)) { // 此时说明appTheme可能已经被初始化为了systemtheme
         if (QGuiApplicationPrivate::is_app_running) {
             _q_initApplicationTheme();
         } else {
             // 延后初始化数据，因为在调用 clientLeader 前必须要保证QGuiApplication已经完全构造完成
             q->metaObject()->invokeMethod(q, "_q_initApplicationTheme", Qt::QueuedConnection, Q_ARG(bool, true));
         }
+    } else if (appTheme == systemTheme) {
+        // 此时appTheme等价于systemTheme, 可以直接信号链接
+        _q_initApplicationTheme();
     }
 }
 
@@ -134,12 +137,12 @@ DPlatformTheme *DGuiApplicationHelperPrivate::initWindow(QWindow *window) const
 
 void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
 {
-    if (appTheme)
-        return;
+    if (!appTheme) {
+        // DPlatfromHandle::windowLeader依赖platformIntegration
+        Q_ASSERT(QGuiApplicationPrivate::platformIntegration());
+        appTheme = new DPlatformTheme(DPlatformHandle::windowLeader(), systemTheme);
+    }
 
-    // DPlatfromHandle::windowLeader依赖platformIntegration
-    Q_ASSERT(QGuiApplicationPrivate::platformIntegration());
-    appTheme = new DPlatformTheme(DPlatformHandle::windowLeader(), systemTheme);
     QGuiApplication *app = qGuiApp;
     auto onAppThemeChanged = [this] {
         // 只有当程序未自定义调色板时才需要关心DPlatformTheme中themeName和palette的改变
