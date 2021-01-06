@@ -910,7 +910,7 @@ bool DPlatformHandle::setWindowWallpaperParaByWM(QWindow *window, const QRect &a
     // 激活 backing store
     window->setProperty("_d_dxcb_wallpaper", QVariant::fromValue(QPair<QRect, int>(area, bMode)));
 
-    if (!DWindowManagerHelper::instance()->hasComposite() && !window->handle())  {
+    if (!window->handle())  {
         return true;
     } else {
         qWarning() << "because the window handle has been created, so 2D mode will have no effect";
