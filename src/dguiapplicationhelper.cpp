@@ -21,6 +21,7 @@
 #include "dguiapplicationhelper.h"
 #include "private/dguiapplicationhelper_p.h"
 #include "dplatformhandle.h"
+#include "dfontmanager.h"
 
 #include <QColor>
 #include <QPalette>
@@ -44,6 +45,7 @@ DGUI_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC(QLocalServer, _d_singleServer)
 static quint8 _d_singleServerVersion = 1;
+Q_GLOBAL_STATIC(DFontManager, _globalFM)
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
@@ -912,6 +914,22 @@ DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
     }
 
     return fetchPalette(theme);
+}
+
+/*!
+ * \~chinese \brief DGuiApplicationHelper::fontManager
+ * \~chinese 程序中唯一的DFontManager对象, 会根据程序的fontChanged信号
+ * \~chinese 更新 DFontManager::baseFontPixelSize
+ * \~chinese \warning 请不要尝试更改它的 baseFontPixelSize 属性
+ */
+const DFontManager *DGuiApplicationHelper::fontManager() const
+{
+    // 为对象初始化信号链接
+    if (!_globalFM.exists()) {
+        connect(this, &DGuiApplicationHelper::fontChanged, _globalFM, &DFontManager::setBaseFont);
+    }
+
+    return _globalFM;
 }
 
 /*!

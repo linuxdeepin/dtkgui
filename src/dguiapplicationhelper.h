@@ -31,6 +31,7 @@
 DGUI_BEGIN_NAMESPACE
 
 class DPlatformTheme;
+class DFontManager;
 class DGuiApplicationHelperPrivate;
 class DGuiApplicationHelper : public QObject, public DCORE_NAMESPACE::DObject
 {
@@ -80,6 +81,8 @@ public:
     DPalette applicationPalette() const;
     void setApplicationPalette(const DPalette &palette);
     D_DECL_DEPRECATED DPalette windowPalette(QWindow *window) const;
+
+    const DFontManager *fontManager() const;
 
     static ColorType toColorType(const QColor &color);
     static ColorType toColorType(const QPalette &palette);

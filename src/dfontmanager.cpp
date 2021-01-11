@@ -19,10 +19,6 @@
 #include <QFont>
 #undef private
 
-#include <DGuiApplicationHelper>
-
-#include <QGuiApplication>
-
 #include "dfontmanager.h"
 #include "private/dfontmanager_p.h"
 
@@ -32,12 +28,10 @@
 
 DGUI_BEGIN_NAMESPACE
 
-static DFontManager *g_instance = nullptr;
-
 DFontManagerPrivate::DFontManagerPrivate(DFontManager *qq)
     : DTK_CORE_NAMESPACE::DObjectPrivate(qq)
 {
-    fontPixelSizeDiff = DFontManager::fontPixelSize(qGuiApp->font()) - fontPixelSize[DFontManager::T6];
+    baseFont.setPixelSize(fontPixelSize[baseFontSizeType]);
 }
 
 /*!
@@ -53,21 +47,6 @@ DFontManager::DFontManager(QObject *parent)
 
 DFontManager::~DFontManager()
 {
-}
-
-// instance 返回的实例用于全局的字体管理，public 的构造函数用于给用户自行分配管理字体
-DFontManager *DFontManager::instance()
-{
-    if (!g_instance) {
-        g_instance = new DFontManager;
-
-        // 处理instance返回实例的信号处理
-        connect(DGuiApplicationHelper::instance(), &DGuiApplicationHelper::fontChanged, g_instance, [](const QFont &font) {
-            g_instance->setFontGenericPixelSize(static_cast<quint16>(DFontManager::fontPixelSize(font)));
-        });
-    }
-
-    return g_instance;
 }
 
 /*!
@@ -145,56 +124,45 @@ void DFontManager::setFontPixelSize(DFontManager::SizeType type, int size)
  * \~chinese \brief 设置字体的通用像素大小
  * \~chinese \param[in] size 预设计的字体像素的大小
  */
-void DFontManager::setFontGenericPixelSize(int size)
+void DFontManager::setBaseFont(const QFont &font)
 {
     D_D(DFontManager);
 
-    int diff = size - d->fontPixelSize[d->fontGenericSizeType];
-
-    if (diff == d->fontPixelSizeDiff)
+    if (d->baseFont == font)
         return;
 
-    d->fontPixelSizeDiff = diff;
+    d->baseFont = font;
+    d->fontPixelSizeDiff = fontPixelSize(font) - d->fontPixelSize[d->baseFontSizeType];
 
-    Q_EMIT t1Changed();
-    Q_EMIT t2Changed();
-    Q_EMIT t3Changed();
-    Q_EMIT t4Changed();
-    Q_EMIT t5Changed();
-    Q_EMIT t6Changed();
-    Q_EMIT t7Changed();
-    Q_EMIT t8Changed();
-    Q_EMIT t9Changed();
-    Q_EMIT t10Changed();
-
-    Q_EMIT fontGenericPixelSizeChanged();
+    Q_EMIT fontChanged();
 }
 
-int DFontManager::fontGenericPixelSize() const
+QFont DFontManager::baseFont() const
 {
     D_DC(DFontManager);
 
-    return d->fontPixelSizeDiff;
+    return d->baseFont;
 }
 
-const QFont DFontManager::get(DFontManager::SizeType type, const QFont &base) const
+void DFontManager::resetBaseFont()
 {
-    return get(type, base.weight(), base);
+    D_DC(DFontManager);
+
+    QFont font;
+    font.setPixelSize(d->fontPixelSize[d->baseFontSizeType]);
+    setBaseFont(font);
 }
 
 /*!
  * \~chinese \brief 获取字体
- * \~chinese \param[in] type 字体的大小枚举
- * \~chinese \param[in] base 将改变大小的字体
+ * \~chinese \param[in] pixelSize 字体的像素大小
+ * \~chinese \param[in] base 要基于的字体
  * \~chinese \return 返回设置字体大小后的字体
  */
-const QFont DFontManager::get(DFontManager::SizeType type, int weight, const QFont &base) const
+QFont DFontManager::get(int pixelSize, const QFont &base)
 {
     QFont font = base;
-
-    font.setPixelSize(fontPixelSize(type));
-    font.setWeight(weight);
-
+    font.setPixelSize(pixelSize);
     return font;
 }
 

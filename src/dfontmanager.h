@@ -22,7 +22,6 @@
 #include <dtkgui_global.h>
 
 #include <QFont>
-#include <QEvent>
 
 DGUI_BEGIN_NAMESPACE
 
@@ -32,18 +31,18 @@ class DFontManager : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QFont t1 READ t1 NOTIFY t1Changed)
-    Q_PROPERTY(QFont t2 READ t2 NOTIFY t2Changed)
-    Q_PROPERTY(QFont t3 READ t3 NOTIFY t3Changed)
-    Q_PROPERTY(QFont t4 READ t4 NOTIFY t4Changed)
-    Q_PROPERTY(QFont t5 READ t5 NOTIFY t5Changed)
-    Q_PROPERTY(QFont t6 READ t6 NOTIFY t6Changed)
-    Q_PROPERTY(QFont t7 READ t7 NOTIFY t7Changed)
-    Q_PROPERTY(QFont t8 READ t8 NOTIFY t8Changed)
-    Q_PROPERTY(QFont t9 READ t9 NOTIFY t9Changed)
-    Q_PROPERTY(QFont t10 READ t10 NOTIFY t10Changed)
+    Q_PROPERTY(QFont t1 READ t1 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t2 READ t2 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t3 READ t3 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t4 READ t4 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t5 READ t5 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t6 READ t6 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t7 READ t7 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t8 READ t8 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t9 READ t9 NOTIFY fontChanged)
+    Q_PROPERTY(QFont t10 READ t10 NOTIFY fontChanged)
 
-    Q_PROPERTY(int fontGenericPixelSize READ fontGenericPixelSize WRITE setFontGenericPixelSize NOTIFY fontGenericPixelSizeChanged)
+    Q_PROPERTY(QFont baseFont READ baseFont WRITE setBaseFont RESET resetBaseFont NOTIFY fontChanged)
 
 public:
     enum SizeType {
@@ -64,73 +63,68 @@ public:
     DFontManager(QObject *parent = nullptr);
     ~DFontManager() override;
 
-    static DFontManager *instance();
-
     Q_INVOKABLE int fontPixelSize(SizeType type) const;
     Q_INVOKABLE void setFontPixelSize(SizeType type, int size);
 
-    void setFontGenericPixelSize(int size);
-    int fontGenericPixelSize() const;
-
     Q_INVOKABLE static int fontPixelSize(const QFont &font);
 
-    Q_INVOKABLE const QFont get(SizeType type, const QFont &base = QFont()) const;
-    Q_INVOKABLE const QFont get(SizeType type, int weight, const QFont &base = QFont()) const;
+    Q_INVOKABLE static QFont get(int pixelSize, const QFont &base);
+    inline const QFont get(SizeType type, const QFont &base) const
+    {
+        return get(fontPixelSize(type), base);
+    }
+    inline const QFont get(SizeType type) const
+    {
+        return get(type, baseFont());
+    }
 
-    inline const QFont t1(const QFont &base = QFont()) const
+    QFont baseFont() const;
+    void setBaseFont(const QFont &font);
+    void resetBaseFont();
+
+    inline const QFont t1() const
     {
-        return get(T1, base);
+        return get(T1);
     }
-    inline const QFont t2(const QFont &base = QFont()) const
+    inline const QFont t2() const
     {
-        return get(T2, base);
+        return get(T2);
     }
-    inline const QFont t3(const QFont &base = QFont()) const
+    inline const QFont t3() const
     {
-        return get(T3, base);
+        return get(T3);
     }
-    inline const QFont t4(const QFont &base = QFont()) const
+    inline const QFont t4() const
     {
-        return get(T4, base);
+        return get(T4);
     }
-    inline const QFont t5(const QFont &base = QFont()) const
+    inline const QFont t5() const
     {
-        return get(T5, base);
+        return get(T5);
     }
-    inline const QFont t6(const QFont &base = QFont()) const
+    inline const QFont t6() const
     {
-        return get(T6, base);
+        return get(T6);
     }
-    inline const QFont t7(const QFont &base = QFont()) const
+    inline const QFont t7() const
     {
-        return get(T7, base);
+        return get(T7);
     }
-    inline const QFont t8(const QFont &base = QFont()) const
+    inline const QFont t8() const
     {
-        return get(T8, base);
+        return get(T8);
     }
-    inline const QFont t9(const QFont &base = QFont()) const
+    inline const QFont t9() const
     {
-        return get(T9, base);
+        return get(T9);
     }
-    inline const QFont t10(const QFont &base = QFont()) const
+    inline const QFont t10() const
     {
-        return get(T10, base);
+        return get(T10);
     }
 
 Q_SIGNALS:
-    void t1Changed();
-    void t2Changed();
-    void t3Changed();
-    void t4Changed();
-    void t5Changed();
-    void t6Changed();
-    void t7Changed();
-    void t8Changed();
-    void t9Changed();
-    void t10Changed();
-
-    void fontGenericPixelSizeChanged();
+    void fontChanged();
 
 private:
     D_DECLARE_PRIVATE(DFontManager)

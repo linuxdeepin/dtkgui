@@ -1,3 +1,4 @@
+#include <DGuiApplicationHelper>
 #include <DFontManager>
 
 #include <QApplication>
@@ -32,8 +33,8 @@ int main(int argc, char *argv[])
     });
 
     //控制中心修改字体大小可以看到打印输出
-    QObject::connect(DFontManager::instance(), &DFontManager::fontGenericPixelSizeChanged, [] {
-        qDebug() << DFontManager::instance()->fontGenericPixelSize();
+    QObject::connect(DGuiApplicationHelper::instance()->fontManager(), &DFontManager::fontChanged, [] {
+        qDebug() << DGuiApplicationHelper::instance()->fontManager()->baseFont();
     });
 
     return a.exec();

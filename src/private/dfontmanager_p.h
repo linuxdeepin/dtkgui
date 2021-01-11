@@ -31,9 +31,10 @@ public:
     DFontManagerPrivate(DFontManager *qq);
 
     int fontPixelSize[DFontManager::NSizeTypes] = {40, 30, 24, 20, 17, 14, 13, 12, 11, 10};
-    int fontGenericSizeType = DFontManager::T6;
+    int baseFontSizeType = DFontManager::T6;
     // 字号的差值
     int fontPixelSizeDiff = 0;
+    QFont baseFont;
 
 private:
     D_DECLARE_PUBLIC(DFontManager)
