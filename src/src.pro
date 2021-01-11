@@ -7,7 +7,7 @@ CONFIG += internal_module
 contains(QMAKE_HOST.arch, mips.*): QMAKE_LFLAGS_SHLIB += "-Wl,-z,noexecstack"
 
 # don't link library
-QMAKE_CXXFLAGS += $$system(pkg-config --cflags-only-I librsvg-2.0)
+QMAKE_CXXFLAGS += $$system($$pkgConfigExecutable() --cflags-only-I librsvg-2.0)
 
 INCLUDEPATH += \
     $$PWD/filedrag \
