@@ -41,6 +41,7 @@ public:
     void init();
     void initApplication(QGuiApplication *app);
     static void staticInitApplication();
+    static void staticCleanApplication();
     DPlatformTheme *initWindow(QWindow *window) const;
     void _q_initApplicationTheme(bool notifyChange = false);
     void notifyAppThemeChanged();

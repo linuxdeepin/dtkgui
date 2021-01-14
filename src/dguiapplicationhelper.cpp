@@ -49,6 +49,39 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
+class _DGuiApplicationHelper
+{
+public:
+#define INVALID_HELPER reinterpret_cast<DGuiApplicationHelper*>(1)
+    inline DGuiApplicationHelper *helper()
+    {
+        // 临时存储一个无效的指针值, 用于此处条件变量的竞争
+        if (m_helper.testAndSetRelaxed(nullptr, INVALID_HELPER)) {
+            m_helper.store(creator());
+            m_helper.load()->initialize();
+        }
+
+        return m_helper.load();
+    }
+
+    inline void clear()
+    {
+        if (m_helper != INVALID_HELPER)
+            delete m_helper.fetchAndStoreRelaxed(nullptr);
+    }
+
+    static DGuiApplicationHelper *defaultCreator()
+    {
+        return new DGuiApplicationHelper();
+    }
+
+    QAtomicPointer<DGuiApplicationHelper> m_helper;
+    static DGuiApplicationHelper::HelperCreator creator;
+};
+
+DGuiApplicationHelper::HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
+Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
+
 bool DGuiApplicationHelperPrivate::useInactiveColor = true;
 bool DGuiApplicationHelperPrivate::compositingColor = false;
 int DGuiApplicationHelperPrivate::waitTime = 3000;
@@ -81,6 +114,9 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
 {
     D_Q(DGuiApplicationHelper);
 
+    // 跟随application销毁
+    qAddPostRoutine(staticCleanApplication);
+
     q->connect(app, &QGuiApplication::paletteChanged, q, [q, this, app] {
         // 如果用户没有自定义颜色类型, 则应该通知程序的颜色类型发送变化
         if (Q_LIKELY(!isCustomPalette())) {
@@ -109,9 +145,18 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
 
 void DGuiApplicationHelperPrivate::staticInitApplication()
 {
-    if (DGuiApplicationHelper *helper = DGuiApplicationHelper::instance()) {
+    if (!_globalHelper.exists())
+        return;
+
+    if (DGuiApplicationHelper *helper = _globalHelper->m_helper.load()) {
         helper->d_func()->initApplication(qGuiApp);
     }
+}
+
+void DGuiApplicationHelperPrivate::staticCleanApplication()
+{
+    if (_globalHelper.exists())
+        _globalHelper->clear();
 }
 
 DPlatformTheme *DGuiApplicationHelperPrivate::initWindow(QWindow *window) const
@@ -186,33 +231,6 @@ bool DGuiApplicationHelperPrivate::isCustomPalette() const
     return appPalette || themeType != DGuiApplicationHelper::UnknownType;
 }
 
-class _DGuiApplicationHelper
-{
-public:
-    _DGuiApplicationHelper()
-        : helper(creator())
-    {
-        helper->initialize();
-    }
-
-    ~_DGuiApplicationHelper()
-    {
-        delete helper;
-    }
-
-    static DGuiApplicationHelper *defaultCreator()
-    {
-        return new DGuiApplicationHelper();
-    }
-
-    DGuiApplicationHelper *helper;
-    static DGuiApplicationHelper::HelperCreator creator;
-};
-
-DGuiApplicationHelper::HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
-Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
-
-
 /*!
  * \~chinese \class DGuiApplicationHelper
  * \~chinese \brief DGuiApplicationHelper 应用程序的 GUI ，如主题、调色板等
@@ -259,10 +277,8 @@ void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::Helpe
 
     _DGuiApplicationHelper::creator = creator;
 
-    if (_globalHelper.exists() && _globalHelper->helper) {
-        delete _globalHelper->helper;
-        _globalHelper->helper = creator();
-        _globalHelper->helper->initialize();
+    if (_globalHelper.exists()) {
+        _globalHelper->clear();
     }
 }
 
@@ -278,12 +294,12 @@ inline static int adjustColorValue(int base, qint8 increment, int max = 255)
  */
 DGuiApplicationHelper *DGuiApplicationHelper::instance()
 {
-    return _globalHelper->helper;
+    return _globalHelper->helper();
 }
 
 DGuiApplicationHelper::~DGuiApplicationHelper()
 {
-
+    _globalHelper->m_helper = nullptr;
 }
 
 /*!
@@ -716,9 +732,8 @@ void DGuiApplicationHelper::setColorCompositingEnabled(bool on)
 
 bool DGuiApplicationHelper::isXWindowPlatform()
 {
-    static bool isX = qGuiApp->platformName() == "xcb" || qGuiApp->platformName() == "dxcb";
-
-    return isX;
+    return qGuiApp->platformName() == QByteArrayLiteral("xcb")
+            || qGuiApp->platformName() == QByteArrayLiteral("dxcb");
 }
 
 /*!
@@ -1076,8 +1091,8 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
                 qInfo() << "New instance: pid=" << pid << "arguments=" << arguments;
 
                 // 通知新进程的信息
-                if (_globalHelper.exists())
-                    Q_EMIT _globalHelper->helper->newProcessInstance(pid, arguments);
+                if (_globalHelper.exists() && _globalHelper->m_helper.load())
+                    Q_EMIT _globalHelper->m_helper.load()->newProcessInstance(pid, arguments);
             });
 
             instance->flush(); //发送数据给新的实例

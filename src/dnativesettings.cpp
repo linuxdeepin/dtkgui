@@ -87,12 +87,20 @@ QVariant DNativeSettings::getSetting(const QByteArray &name) const
 {
     D_DC(DNativeSettings);
 
+    // 避免进入死循环
+    if (!d->valid)
+        return QVariant();
+
     return property(name.constData());
 }
 
 void DNativeSettings::setSetting(const QByteArray &name, const QVariant &value)
 {
     D_D(DNativeSettings);
+
+    // 避免进入死循环
+    if (!d->valid)
+        return;
 
     setProperty(name.constData(), value);
 }
