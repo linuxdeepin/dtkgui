@@ -106,7 +106,9 @@ void DGuiApplicationHelperPrivate::init()
     if (qGuiApp) {
         initApplication(qGuiApp);
     } else {
-        qAddPreRoutine(staticInitApplication);
+        // 确保qAddPreRoutine只会被调用一次
+        static auto _ = [] {qAddPreRoutine(staticInitApplication); return true;}();
+        Q_UNUSED(_)
     }
 }
 
@@ -149,7 +151,9 @@ void DGuiApplicationHelperPrivate::staticInitApplication()
         return;
 
     if (DGuiApplicationHelper *helper = _globalHelper->m_helper.load()) {
-        helper->d_func()->initApplication(qGuiApp);
+        // systemTheme未创建时说明DGuiApplicationHelper还未初始化
+        if (helper->d_func()->systemTheme)
+            helper->d_func()->initApplication(qGuiApp);
     }
 }
 
