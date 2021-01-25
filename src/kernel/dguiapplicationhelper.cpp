@@ -402,7 +402,7 @@ static QColor light_dpalette[DPalette::NColorTypes] {
     QColor(),                       //NoType
     QColor(0, 0, 0, 255 * 0.03),    //ItemBackground
     QColor("#001A2E"),              //TextTitle
-    QColor("#8AA1B4"),              //TextTips
+    QColor("#526A7F"),              //TextTips
     QColor("#FF5736"),              //TextWarning
     Qt::white,                      //TextLively
     QColor("#0081FF"),              //LightLively
