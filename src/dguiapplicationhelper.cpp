@@ -98,10 +98,8 @@ void DGuiApplicationHelperPrivate::init()
 
     systemTheme = new DPlatformTheme(0, q);
     // 直接对应到系统级别的主题, 不再对外提供为某个单独程序设置主题的接口.
-    // 程序设置自身主题相关的东西皆可通过 setThemeType 和 setApplicationPalette 实现.
+    // 程序设置自身主题相关的东西皆可通过 setPaletteType 和 setApplicationPalette 实现.
     appTheme = systemTheme;
-    // paletteType属性与themeType属性相同
-    q->connect(q, &DGuiApplicationHelper::themeTypeChanged, q, &DGuiApplicationHelper::paletteTypeChanged);
 
     if (qGuiApp) {
         initApplication(qGuiApp);
@@ -232,7 +230,7 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChanged()
 
 bool DGuiApplicationHelperPrivate::isCustomPalette() const
 {
-    return appPalette || themeType != DGuiApplicationHelper::UnknownType;
+    return appPalette || paletteType != DGuiApplicationHelper::UnknownType;
 }
 
 /*!
@@ -828,7 +826,7 @@ DPalette DGuiApplicationHelper::applicationPalette() const
         return *d->appPalette;
     }
 
-    ColorType type = d->themeType;
+    ColorType type = d->paletteType;
     bool aa_setPalette = qGuiApp && qGuiApp->testAttribute(Qt::AA_SetPalette);
     // 此时appTheme可能还未初始化, 因此先使用systemTheme, 待appTheme初始化之后会
     // 通知程序调色板发生改变
@@ -990,30 +988,32 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QPalet
  * \~chinese \brief DGuiApplicationHelper::themeType
  * \~chinese \row 返回程序的主题类型, 当themeType为UnknownType时, 将自动根据
  * \~chinese GuiApplication::palette的QPalette::background颜色计算主题
- * \~chinese 类型, 否则直接返回保存的 themeType 值. 程序中应当使用此值作为暗色/亮色主题
- * \~chinese 类型的判断.
- * \~chinese \return 主题类型的枚举值
+ * \~chinese 类型, 否则与 \a paletteType 的值一致. 程序中应当使用此值作为
+ * \~chinese 暗色/亮色主题类型的判断.
+ * \~chinese \return 主题的颜色类型
  * \~chinese \sa toColorType
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
 {
     D_DC(DGuiApplicationHelper);
 
-    if (d->themeType != UnknownType) {
-        return d->themeType;
+    if (d->paletteType != UnknownType) {
+        return d->paletteType;
     }
 
-    return qGuiApp ? toColorType(qGuiApp->palette()) : d->themeType;
+    return toColorType(qGuiApp->palette());
 }
 
 /*!
  * \~chinese \brief DGuiApplicationHelper::paletteType
- * \~chinese 同 \a themeType
- * \~chinese \warning 已废弃, 请使用 \a themeType
+ * \~chinese 返回当前已设置的调色板类型，如果未调用过 setPaletteType, 默认为 UnknownType.
+ * \~chinese \warning 与 themetype 不同，此值与程序当前的 QPalette 没有关系。
+ * \~chinese \sa DGuiApplicationHelper::themeType
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
 {
-    return themeType();
+    D_DC(DGuiApplicationHelper);
+    return d->paletteType;
 }
 
 bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicationHelper::SingleScope singleScope)
@@ -1126,39 +1126,41 @@ void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setThemeType设置主题类型
- * \~chinese 固定程序的主题类型, 此行为可能导致 applicationPalette 变化, 前提是未使用
+ * \~chinese \brief DGuiApplicationHelper::setThemeType
+ * \~chinese 同 setPaletteType， 已废弃，请不要再使用。
+ */
+void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeType)
+{
+    setPaletteType(themeType);
+}
+
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setPaletteType 设置程序所应用的调色板类型。
+ * \~chinese 将固定程序的调色板类型, 此行为可能导致 applicationPalette 变化, 前提是未使用
  * \~chinese \a setApplicationPalette 固定过程序的调色板, 此方法不影响程序的调色板跟随
  * \~chinese 活动色改变, 可用于控制程序使用亮色还是暗色调色板.
  * \~chinese \note 主动设置调色板颜色类型的操作会导致程序不再使用 DPlatformTheme 中调色板相关的数据, 也
  * \~chinese 包括窗口级别的 \a windowTheme 所对应的 DPlatformTheme, 届时设置 DPlatformTheme
  * \~chinese 的 themeName 和所有与 palette 相关的属性都不再生效.
- * \~chinese \param themeType主题类型的枚举值
+ * \~chinese \param paletteType主题类型的枚举值
  */
-void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeType)
+void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType paletteType)
 {
     D_D(DGuiApplicationHelper);
 
-    if (d->themeType == themeType)
+    if (d->paletteType == paletteType)
         return;
 
     if (qGuiApp && qGuiApp->testAttribute(Qt::AA_SetPalette)) {
         qWarning() << "DGuiApplicationHelper: Plase check 'QGuiApplication::setPalette', Don't use it on DTK application.";
     }
 
-    d->themeType = themeType;
-    // 如果未固定调色板, 则themeType的变化可能会导致调色板改变, 应当通知程序更新数据
+    d->paletteType = paletteType;
+    // 如果未固定调色板, 则paletteType的变化可能会导致调色板改变, 应当通知程序更新数据
     if (!d->appPalette)
         d->notifyAppThemeChanged();
-}
 
-/*!
- * \~chinese \brief DGuiApplicationHelper::setPaletteType
- * \~chinese 同 \a setThemeType
- */
-void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType paletteType)
-{
-    return setThemeType(paletteType);
+    Q_EMIT paletteTypeChanged(paletteType);
 }
 
 DGUI_END_NAMESPACE

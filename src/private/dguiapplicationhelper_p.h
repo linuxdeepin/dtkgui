@@ -48,7 +48,7 @@ public:
     // 返回程序是否自定义了调色板
     inline bool isCustomPalette() const;
 
-    DGuiApplicationHelper::ColorType themeType = DGuiApplicationHelper::UnknownType;
+    DGuiApplicationHelper::ColorType paletteType = DGuiApplicationHelper::UnknownType;
     // 系统级别的主题设置
     DPlatformTheme *systemTheme;
     QScopedPointer<DPalette> appPalette;
