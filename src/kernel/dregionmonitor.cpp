@@ -285,6 +285,6 @@ const QPoint DRegionMonitorPrivate::deviceScaledCoordinate(const QPoint &p, cons
     return p / ratio;
 }
 
-#include "moc_dregionmonitor.cpp"
-
 DGUI_END_NAMESPACE
+
+#include "moc_dregionmonitor.cpp"

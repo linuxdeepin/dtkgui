@@ -21,7 +21,7 @@
 #include "dguiapplicationhelper.h"
 #include "private/dguiapplicationhelper_p.h"
 #include "dplatformhandle.h"
-#include "dfontmanager.h"
+#include <util/DFontManager>
 
 #include <QColor>
 #include <QPalette>

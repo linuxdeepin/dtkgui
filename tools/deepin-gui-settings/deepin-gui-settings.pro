@@ -10,7 +10,10 @@ win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../src/release -ldt
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../src/debug -ldtkgui
 else:unix: LIBS += -L$$OUT_PWD/../../src -ldtkgui
 
-INCLUDEPATH += $$PWD/../../src
+INCLUDEPATH += \
+    $$PWD/../../src \
+    $$PWD/../../private \
+    $$PWD/../../src/kernel
 
 CONFIG(debug, debug|release) {
     unix:QMAKE_RPATHDIR += $$OUT_PWD/../../src

@@ -20,7 +20,7 @@
 #undef private
 
 #include "dfontmanager.h"
-#include "private/dfontmanager_p.h"
+#include "dfontmanager_p.h"
 
 #include <private/qfont_p.h>
 
