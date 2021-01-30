@@ -1,5 +1,5 @@
 Name:           dtkgui
-Version:        5.2.2.18
+Version:        5.4.0
 Release:        1%{?dist}
 Summary:        Deepin dtkgui
 License:        LGPLv3+
@@ -21,6 +21,7 @@ BuildRequires:  pkgconfig(gsettings-qt)
 BuildRequires:  qt5-qtbase-private-devel
 %{?_qt5:Requires: %{_qt5}%{?_isa} = %{_qt5_version}}
 %endif
+BuildRequires:  make
 %description
 Dtkgui is the GUI module for DDE look and feel.
 
