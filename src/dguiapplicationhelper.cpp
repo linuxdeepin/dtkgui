@@ -36,6 +36,7 @@
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformservices.h>
 #include <qpa/qplatformintegration.h>
+#include <qpa/qplatformtheme.h>
 
 #ifdef Q_OS_LINUX
 #include <unistd.h>
@@ -82,9 +83,8 @@ public:
 DGuiApplicationHelper::HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
 Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
 
-bool DGuiApplicationHelperPrivate::useInactiveColor = true;
-bool DGuiApplicationHelperPrivate::compositingColor = false;
 int DGuiApplicationHelperPrivate::waitTime = 3000;
+DGuiApplicationHelper::Attributes DGuiApplicationHelperPrivate::attributes = DGuiApplicationHelper::UseInactiveColorGroup;
 
 DGuiApplicationHelperPrivate::DGuiApplicationHelperPrivate(DGuiApplicationHelper *qq)
     : DObjectPrivate(qq)
@@ -251,6 +251,37 @@ bool DGuiApplicationHelperPrivate::isCustomPalette() const
  *
  * \~chinese \var DGuiApplicationHelper:ColorType DGuiApplicationHelper::DarkType
  * \~chinese 深色主题
+ */
+
+/*!
+ *
+ * \~chinese \enum DGuiApplicationHelper::Attribute
+ * \~chinese DGuiApplicationHelper::Attribute 定义了功能属性
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::UseInactiveColorGroup
+ * \~chinese 如果开启，当窗口处于Inactive状态时就会使用QPalette::Inactive的颜色，否则窗口将没有任何颜色变化。
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::ColorCompositing
+ * \~chinese 是否采用半透明样式的调色板。
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::ReadOnlyLimit
+ * \~chinese 区分只读枚举。
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsDeepinPlatformTheme
+ * \~chinese 获取当前是否使用deepin的platformtheme插件，platformtheme插件可以为Qt程序提供特定的控件样式，默认使用chameleon主题。
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsDPlatformDXcb
+ * \~chinese 获取当前使用的是不是dtk的xcb窗口插件，dxcb插件提供了窗口圆角和阴影功能。
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsXWindowPlatform
+ * \~chinese 获取当前是否运行在X11环境中。
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsTableEnvironment
+ * \~chinese 获取当前是否运行在deepin平板环境中，检测XDG_CURRENT_DESKTOP环境变量是不是tablet结尾。
+ *
+ * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsDeepinEnvironment
+ * \~chinese 获取当前是否运行在deepin桌面环境中，检测XDG_CURRENT_DESKTOP环境变量是不是deepin。
+ *
  */
 
 DGuiApplicationHelper::DGuiApplicationHelper()
@@ -454,9 +485,10 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
 {
     static const DPalette *light_palette = nullptr, *dark_palette = nullptr;
     static const DPalette *alpha_light_palette = nullptr, *alpha_dark_palette = nullptr;
+    const bool allowCompositingColor = DGuiApplicationHelper::testAttribute(ColorCompositing);
 
     if (type == LightType) {
-        if (Q_UNLIKELY(DGuiApplicationHelperPrivate::compositingColor)) {
+        if (Q_UNLIKELY(allowCompositingColor)) {
             if (Q_LIKELY(alpha_light_palette)) {
                 return *alpha_light_palette;
             }
@@ -466,7 +498,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
             return *light_palette;
         }
     } else if (type == DarkType) {
-        if (Q_UNLIKELY(DGuiApplicationHelperPrivate::compositingColor)) {
+        if (Q_UNLIKELY(allowCompositingColor)) {
             if (Q_LIKELY(alpha_dark_palette)) {
                 return *alpha_dark_palette;
             }
@@ -485,7 +517,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
     if (type == DarkType) {
         pa = new DPalette();
 
-        if (DGuiApplicationHelperPrivate::compositingColor)
+        if (allowCompositingColor)
             alpha_dark_palette = pa;
         else
             dark_palette = pa;
@@ -495,7 +527,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
     } else {
         pa = new DPalette();
 
-        if (DGuiApplicationHelperPrivate::compositingColor)
+        if (allowCompositingColor)
             alpha_light_palette = pa;
         else
             light_palette = pa;
@@ -509,7 +541,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
         QColor color = qcolor_list[i];
 
         // 处理半透明色
-        if (DGuiApplicationHelperPrivate::compositingColor) {
+        if (allowCompositingColor) {
             switch (role) {
             case QPalette::Window:
                 color = type == LightType ? adjustColor(color, 0, 0, 0, 0, 0, 0, -20) : adjustColor(color, 0, 0, -10, 0, 0, 0, -20);
@@ -545,7 +577,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
         QColor color = dcolor_list[i];
 
         // 处理半透明色
-        if (DGuiApplicationHelperPrivate::compositingColor) {
+        if (allowCompositingColor) {
             switch (role) {
             case DPalette::ItemBackground:
                 color = adjustColor(color, 0, 0, 100, 0, 0, 0, type == LightType ? -80 : -90);
@@ -598,7 +630,7 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
         base.setColor(QPalette::Disabled, role, DGuiApplicationHelper::adjustColor(color, 0, 0, 0, 0, 0, 0, -60));
     }
 
-    if (DGuiApplicationHelperPrivate::useInactiveColor)
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute::UseInactiveColorGroup))
         base.setColor(QPalette::Inactive, role, DGuiApplicationHelper::blendColor(color, inactive_mask_color));
     else
         base.setColor(QPalette::Inactive, role, color);
@@ -720,7 +752,7 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
  */
 void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
 {
-    DGuiApplicationHelperPrivate::useInactiveColor = on;
+    DGuiApplicationHelper::setAttribute(Attribute::UseInactiveColorGroup, on);
 }
 
 /*!
@@ -729,13 +761,12 @@ void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
  */
 void DGuiApplicationHelper::setColorCompositingEnabled(bool on)
 {
-    DGuiApplicationHelperPrivate::compositingColor = on;
+    DGuiApplicationHelper::setAttribute(Attribute::ColorCompositing, on);
 }
 
 bool DGuiApplicationHelper::isXWindowPlatform()
 {
-    return qGuiApp->platformName() == QByteArrayLiteral("xcb")
-            || qGuiApp->platformName() == QByteArrayLiteral("dxcb");
+    return DGuiApplicationHelper::testAttribute(Attribute::IsXWindowPlatform);
 }
 
 /*!
@@ -744,7 +775,7 @@ bool DGuiApplicationHelper::isXWindowPlatform()
  */
 bool DGuiApplicationHelper::isTabletEnvironment()
 {
-    return QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment().toLower().endsWith("tablet");
+    return DGuiApplicationHelper::testAttribute(Attribute::IsTableEnvironment);
 }
 
 /*!
@@ -1123,6 +1154,38 @@ void DGuiApplicationHelper::setSingleInstanceInterval(int interval)
 void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
 {
     DGuiApplicationHelperPrivate::waitTime = interval;
+}
+
+void DGuiApplicationHelper::setAttribute(DGuiApplicationHelper::Attribute attribute, bool enable)
+{
+    if (attribute < Attribute::ReadOnlyLimit) {
+        DGuiApplicationHelperPrivate::attributes.setFlag(attribute, enable);
+    } else {
+        qWarning() << "You are setting for the read-only option.";
+        return;
+    }
+}
+
+bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attribute)
+{
+    switch (attribute) {
+    case IsXWindowPlatform:
+        return qGuiApp->platformName() == QByteArrayLiteral("xcb")
+                || qGuiApp->platformName() == QByteArrayLiteral("dxcb");
+    case IsDXcbPlatform:
+        return DPlatformHandle::isDXcbPlatform();
+    case IsTableEnvironment:
+        return QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment().toLower().endsWith("tablet");
+    case IsDeepinPlatformTheme:
+        if (!QGuiApplicationPrivate::platform_name) {
+            return false;
+        }
+        return QString(typeid(*QGuiApplicationPrivate::platform_theme).name()).contains("QDeepinTheme");
+    case IsDeepinEnvironment:
+        return QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment().toLower().contains("deepin");
+    default:
+        return DGuiApplicationHelperPrivate::attributes.testFlag(attribute);
+    }
 }
 
 /*!

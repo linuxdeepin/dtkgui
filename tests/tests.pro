@@ -21,4 +21,5 @@ HEADERS += \
 SOURCES += \
         main.cpp \
     src/tdregionmonitor.cpp \
-    src/tdforeignwindow.cpp
+    src/tdforeignwindow.cpp \
+    src/tdguiapplicationhelper.cpp

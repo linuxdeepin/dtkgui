@@ -56,6 +56,21 @@ public:
     };
     Q_ENUM(SingleScope)
 
+    enum Attribute {
+        UseInactiveColorGroup    = 1 << 0,
+        ColorCompositing         = 1 << 1,
+
+        /* readonly flag */
+        ReadOnlyLimit            = 1 << 22,
+        IsDeepinPlatformTheme    = ReadOnlyLimit << 0,
+        IsDXcbPlatform           = ReadOnlyLimit << 1,
+        IsXWindowPlatform        = ReadOnlyLimit << 2,
+        IsTableEnvironment       = ReadOnlyLimit << 3,
+        IsDeepinEnvironment      = ReadOnlyLimit << 4,
+    };
+    Q_ENUM(Attribute)
+    Q_DECLARE_FLAGS(Attributes, Attribute)
+
     typedef DGuiApplicationHelper *(*HelperCreator)();
     D_DECL_DEPRECATED static void registerInstanceCreator(HelperCreator creator);
     static DGuiApplicationHelper *instance();
@@ -69,10 +84,12 @@ public:
     static void generatePaletteColor(DPalette &base, DPalette::ColorType role, ColorType type);
     static void generatePalette(DPalette &base, ColorType type = UnknownType);
     static DPalette fetchPalette(const DPlatformTheme *theme);
-    static void setUseInactiveColorGroup(bool on);
-    static void setColorCompositingEnabled(bool on);
+    Q_DECL_DEPRECATED_X("Use UseInactiveColorGroup enum with setAttribute.") static void setUseInactiveColorGroup(bool on);
+    Q_DECL_DEPRECATED_X("Use ColorCompositing enum with setAttribute.") static void setColorCompositingEnabled(bool on);
     static bool isXWindowPlatform();
     static bool isTabletEnvironment();
+    static void setAttribute(Attribute attribute, bool enable);
+    static bool testAttribute(Attribute attribute);
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;

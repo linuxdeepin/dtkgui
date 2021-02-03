@@ -52,16 +52,16 @@ public:
     // 系统级别的主题设置
     DPlatformTheme *systemTheme;
     QScopedPointer<DPalette> appPalette;
-    static bool useInactiveColor;
-    // 是否采用半透明样式的调色板
-    static bool compositingColor;
     // 获取QLocalSever消息的等待时间
     static int waitTime;
+    static DGuiApplicationHelper::Attributes attributes;
 
 private:
     // 应用程序级别的主题设置
     DPlatformTheme *appTheme = nullptr;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(DGuiApplicationHelper::Attributes)
 
 DGUI_END_NAMESPACE
 
