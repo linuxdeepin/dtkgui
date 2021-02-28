@@ -44,47 +44,34 @@ includes.files += \
     $$PWD/*.h \
     $$PWD/DtkGuis \
     $$PWD/dtkgui_config.h \
-    $$PWD/DNativeSettings \
-    $$PWD/DWindowManagerHelper \
-    $$PWD/DForeignWindow \
-    $$PWD/DWindowGroupLeader \
-    $$PWD/DPlatformHandle \
-    $$PWD/DPalette \
-    $$PWD/DGuiApplicationHelper \
-    $$PWD/DPlatformTheme \
-    $$PWD/DFileDragServer \
-    $$PWD/DFileDrag \
-    $$PWD/DFileDragClient \
-    $$PWD/DSvgRenderer \
-    $$PWD/DThumbnailProvider \
-    $$PWD/DTaskbarControl
+    $$PWD/kernel/*.h \
+    $$PWD/kernel/DForeignWindow \
+    $$PWD/kernel/DGuiApplicationHelper \
+    $$PWD/kernel/DNativeSettings \
+    $$PWD/kernel/DPalette \
+    $$PWD/kernel/DPlatformHandle \
+    $$PWD/kernel/DPlatformTheme \
+    $$PWD/kernel/DRegionMonitor \
+    $$PWD/kernel/DWindowGroupLeader \
+    $$PWD/kernel/DWindowManagerHelper \
+    $$PWD/filedrag/*.h \
+    $$PWD/filedrag/DFileDrag \
+    $$PWD/filedrag/DFileDragClient \
+    $$PWD/filedrag/DFileDragServer \
+    $$PWD/util/*.h \
+    $$PWD/util/DFontManager \
+    $$PWD/util/DSvgRenderer \
+    $$PWD/util/DTaskbarControl \
+    $$PWD/util/DThumbnailProvider
 
-linux* {
-    # don't link library
-    QMAKE_CXXFLAGS += $$system(pkg-config --cflags-only-I librsvg-2.0)
-
-    HEADERS += \
-        $$PWD/dregionmonitor.h
-
-    SOURCES += \
-        $$PWD/dregionmonitor.cpp \
-        $$PWD/dsvgrenderer.cpp
-
-    includes.files += \
-        $$PWD/DRegionMonitor
-
-    dbus_monitor.files += $$PWD/dbus/com.deepin.api.XEventMonitor.xml
-    dbus_monitor.header_flags += -i dbus/arealist.h
-    DBUS_INTERFACES += dbus_monitor
-}
-
-systembusconf.path = /etc/dbus-1/system.d
-systembusconf.files = $$PWD/dbus/com.deepin.dtk.FileDrag.conf
+dbus_monitor.files += $$PWD/dbus/com.deepin.api.XEventMonitor.xml
+dbus_monitor.header_flags += -i dbus/arealist.h
+DBUS_INTERFACES += dbus_monitor
 
 DTK_MODULE_NAME=$$TARGET
 load(dtk_build)
 
-INSTALLS += includes target systembusconf
+INSTALLS += includes target
 
 load(dtk_cmake)
 load(dtk_module)
