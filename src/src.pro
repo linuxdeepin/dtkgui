@@ -47,13 +47,11 @@ includes.files += \
 dbus_monitor.files += $$PWD/dbus/com.deepin.api.XEventMonitor.xml
 dbus_monitor.header_flags += -i dbus/arealist.h
 DBUS_INTERFACES += dbus_monitor
-systembusconf.path = /etc/dbus-1/system.d
-systembusconf.files = $$PWD/dbus/com.deepin.dtk.FileDrag.conf
 
 DTK_MODULE_NAME=$$TARGET
 load(dtk_build)
 
-INSTALLS += includes target systembusconf
+INSTALLS += includes target
 
 load(dtk_cmake)
 load(dtk_module)
