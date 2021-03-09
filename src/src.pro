@@ -1,6 +1,6 @@
-TARGET = dtkgui
+TARGET = dtkgui5.5
 TEMPLATE = lib
-QT += dtkcore gui gui-private dbus network
+QT += dtkcore5.5 gui gui-private dbus network
 CONFIG += internal_module
 
 # 龙芯架构上没有默认添加PT_GNU_STACK-section,所以此处手动指定一下

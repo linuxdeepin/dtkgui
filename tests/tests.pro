@@ -1,5 +1,5 @@
 TEMPLATE = app
-QT += dtkcore gui gui-private dbus network
+QT += dtkcore5.5 gui gui-private dbus network
 CONFIG += thread testcase no_testcase_installs
 CONFIG -= app_bundle
 
@@ -19,7 +19,7 @@ MOC_DIR=$$OUT_PWD/../src
 
 DEPENDPATH += $$PWD/../src
 unix:QMAKE_RPATHDIR += $$OUT_PWD/../src
-unix:LIBS += -L$$OUT_PWD/../src/ -ldtkgui -lgtest -lglib-2.0
+unix:LIBS += -L$$OUT_PWD/../src/ -ldtkgui5.5 -lgtest -lglib-2.0
 
 include($$PWD/../src/filedrag/filedrag.pri)
 include($$PWD/../src/kernel/kernel.pri)
