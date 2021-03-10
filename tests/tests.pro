@@ -1,10 +1,9 @@
 TEMPLATE = app
 QT += dtkcore5.5 gui gui-private dbus network
-CONFIG += thread testcase no_testcase_installs
+CONFIG += thread
 CONFIG -= app_bundle
 
-QMAKE_CXXFLAGS += -g -Wall -fprofile-arcs -ftest-coverage -O0
-QMAKE_LFLAGS += -g -Wall -fprofile-arcs -ftest-coverage  -O0
+load(dtk_testcase)
 
 INCLUDEPATH += \
     $$PWD/../src/ \
