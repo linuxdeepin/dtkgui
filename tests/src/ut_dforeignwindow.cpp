@@ -2,11 +2,15 @@
 #include "dforeignwindow.h"
 
 #include <dwindowmanagerhelper.h>
+#include <QSignalSpy>
 #include <QDebug>
-
+#include "test.h"
 DGUI_BEGIN_NAMESPACE
 
-class TDForeignWindow : public testing::Test
+#define WmClass "_d_WmClass"
+#define ProcessId "_d_ProcessId"
+
+class TDForeignWindow : public DTest
 {
 protected:
     virtual void SetUp()
@@ -36,6 +40,22 @@ TEST_F(TDForeignWindow, pid)
 {
     for (auto foreignWindow : qAsConst(foreignWindows))
         ASSERT_NE(foreignWindow->pid(), 0);
+}
+
+TEST_F(TDForeignWindow, event)
+{
+    QDynamicPropertyChangeEvent wmevent(WmClass);
+    QDynamicPropertyChangeEvent pidevent(ProcessId);
+
+    for (auto foreignWindow : qAsConst(foreignWindows)) {
+        QSignalSpy wmspy(foreignWindow, SIGNAL(wmClassChanged()));
+        ASSERT_TRUE(foreignWindow->event(&wmevent));
+        ASSERT_EQ(wmspy.count(), 1);
+
+        QSignalSpy pidspy(foreignWindow, SIGNAL(pidChanged()));
+        ASSERT_TRUE(foreignWindow->event(&pidevent));
+        ASSERT_EQ(pidspy.count(), 1);
+    }
 }
 
 DGUI_END_NAMESPACE

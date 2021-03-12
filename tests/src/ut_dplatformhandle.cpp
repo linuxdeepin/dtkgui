@@ -41,8 +41,7 @@ protected:
 void TDPlatformHandle::SetUp()
 {
     window = new QWindow;
-    //widget->show();
-    //ASSERT_TRUE(QTest::qWaitForWindowExposed(widget));
+    window->create();
 
     if (QWindow *wHandle = window) {
         pHandle = new DPlatformHandle(wHandle);
@@ -208,53 +207,35 @@ TEST_F(TDPlatformHandle, testFunction)
     }
 }
 
-TEST_F(TDPlatformHandle, testSlots)
-{
-    enum { TESTBORDERWIDTH = 4, TESTOFFSET = 6, TESTRADIUS = 8 };
-    if (pHandle) {
-        pHandle->setWindowRadius(TESTRADIUS);
-        ASSERT_EQ(pHandle->windowRadius(), TESTRADIUS);
-
-        pHandle->setBorderWidth(TESTBORDERWIDTH);
-        ASSERT_EQ(pHandle->borderWidth(), TESTBORDERWIDTH);
-
-        pHandle->setBorderColor(Qt::black);
-        ASSERT_EQ(pHandle->borderColor(), Qt::black);
-
-        pHandle->setShadowRadius(TESTRADIUS);
-        ASSERT_EQ(pHandle->shadowRadius(), TESTRADIUS);
-
-        pHandle->setShadowOffset({TESTOFFSET, TESTOFFSET});
-        ASSERT_EQ(pHandle->shadowOffset(), QPoint(TESTOFFSET, TESTOFFSET));
-
-        pHandle->setShadowColor(Qt::blue);
-        ASSERT_EQ(pHandle->shadowColor(), Qt::blue);
-
-        QPainterPath pPath;
-        pPath.addRect({0, 0, 20, 20});
-
-        pHandle->setClipPath(pPath);
-        ASSERT_EQ(pHandle->clipPath(), pPath);
-
-        pHandle->setFrameMask(QRegion(0, 0, 10, 10));
-        ASSERT_EQ(pHandle->frameMask(), QRegion(0, 0, 10, 10));
-
-        pHandle->setTranslucentBackground(true);
-        ASSERT_TRUE(pHandle->translucentBackground());
-
-        pHandle->setEnableSystemResize(true);
-        ASSERT_TRUE(pHandle->enableSystemResize());
-
-        pHandle->setEnableSystemMove(true);
-        ASSERT_TRUE(pHandle->enableSystemMove());
-
-        pHandle->setEnableBlurWindow(true);
-        ASSERT_TRUE(pHandle->enableBlurWindow());
-
-        pHandle->setAutoInputMaskByClipPath(true);
-        ASSERT_TRUE(pHandle->autoInputMaskByClipPath());
-    }
+#define TEST_SetGet_F(SetFun, GetFun, Param) \
+    TEST_F(TDPlatformHandle, GetFun){\
+    if (pHandle) {\
+        pHandle->SetFun(Param);\
+        ASSERT_EQ(pHandle->GetFun(), Param);\
+    }\
 }
+
+
+QPainterPath getPath()
+{
+    QPainterPath pPath;
+    pPath.addRect({0, 0, 20, 20});
+    return pPath;
+}
+TEST_SetGet_F(setWindowRadius, windowRadius, 8)
+TEST_SetGet_F(setBorderWidth, borderWidth, 4)
+TEST_SetGet_F(setBorderColor, borderColor, Qt::black)
+TEST_SetGet_F(setShadowRadius, shadowRadius, 8)
+TEST_SetGet_F(setShadowOffset, shadowOffset, QPoint(8, 8))
+TEST_SetGet_F(setShadowColor, shadowColor, Qt::blue)
+TEST_SetGet_F(setClipPath, clipPath, getPath())
+TEST_SetGet_F(setFrameMask, frameMask, QRegion(0, 0, 10, 10))
+TEST_SetGet_F(setTranslucentBackground, translucentBackground, true)
+TEST_SetGet_F(setEnableSystemResize, enableSystemResize, false)
+TEST_SetGet_F(setEnableSystemMove, enableSystemMove, false)
+TEST_SetGet_F(setEnableBlurWindow, enableBlurWindow, false)
+TEST_SetGet_F(setAutoInputMaskByClipPath, autoInputMaskByClipPath, false)
+
 
 TEST_F(TDPlatformHandle, wmAreaDebug)
 {

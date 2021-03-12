@@ -1,6 +1,6 @@
 TEMPLATE = app
 QT += dtkcore gui gui-private dbus network testlib
-CONFIG += thread testcase no_testcase_installs
+CONFIG += thread
 CONFIG -= app_bundle
 
 load(dtk_testcase)
@@ -13,6 +13,9 @@ INCLUDEPATH += \
     $$PWD/../src/util \
     $$OUT_PWD/../src \
     $$PWD/../src/private
+
+QMAKE_CXXFLAGS += -fno-access-control
+QMAKE_LFLAGS += -fno-access-control
 
 # 指定moc文件生成目录和src一样
 MOC_DIR=$$OUT_PWD/../src
@@ -34,13 +37,16 @@ linux* {
     DBUS_INTERFACES += dbus_monitor
 }
 
+HEADERS += test.h
+
 SOURCES += \
     main.cpp \
     #src/ut_dguiapplicationhelper.cpp \
+    src/ut_dregionmonitor.cpp \
     src/ut_dforeignwindow.cpp \
     src/ut_dpalette.cpp \
     src/ut_dplatformhandle.cpp \
-#    src/ut_dplatformtheme.cpp \
+    src/ut_dplatformtheme.cpp \
     src/ut_dwindowmanagerhelper.cpp \
     src/ut_dwindowgroupleader.cpp \
 #    src/ut_dfontmanager.cpp \
@@ -50,5 +56,3 @@ SOURCES += \
 
 RESOURCES += \
     res.qrc
-
-

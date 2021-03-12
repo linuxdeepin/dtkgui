@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "dguiapplicationhelper.h"
+#include "dguiapplicationhelper_p.h"
 
 #include <QMap>
 
@@ -11,6 +12,7 @@ protected:
     virtual void SetUp()
     {
         helper = DGuiApplicationHelper::instance();
+        helper_d = helper->d_func();
 
         /* read write */
         readWriteDatas << DGuiApplicationHelper::Attribute::UseInactiveColorGroup
@@ -25,9 +27,54 @@ protected:
     }
 
     DGuiApplicationHelper *helper = nullptr;
+    DGuiApplicationHelperPrivate *helper_d = nullptr;
     QList<DGuiApplicationHelper::Attribute> readWriteDatas;
     QList<DGuiApplicationHelper::Attribute> readOnlyDatas;
 };
+
+TEST_F(TDGuiApplicationHelper, testFunction)
+{
+    QColor testColor(Qt::red);
+    QColor adjustedColor = helper->adjustColor(testColor, 0, 0, 0, 0, 0, 0, -20);
+    ASSERT_NE(testColor, adjustedColor);
+    ASSERT_TRUE(adjustedColor.isValid());
+
+    QColor disBlendColor = Qt::black;
+    QColor blendedColor = helper->blendColor(testColor, disBlendColor);
+    ASSERT_NE(testColor, blendedColor);
+    ASSERT_TRUE(blendedColor.isValid());
+
+    DPalette tPalette;
+    helper->generatePaletteColor(tPalette, QPalette::Window, DGuiApplicationHelper::ColorType::LightType);
+    ASSERT_EQ(tPalette.brush(QPalette::Disabled, QPalette::Window), tPalette.brush(QPalette::Normal, QPalette::Window));
+
+    tPalette.setColor(DPalette::Background, Qt::black);
+    helper->generatePaletteColor(tPalette, QPalette::Highlight, DGuiApplicationHelper::ColorType::DarkType);
+    ASSERT_TRUE(tPalette.highlight().color().isValid());
+
+    // 初始化调色板为默认值
+    helper->generatePalette(tPalette);
+
+    ASSERT_EQ(helper->isXWindowPlatform(), DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsXWindowPlatform));
+    ASSERT_EQ(helper->isTabletEnvironment(), DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTableEnvironment));
+
+    ASSERT_TRUE(helper->applicationTheme());
+    ASSERT_TRUE(helper->systemTheme());
+    ASSERT_NE(helper->applicationPalette(), tPalette);
+    qGuiApp->setAttribute(Qt::AA_SetPalette, false);
+    helper->setPaletteType(DGuiApplicationHelper::DarkType);
+    ASSERT_NE(helper->applicationPalette(), tPalette);
+
+    helper->setApplicationPalette(tPalette);
+    ASSERT_EQ(helper->applicationPalette(), tPalette);
+
+    ASSERT_TRUE(helper->fontManager());
+    ASSERT_EQ(helper->toColorType(QColor(Qt::white)), DGuiApplicationHelper::LightType);
+    ASSERT_EQ(helper->toColorType(QColor(Qt::black)), DGuiApplicationHelper::DarkType);
+    ASSERT_EQ(helper->themeType(), DGuiApplicationHelper::DarkType);
+    ASSERT_EQ(helper->paletteType(), DGuiApplicationHelper::DarkType);
+    ASSERT_TRUE(helper->setSingleInstance("dtkgui-ut"));
+}
 
 TEST_F(TDGuiApplicationHelper, AttributeReadWrite)
 {

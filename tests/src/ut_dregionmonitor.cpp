@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
+#define private public
 #include "dregionmonitor.h"
+#undef private
 #include "private/dregionmonitor_p.h"
 
 #include <QRegion>
 #include <QSignalSpy>
-#include <QApplication>
+#include <QGuiApplication>
 
 DGUI_BEGIN_NAMESPACE
 
