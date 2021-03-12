@@ -1,10 +1,9 @@
 TEMPLATE = app
-QT += dtkcore gui gui-private dbus network
-CONFIG += thread testcase no_testcase_installs
+QT += dtkcore gui gui-private dbus network testlib widgets
+CONFIG += thread
 CONFIG -= app_bundle
 
-QMAKE_CXXFLAGS += -g -Wall -fprofile-arcs -ftest-coverage -O0
-QMAKE_LFLAGS += -g -Wall -fprofile-arcs -ftest-coverage  -O0
+load(dtk_testcase)
 
 INCLUDEPATH += \
     $$PWD/../src/ \
@@ -13,6 +12,9 @@ INCLUDEPATH += \
     $$PWD/../src/util \
     $$OUT_PWD/../src \
     $$PWD/../src/private
+
+QMAKE_CXXFLAGS += -fno-access-control
+QMAKE_LFLAGS += -fno-access-control
 
 # 指定moc文件生成目录和src一样
 MOC_DIR=$$OUT_PWD/../src
@@ -41,5 +43,8 @@ SOURCES += \
     main.cpp \
     src/ut_dguiapplicationhelper.cpp \
     src/ut_dregionmonitor.cpp \
-    src/ut_dforeignwindow.cpp
+    src/ut_dforeignwindow.cpp \
+    src/ut_dpalette.cpp \
+    src/ut_dplatformhandle.cpp \
+    src/ut_dplatformtheme.cpp
 
