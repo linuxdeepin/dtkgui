@@ -1047,6 +1047,14 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
     return d->paletteType;
 }
 
+/*!
+ * \~chinese \brief DGuiApplicationHelper::setSingleInstance 设置DGuiApplicationHelper实例
+ * \~chinese \param key 实例关键字
+ * \~chinese \param singleScope 实例使用范围
+ * \~chinese \return 设置是否成功
+ * \~chinese \note 此处所用到DGuiApplicationHelperPrivate::waitTime默认值为3000ms，可通过
+ * \~chinese \note DGuiApplicationHelper::setSingleInstanceInterval设置
+ */
 bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicationHelper::SingleScope singleScope)
 {
     bool new_server = !_d_singleServer.exists();
@@ -1136,8 +1144,10 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
 
     return true;
 }
+
 /*!
- * \~chinese \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间
+ * \~chinese \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间，
+ * \~chinese \brief 用于在重新创建DGuiApplicationHelper单例时，检测DGuiApplicationHelper单例是否存在且有响应
  * \~chinese \param interval等待时间，如 interval 为 -1 则没有超时一直等待，默认和 QLocalSocket 一致 3000ms
  * \~chinese \note 需要在 DGuiApplicationHelper::setSingleInstance 之前调用否则无效。
  */
