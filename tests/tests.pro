@@ -1,10 +1,10 @@
 TEMPLATE = app
-QT += dtkcore gui gui-private dbus network
+QT += dtkcore gui gui-private dbus network testlib
 CONFIG += thread testcase no_testcase_installs
 CONFIG -= app_bundle
 
-QMAKE_CXXFLAGS += -g -Wall -fprofile-arcs -ftest-coverage -O0
-QMAKE_LFLAGS += -g -Wall -fprofile-arcs -ftest-coverage  -O0
+load(dtk_testcase)
+LIBS += -lgmock
 
 INCLUDEPATH += \
     $$PWD/../src/ \
@@ -37,5 +37,18 @@ linux* {
 SOURCES += \
     main.cpp \
     #src/ut_dguiapplicationhelper.cpp \
-    src/ut_dregionmonitor.cpp \
-    src/ut_dforeignwindow.cpp
+    src/ut_dforeignwindow.cpp \
+    src/ut_dpalette.cpp \
+    src/ut_dplatformhandle.cpp \
+#    src/ut_dplatformtheme.cpp \
+    src/ut_dwindowmanagerhelper.cpp \
+    src/ut_dwindowgroupleader.cpp \
+#    src/ut_dfontmanager.cpp \
+    src/ut_dsvgrenderer.cpp \
+    src/ut_dtaskbarcontrol.cpp \
+    src/ut_dthumbnailprovider.cpp
+
+RESOURCES += \
+    res.qrc
+
+

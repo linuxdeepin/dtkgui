@@ -48,6 +48,7 @@ inline QByteArray dataToMd5Hex(const QByteArray &data)
     return QCryptographicHash::hash(data, QCryptographicHash::Md5).toHex();
 }
 
+#ifndef UT_DThumbnailProviderPrivate
 class DThumbnailProviderPrivate : public DTK_CORE_NAMESPACE::DObjectPrivate
 {
 public:
@@ -82,6 +83,7 @@ public:
 
     D_DECLARE_PUBLIC(DThumbnailProvider)
 };
+#endif
 
 QSet<QString> DThumbnailProviderPrivate::hasThumbnailMimeHash;
 
