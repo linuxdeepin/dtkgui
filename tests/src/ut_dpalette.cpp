@@ -1,13 +1,13 @@
-#include <gtest/gtest.h>
 #include <DGuiApplicationHelper>
 #include <QDebug>
 #include <QBuffer>
 
+#include "test.h"
 #include "dpalette.h"
 
 DGUI_USE_NAMESPACE
 
-class TDPalette : public testing::TestWithParam<int>
+class TDPalette : public DTestWithParam<int>
 {
 protected:
     void SetUp();

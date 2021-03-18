@@ -4,6 +4,7 @@ CONFIG += thread
 CONFIG -= app_bundle
 
 load(dtk_testcase)
+LIBS += -lgmock
 
 INCLUDEPATH += \
     $$PWD/../src/ \
@@ -46,5 +47,14 @@ SOURCES += \
     src/ut_dforeignwindow.cpp \
     src/ut_dpalette.cpp \
     src/ut_dplatformhandle.cpp \
-    src/ut_dplatformtheme.cpp
+    src/ut_dplatformtheme.cpp \
+    src/ut_dwindowmanagerhelper.cpp \
+    src/ut_dwindowgroupleader.cpp \
+    src/ut_dfontmanager.cpp \
+    src/ut_dsvgrenderer.cpp \
+    src/ut_dtaskbarcontrol.cpp \
+    src/ut_dthumbnailprovider.cpp
+
+RESOURCES += \
+    res.qrc
 

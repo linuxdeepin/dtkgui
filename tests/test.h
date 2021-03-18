@@ -7,4 +7,8 @@ class DTest : public ::testing::Test
 {
 };
 
+template<typename T>
+class DTestWithParam : public ::testing::TestWithParam<T>
+{
+};
 #endif // TEST_H

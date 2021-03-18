@@ -3,6 +3,7 @@
 #include <QWindow>
 #include <QTest>
 #include <QDebug>
+#include <QBuffer>
 
 #include "dplatformhandle.h"
 
@@ -52,7 +53,8 @@ void TDPlatformHandle::SetUp()
 
 void TDPlatformHandle::TearDown()
 {
-    delete  widget;
+    delete widget;
+    delete pHandle;
 }
 
 TEST_F(TDPlatformHandle, testFunction)
@@ -254,4 +256,18 @@ TEST_F(TDPlatformHandle, testSlots)
         pHandle->setAutoInputMaskByClipPath(true);
         ASSERT_TRUE(pHandle->autoInputMaskByClipPath());
     }
+}
+
+TEST_F(TDPlatformHandle, wmAreaDebug)
+{
+    DPlatformHandle::WMBlurArea area = dMakeWMBlurArea(0, 0, 20, 20);
+
+    QByteArray data;
+    QBuffer buf(&data);
+    ASSERT_TRUE(buf.open(QIODevice::WriteOnly));
+
+    QDebug tDebug(&buf);
+    tDebug << area;
+    buf.close();
+    ASSERT_FALSE(data.isEmpty());
 }
