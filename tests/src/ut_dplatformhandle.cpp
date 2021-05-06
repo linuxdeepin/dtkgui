@@ -100,8 +100,9 @@ TEST_F(TDPlatformHandle, testFunction)
     DPlatformHandle::setDisableWindowOverrideCursor(widget->windowHandle(), true);
     QVariant windowRadius = widget->windowHandle()->property(WINDOWRADIUS);
 
-    if (windowRadius.isValid() && windowRadius.canConvert(QVariant::Int))
+    if (windowRadius.isValid() && windowRadius.canConvert(QVariant::Int)) {
         ASSERT_EQ(pHandle->windowRadius(), windowRadius.toInt());
+    }
 
     QVariant borderWidth = widget->windowHandle()->property(BORDERWIDTH);
 
