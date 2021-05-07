@@ -126,19 +126,19 @@ DFileDragClient::DFileDragClient(const QMimeData *data, QObject *parent)
     }
 
     if (!DFileDragClientPrivate::ifacemap.contains(d->service)) {
-        QDBusConnection sysbus(QDBusConnection::systemBus());
-        d->iface = QSharedPointer<QDBusInterface>(new QDBusInterface(d->service, DND_OBJPATH, DND_INTERFACE, sysbus), [d](QDBusInterface* intf){
-            QDBusConnection sysbus(QDBusConnection::systemBus());
-            sysbus.disconnect(d->service, DND_OBJPATH, DND_INTERFACE, "progressChanged", "si", d->relay.data(), SLOT(progressChanged(QString, int)));
-            sysbus.disconnect(d->service, DND_OBJPATH, DND_INTERFACE, "stateChanged", "si", d->relay.data(), SLOT(stateChanged(QString, int)));
-            sysbus.disconnect(d->service, DND_OBJPATH, DND_INTERFACE, "serverDestroyed", "s", d->relay.data(), SLOT(serverDestroyed(QString)));
+        QDBusConnection sessionBus(QDBusConnection::sessionBus());
+        d->iface = QSharedPointer<QDBusInterface>(new QDBusInterface(d->service, DND_OBJPATH, DND_INTERFACE, sessionBus), [d](QDBusInterface* intf){
+            QDBusConnection sessionBus(QDBusConnection::sessionBus());
+            sessionBus.disconnect(d->service, DND_OBJPATH, DND_INTERFACE, "progressChanged", "si", d->relay.data(), SLOT(progressChanged(QString, int)));
+            sessionBus.disconnect(d->service, DND_OBJPATH, DND_INTERFACE, "stateChanged", "si", d->relay.data(), SLOT(stateChanged(QString, int)));
+            sessionBus.disconnect(d->service, DND_OBJPATH, DND_INTERFACE, "serverDestroyed", "s", d->relay.data(), SLOT(serverDestroyed(QString)));
             intf->deleteLater();
             DFileDragClientPrivate::ifacemap.remove(d->service);
         });
         DFileDragClientPrivate::ifacemap[d->service] = d->iface.toWeakRef();
-        sysbus.connect(d->service, DND_OBJPATH, DND_INTERFACE, "progressChanged", "si", d->relay.data(), SLOT(progressChanged(QString, int)));
-        sysbus.connect(d->service, DND_OBJPATH, DND_INTERFACE, "stateChanged", "si", d->relay.data(), SLOT(stateChanged(QString, int)));
-        sysbus.connect(d->service, DND_OBJPATH, DND_INTERFACE, "serverDestroyed", "s", d->relay.data(), SLOT(serverDestroyed(QString)));
+        sessionBus.connect(d->service, DND_OBJPATH, DND_INTERFACE, "progressChanged", "si", d->relay.data(), SLOT(progressChanged(QString, int)));
+        sessionBus.connect(d->service, DND_OBJPATH, DND_INTERFACE, "stateChanged", "si", d->relay.data(), SLOT(stateChanged(QString, int)));
+        sessionBus.connect(d->service, DND_OBJPATH, DND_INTERFACE, "serverDestroyed", "s", d->relay.data(), SLOT(serverDestroyed(QString)));
     } else {
         d->iface = DFileDragClientPrivate::ifacemap[d->service].toStrongRef();
     }
@@ -190,9 +190,9 @@ void DFileDragClient::setTargetData(const QMimeData *data, QString key, QVariant
     Q_ASSERT(checkMimeData(data));
     QString service(data->data(DND_MIME_SERVICE));
     QString uuid(data->data(DND_MIME_UUID));
-    QDBusInterface iface(service, DND_OBJPATH, DND_INTERFACE, QDBusConnection::systemBus());
+    QDBusInterface iface(service, DND_OBJPATH, DND_INTERFACE, QDBusConnection::sessionBus());
 
-    QDBusReply<uint> pid = QDBusConnection::systemBus().interface()->servicePid(service);
+    QDBusReply<uint> pid = QDBusConnection::sessionBus().interface()->servicePid(service);
     if (QString::number(pid).toUtf8() != data->data(DND_MIME_PID)) {
         return;
     }

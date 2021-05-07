@@ -165,11 +165,11 @@ DFileDragServerPrivate::DFileDragServerPrivate(DFileDragServer *q)
 {
     if (dbusifinst.isNull()) {
         dbusif = QSharedPointer<DDndSourceInterface>(new DDndSourceInterface(), [](DDndSourceInterface *intf){
-            QDBusConnection::systemBus().unregisterObject(DND_OBJPATH);
+            QDBusConnection::sessionBus().unregisterObject(DND_OBJPATH);
             intf->deleteLater();
         });
         dbusifinst = dbusif.toWeakRef();
-        QDBusConnection::systemBus().registerObject(DND_OBJPATH, DND_INTERFACE, dbusif.data(), QDBusConnection::RegisterOption::ExportAllContents);
+        QDBusConnection::sessionBus().registerObject(DND_OBJPATH, DND_INTERFACE, dbusif.data(), QDBusConnection::RegisterOption::ExportAllContents);
     } else {
         dbusif = dbusifinst.toStrongRef();
     }
@@ -182,7 +182,7 @@ DFileDragServerPrivate::~DFileDragServerPrivate()
 
 void DFileDragServerPrivate::writeMimeData(QMimeData *dest)
 {
-    dest->setData(DND_MIME_SERVICE, QDBusConnection::systemBus().baseService().toUtf8());
+    dest->setData(DND_MIME_SERVICE, QDBusConnection::sessionBus().baseService().toUtf8());
     dest->setData(DND_MIME_PID, QString::number(QCoreApplication::applicationPid()).toUtf8());
     dest->setData(DND_MIME_UUID, uuid.toString().toUtf8());
 }
