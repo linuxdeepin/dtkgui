@@ -22,6 +22,7 @@
 #include "private/dguiapplicationhelper_p.h"
 #include "dplatformhandle.h"
 
+#include <QHash>
 #include <QColor>
 #include <QPalette>
 #include <QWindow>
@@ -31,6 +32,7 @@
 #include <QDebug>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <QLoggingCategory>
 
 #include <private/qguiapplication_p.h>
 
@@ -39,6 +41,244 @@
 #endif
 
 DGUI_BEGIN_NAMESPACE
+
+#ifdef QT_DEBUG
+Q_LOGGING_CATEGORY(dgAppHelper, "dtk.dguihelper")
+#else
+Q_LOGGING_CATEGORY(dgAppHelper, "dtk.dguihelper", QtInfoMsg)
+#endif
+
+#ifdef Q_OS_LINUX
+class DInstanceGuard {
+public:
+    static bool guard(const QString &name);
+    static void enterCriticalSection();
+    static void leaveCriticalSection();
+
+    class DCriticalHolder {
+    public:
+        DCriticalHolder() {
+            DInstanceGuard::enterCriticalSection();
+        }
+        ~DCriticalHolder() {
+            DInstanceGuard::leaveCriticalSection();
+        }
+    };
+
+private:
+    static bool setInstanceName(const QString &name);
+    static void shmInit();
+    static void destroy();
+    static void errorExitIf(bool cond, QStringView reason);
+
+    struct SharedVarables {
+        pid_t               pid[2];
+        pthread_mutex_t     mutex[2];
+
+        struct {
+          pid_t             criticalProcessPid;
+          pthread_mutex_t   criticalSectionMtx;
+        } CriticalSection;
+    };
+
+    static DInstanceGuard * s_pSelf;
+    static QString          s_name;
+
+    static int              s_shmId;
+    static key_t            s_shmKey;
+
+    static QVector<QString> s_procIdPath;
+    static SharedVarables * s_pShm;
+    static int              s_nLock;
+
+private:
+    DInstanceGuard();
+    ~DInstanceGuard() = default;
+    DInstanceGuard(const DInstanceGuard &) = delete;
+    DInstanceGuard &operator=(const DInstanceGuard &) = delete;
+    DInstanceGuard(DInstanceGuard &&) = delete;
+    DInstanceGuard &operator=(DInstanceGuard &&) = delete;
+};
+
+DInstanceGuard  *   DInstanceGuard::s_pSelf  = nullptr;
+QString             DInstanceGuard::s_name;
+
+int                 DInstanceGuard::s_shmId  = 0;
+key_t               DInstanceGuard::s_shmKey = 0;
+
+QVector<QString>    DInstanceGuard::s_procIdPath;
+DInstanceGuard::SharedVarables *  DInstanceGuard::s_pShm = nullptr;
+int                 DInstanceGuard::s_nLock  = -1;
+
+/*!
+    \internal DInstanceGuard::DInstanceGuard 构造 DInstanceGuard 实例并初始化
+
+    需要预先传入 name 实例名，相同实例名的实例在系统中只能同时存在最好两个。锁是对两个
+    pid 的保护，获取到锁才能改写 pid，最终是根据 pid 来判断当前有几个进程、应该启动几个
+    进程。传入的 name 应该按照 Session 或 Scope 做区分，比如同一个用户连接多个
+    VNC、同一台主机登陆多个用户。
+ */
+DInstanceGuard::DInstanceGuard()
+{
+    for (int i = 0; i < 2 && s_nLock == -1; ++i) {
+        if (pthread_mutex_trylock(&s_pShm->mutex[i]) != 0) {
+            continue;
+        }
+        s_nLock = i;
+        s_pShm->pid[i] = getpid();
+        std::atexit(destroy);
+    }
+    QString criticalProc = QString("/proc/%1").arg(s_pShm->CriticalSection.criticalProcessPid);
+    if (s_pShm->CriticalSection.criticalProcessPid && !QFile(criticalProc).exists()) {
+        pthread_mutex_unlock(&s_pShm->CriticalSection.criticalSectionMtx);
+    }
+
+    errorExitIf(s_nLock == -1, u"Has two instance running.");
+}
+
+/*!
+    \internal DInstanceGuard::shmInit() 初始化共享内存
+
+    对共享内存进行初始化，存放进程级别的互斥锁、记录进程的 pid。
+*/
+void DInstanceGuard::shmInit()
+{
+    s_shmKey = qHash(s_name);
+    s_procIdPath.resize(2);
+
+    pthread_mutexattr_t mutexSharedAttr[2] = {};
+    for (int i = 0; i < 2; ++i) {
+        pthread_mutexattr_setpshared(&mutexSharedAttr[i], PTHREAD_PROCESS_SHARED);
+        pthread_mutexattr_settype(&mutexSharedAttr[i], PTHREAD_MUTEX_RECURSIVE_NP);
+    }
+
+    // 获取共享内存，如果不存在则创建并初始化
+    bool clearFlag = false;
+    s_shmId = shmget(s_shmKey, 0, 0666 | IPC_CREAT);
+    if (s_shmId == -1) {
+        s_shmId = shmget(s_shmKey, sizeof(SharedVarables), 0666 | IPC_CREAT);
+        errorExitIf(s_shmId < 0, u"Create share memory failed.");
+        clearFlag = true;
+    }
+    s_pShm = static_cast<SharedVarables*>(shmat(s_shmId, nullptr, 0));
+    errorExitIf(!s_pShm, u"Attach share memory failed.");
+    if (clearFlag) memset(s_pShm, 0, sizeof(SharedVarables));
+
+    // 对已退出/新创建的进程的锁进行重新初始化，防止　mutex 内部错误
+    for (int i = 0; i < 2; ++i) {
+        s_procIdPath[i] = QString("/proc/%1").arg(s_pShm->pid[i]);
+        if (s_pShm->pid[i] && !QFile(s_procIdPath[i]).exists()) {
+            pthread_mutex_destroy(&s_pShm->mutex[i]);
+            pthread_mutex_init(&s_pShm->mutex[i], &mutexSharedAttr[i]);
+            s_pShm->pid[i] = 0;
+        }
+        pthread_mutexattr_destroy(&mutexSharedAttr[i]);
+    }
+
+    // 对临界区锁的有效性进行检测，重新初始化
+    QString criticalProcPath = QString("/proc/%1").arg(s_pShm->CriticalSection.criticalProcessPid);
+    if (!s_pShm->CriticalSection.criticalProcessPid || !QFile(criticalProcPath).exists()) {
+        // Critical section init
+        pthread_mutexattr_t criticalMtxSharedAttr = {};
+        pthread_mutexattr_setpshared(&criticalMtxSharedAttr, PTHREAD_PROCESS_SHARED);
+        pthread_mutexattr_settype(&criticalMtxSharedAttr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutex_init(&s_pShm->CriticalSection.criticalSectionMtx, &criticalMtxSharedAttr);
+        pthread_mutexattr_destroy(&criticalMtxSharedAttr);
+    }
+}
+
+/*!
+    \fn DInstanceGuard::setInstanceName(const QString &name) 设置实例名
+
+    根据实例名初始化对应的共享内存
+*/
+bool DInstanceGuard::setInstanceName(const QString &name)
+{
+    errorExitIf(name.isEmpty(), u"Set instance name error...");
+    if (!s_name.isEmpty()) {
+        qCWarning(dgAppHelper, "Set instance name failed. already has a name...");
+        return false;
+    }
+    s_name = name;
+
+    return true;
+}
+
+/*!
+    \fn DInstanceGuard::guard 创建 DInstanceGuard 实例
+
+    传入 name 实例名，确保和当前 name 相同的实例在系统中只能同时存在不超过两个，确保后续可以完成后者到
+    前者的通信过程，最终只保留一个实例。负责完成 DGuiApplicationHelper::setSingleInstance 中的
+    第一阶段。
+ */
+bool DInstanceGuard::guard(const QString &name)
+{
+    static std::once_flag initFlag;
+    bool retValue = false;
+    std::call_once(initFlag, [name, &retValue] {
+        retValue = setInstanceName(name);
+        shmInit();
+        s_pSelf = s_pSelf ? s_pSelf : new DInstanceGuard();
+    });
+
+    return retValue;
+}
+
+/*!
+    \internal DInstanceGuard::destroy() 销毁共享内存
+
+    只有在程序正常退出的时候由 atexit 的注册来调用。即使异常退出也不会对下次执行造成影响。
+ */
+void DInstanceGuard::destroy()
+{
+    if (!s_pSelf) {
+        return;
+    }
+
+    bool shmRelease = false;
+    int anotherProc = !s_nLock;
+    if (!QFile(s_procIdPath[anotherProc]).exists()) {
+        shmRelease = true;
+        pthread_mutex_unlock(&s_pShm->mutex[anotherProc]);
+    }
+    pthread_mutex_unlock(&s_pShm->mutex[s_nLock]);
+    if (s_pShm->CriticalSection.criticalProcessPid == getpid()) {
+        s_pShm->CriticalSection.criticalProcessPid = 0;
+        pthread_mutex_unlock(&s_pShm->CriticalSection.criticalSectionMtx);
+    }
+    if (shmRelease) {
+        shmctl(s_shmId, IPC_RMID, nullptr);
+    }
+
+    delete s_pSelf;
+    s_pSelf = nullptr;
+}
+
+/*!
+    \fn void DInstanceGuard::enterCriticalSection()
+
+    进入临界区。 按 Guard 传入的 name 进行代码段的保护。不能单独使用，必须先调用 Guard。
+    不能用于同一进程内的多线程。根据实例名的 scope，最大可提供系统级的保护。
+    确保 DGuiApplicationHelper::setSingleInstance 中的第二阶段正确执行。
+*/
+void DInstanceGuard::enterCriticalSection() {
+    errorExitIf(s_name.isEmpty() || !s_pSelf, u"Enter critical section failed. must set instance name first.");
+    if (pthread_mutex_lock(&s_pShm->CriticalSection.criticalSectionMtx) == 0) {
+        s_pShm->CriticalSection.criticalProcessPid = getpid();
+    }
+}
+
+void DInstanceGuard::leaveCriticalSection() {
+    pthread_mutex_unlock(&s_pShm->CriticalSection.criticalSectionMtx);
+}
+
+void DInstanceGuard::errorExitIf(bool cond, QStringView reason) {
+    if (cond) {
+        qCWarning(dgAppHelper) << reason << " should exit program.";
+        qFatal("Error: DInstanceGuard::errorExitIf.");
+    }
+}
+#endif
 
 Q_GLOBAL_STATIC(QLocalServer, _d_singleServer)
 static quint8 _d_singleServerVersion = 1;
@@ -934,6 +1174,13 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     }
 
     socket_key += key;
+
+#ifdef Q_OS_LINUX
+    if (!DInstanceGuard::guard(socket_key)) {
+        return false;
+    }
+    DInstanceGuard::DCriticalHolder holder;
+#endif
 
     // 通知别的实例
     QLocalSocket socket;
