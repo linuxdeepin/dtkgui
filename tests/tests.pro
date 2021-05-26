@@ -17,6 +17,13 @@ INCLUDEPATH += \
 QMAKE_CXXFLAGS += -fno-access-control
 QMAKE_LFLAGS += -fno-access-control
 
+CONFIG(debug, debug|release) {
+LIBS += -lgtest -lgmock
+QMAKE_CXXFLAGS += -g -Wall -fprofile-arcs -ftest-coverage -fsanitize=address -O2
+QMAKE_LFLAGS += -g -Wall -fprofile-arcs -ftest-coverage -fsanitize=address -O2
+MAKE_CXX += -g -fprofile-arcs -ftest-coverage -fsanitize=address -O2
+}
+
 # 指定moc文件生成目录和src一样
 MOC_DIR=$$OUT_PWD/../src
 
