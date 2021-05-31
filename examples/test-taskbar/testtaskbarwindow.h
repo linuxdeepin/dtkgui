@@ -45,7 +45,7 @@ class TestTaskbarWindow : public QWidget
     Q_OBJECT
 
 public:
-    TestTaskbarWindow(QWidget *parent = nullptr);
+    explicit TestTaskbarWindow(QWidget *parent = nullptr);
     ~TestTaskbarWindow();
 
 protected:

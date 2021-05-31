@@ -37,7 +37,7 @@ class DTaskbarControl : public QObject, public DTK_CORE_NAMESPACE::DObject
     Q_OBJECT
 
 public:
-    DTaskbarControl(QObject *parent = nullptr);
+    explicit DTaskbarControl(QObject *parent = nullptr);
     ~DTaskbarControl();
 
     void setProgress(bool progressVisible, double progress);

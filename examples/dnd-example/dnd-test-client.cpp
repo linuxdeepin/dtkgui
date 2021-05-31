@@ -25,7 +25,7 @@ class DropArea : public QFrame
 {
     Q_OBJECT
 public:
-    DropArea(QString s)
+    explicit DropArea(QString s)
         : lb(new QLabel(s, this))
         , le(new QLineEdit(this))
     {
@@ -76,8 +76,8 @@ int main(int argc, char **argv)
     lo->addWidget(new DropArea("area 51"));
     lo->addWidget(new DropArea("area 61"));
 
-    QProgressBar pp;
-    p = &pp;
+    QScopedPointer<QProgressBar> pp = new QProgressBar();
+    p = pp.data();
     p->setMinimum(0);
     p->setMaximum(100);
 

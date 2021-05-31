@@ -38,7 +38,7 @@ DEFINE_CONST_CHAR(clientLeader);
 class DWindowGroupLeaderPrivate
 {
 public:
-    DWindowGroupLeaderPrivate(quint32 groupLeader)
+    explicit DWindowGroupLeaderPrivate(quint32 groupLeader)
         : groupLeader(groupLeader) {
         QFunctionPointer clientLeaderFun = qApp->platformFunction(_clientLeader);
 

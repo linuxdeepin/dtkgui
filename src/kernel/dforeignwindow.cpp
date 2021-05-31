@@ -40,7 +40,7 @@ DEFINE_CONST_CHAR(ProcessId);
 class DForeignWindowPrivate : public DTK_CORE_NAMESPACE::DObjectPrivate
 {
 public:
-    DForeignWindowPrivate(DForeignWindow *qq)
+    explicit DForeignWindowPrivate(DForeignWindow *qq)
         : DObjectPrivate(qq) {}
 };
 

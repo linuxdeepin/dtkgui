@@ -30,7 +30,7 @@ struct DPaletteData : public QSharedData
 class DPalettePrivate
 {
 public:
-    DPalettePrivate(const QSharedDataPointer<DPaletteData> &d)
+    explicit DPalettePrivate(const QSharedDataPointer<DPaletteData> &d)
         : data(d)
     {
 

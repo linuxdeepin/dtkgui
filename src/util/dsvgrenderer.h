@@ -35,7 +35,7 @@ class DSvgRenderer : public QObject, public DTK_CORE_NAMESPACE::DObject
 {
     Q_PROPERTY(QRectF viewBox READ viewBoxF WRITE setViewBox)
 public:
-    DSvgRenderer(QObject *parent = Q_NULLPTR);
+    explicit DSvgRenderer(QObject *parent = Q_NULLPTR);
     DSvgRenderer(const QString &filename, QObject *parent = Q_NULLPTR);
     DSvgRenderer(const QByteArray &contents, QObject *parent = Q_NULLPTR);
     ~DSvgRenderer();
