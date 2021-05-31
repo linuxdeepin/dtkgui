@@ -42,7 +42,7 @@ class DFileDragServerPrivate : public DCORE_NAMESPACE::DObjectPrivate
     QMap<QString, QVariant> data;
     QUuid uuid;
 
-    DFileDragServerPrivate(DFileDragServer *q);
+    explicit DFileDragServerPrivate(DFileDragServer *q);
     ~DFileDragServerPrivate();
 
     void writeMimeData(QMimeData *dest);

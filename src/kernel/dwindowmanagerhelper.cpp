@@ -126,7 +126,7 @@ static bool connectWindowMotifWMHintsChanged(QObject *object, std::function<void
 class DWindowManagerHelperPrivate : public DTK_CORE_NAMESPACE::DObjectPrivate
 {
 public:
-    DWindowManagerHelperPrivate(DWindowManagerHelper *qq)
+    explicit DWindowManagerHelperPrivate(DWindowManagerHelper *qq)
         : DObjectPrivate(qq) {}
 
     mutable QList<DForeignWindow *> windowList;

@@ -50,7 +50,7 @@ private:
 
 class DFileDragClientPrivate : DCORE_NAMESPACE::DObjectPrivate
 {
-    DFileDragClientPrivate(DFileDragClient *q)
+    explicit DFileDragClientPrivate(DFileDragClient *q)
         : DCORE_NAMESPACE::DObjectPrivate(q) {}
     QUuid uuid;
     QString service;

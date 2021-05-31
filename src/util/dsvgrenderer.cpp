@@ -101,7 +101,7 @@ private:
 class DSvgRendererPrivate : public DObjectPrivate
 {
 public:
-    DSvgRendererPrivate(DObject *qq);
+    explicit DSvgRendererPrivate(DObject *qq);
 
     QImage getImage(const QSize &size, const QString &elementId) const;
 
