@@ -113,7 +113,7 @@ TEST_F(TDPalette, testColorFunction)
 #ifndef QT_NO_DATASTREAM
     QByteArray inArray;
     QDataStream in(&inArray, QIODevice::WriteOnly);
-    in.setVersion(QDataStream::Qt_5_11);
+    // in.setVersion(QDataStream::Qt_5_11);
 
     // 直接调用左移运算符会出现二异性 先直接执行一次生成结果
     in << static_cast<const QPalette &>(palette);
