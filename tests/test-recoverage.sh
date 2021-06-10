@@ -7,15 +7,16 @@ cd ../
 rm -rf $BUILD_DIR
 mkdir $BUILD_DIR
 cd $BUILD_DIR
-qmake ..
-make
+qmake .. CONFIG+=debug
+make -j$(nproc)
 cd ../tests/
 
 rm -rf $BUILD_DIR
 mkdir $BUILD_DIR
 cd $BUILD_DIR
-qmake ../
-make check
+qmake .. CONFIG+=debug
+export ASAN_OPTIONS=halt_on_error=0
+make check -j$(nproc)
 
 lcov -d ./ -c -o coverage_all.info
 #lcov --extract coverage_all.info $EXTRACT_ARGS --output-file coverage.info
@@ -23,7 +24,7 @@ lcov --remove coverage_all.info "*/tests/*" "*/usr/include*" "*build/src*" --out
 cd ..
 genhtml -o $REPORT_DIR $BUILD_DIR/coverage.info
 
-mv ../build/asan.log* ../build/asan_dtkgui.log
+mv ./build/asan.log* ./build/asan_dtkgui.log
 
 #rm -rf $BUILD_DIR
 #rm -rf ../$BUILD_DIR
