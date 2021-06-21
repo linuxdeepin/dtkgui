@@ -427,14 +427,16 @@ class _DGuiApplicationHelper
 {
 public:
     _DGuiApplicationHelper()
-        : helper(creator())
+        : helper(nullptr)
     {
-        helper->initialize();
     }
 
     ~_DGuiApplicationHelper()
     {
-        delete helper;
+        if (helper) {
+            helper->deleteLater();
+            helper = nullptr;
+        }
     }
 
     static DGuiApplicationHelper *defaultCreator()
@@ -497,9 +499,8 @@ void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::Helpe
     _DGuiApplicationHelper::creator = creator;
 
     if (_globalHelper.exists() && _globalHelper->helper) {
-        delete _globalHelper->helper;
-        _globalHelper->helper = creator();
-        _globalHelper->helper->initialize();
+        _globalHelper->helper->deleteLater();
+        _globalHelper->helper = nullptr;
     }
 }
 
@@ -515,6 +516,19 @@ inline static int adjustColorValue(int base, qint8 increment, int max = 255)
  */
 DGuiApplicationHelper *DGuiApplicationHelper::instance()
 {
+    // 单例模式，延迟创建DGuiApplicationHelper
+    if (nullptr == _globalHelper->helper) {
+        _globalHelper->helper = _DGuiApplicationHelper::creator();
+        _globalHelper->helper->initialize();
+        // 当QApplication析构时，同时析构DGuiApplicationHelper
+        QObject::connect(qApp, &QObject::destroyed, [](){
+            if (_globalHelper->helper) {
+                _globalHelper->helper->deleteLater();
+                _globalHelper->helper = nullptr;
+            }
+        });
+    }
+
     return _globalHelper->helper;
 }
 
