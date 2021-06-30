@@ -43,6 +43,7 @@ protected:
     }
     virtual void TearDown()
     {
+        qDeleteAll(foreignWindows);
         foreignWindows.clear();
     }
 

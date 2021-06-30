@@ -93,7 +93,6 @@ TEST_F(TDGuiApplicationHelper, testFunction)
     ASSERT_EQ(helper->toColorType(QColor(Qt::black)), DGuiApplicationHelper::DarkType);
     ASSERT_EQ(helper->themeType(), DGuiApplicationHelper::DarkType);
     ASSERT_EQ(helper->paletteType(), DGuiApplicationHelper::DarkType);
-    ASSERT_TRUE(helper->setSingleInstance("dtkgui-ut"));
 }
 
 TEST_F(TDGuiApplicationHelper, AttributeReadWrite)
