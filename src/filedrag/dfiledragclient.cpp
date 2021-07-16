@@ -91,20 +91,28 @@ void DDndClientSignalRelay::serverDestroyed(QString uuid)
 }
 
 /*!
- * \~chinese \class DFileDragClient
- * \~chinese \brief 提供拖拽文件时与文件发送方交互的接口。
+  \class Dtk::Gui::DFileDragClient
+  \inmodule dtkgui
+  \brief 提供拖拽文件时与文件发送方交互的接口.
  */
 
 /*!
- * \~chinese \fn DFileDragClient::progressChanged
- * \~chinese \param 当前进度
- * \~chinese \brief 信号会在当前进度变化时被发送
- * \~chinese \fn DFileDragClient::stateChanged
- * \~chinese \param 改变后的新状态
- * \~chinese \brief 信号会在当前状态变化时被发送
- * \~chinese \fn DFileDragClient::serverDestroyed
- * \~chinese \brief 信号会在发送方析构销毁前被发送
- * \~chinese \note DFileDragClient 收到后会自删除(deletelater)，因此不用去管理 new 出来的 DFileDragClient
+  \fn void DFileDragClient::progressChanged(int progress)
+  \a progress 当前进度
+  \brief 信号会在当前进度变化时被发送.
+ */
+
+/*!
+  \fn void DFileDragClient::stateChanged(DFileDragState state)
+  \a state 改变后的新状态
+  \brief 信号会在当前状态变化时被发送.
+ */
+
+/*!
+  \fn void DFileDragClient::serverDestroyed()
+  \brief 信号会在发送方析构销毁前被发送.
+
+  \note DFileDragClient 收到后会自删除(deletelater)，因此不用去管理 new 出来的 DFileDragClient
  */
 
 DFileDragClient::DFileDragClient(const QMimeData *data, QObject *parent)
@@ -146,8 +154,8 @@ DFileDragClient::DFileDragClient(const QMimeData *data, QObject *parent)
 }
 
 /*!
- * \~chinese \brief DFileDragClient::progress
- * \~chinese \return 返回当前拖拽的进度
+  \brief DFileDragClient::progress
+  \return 返回当前拖拽的进度
  */
 int DFileDragClient::progress() const
 {
@@ -157,8 +165,8 @@ int DFileDragClient::progress() const
 }
 
 /*!
- * \~chinese \brief DFileDragClient::state
- * \~chinese \return 返回当前状态,见 DFileDragState
+  \brief DFileDragClient::state
+  \return 返回当前状态,见 DFileDragState
  */
 DFileDragState DFileDragClient::state() const
 {
@@ -168,10 +176,10 @@ DFileDragState DFileDragClient::state() const
 }
 
 /*!
- * \~chinese \brief DFileDragClient::checkMimeData
- * \~chinese \param data
- * \~chinese \return 包含 DND_MIME_PID 格式的数据时返回 true，否则返回 false
- * \~chinese \note 通常在接收拖放数据的应用的dropEvent(QDropEvent *event)函数中检测当前 event->mimeData() 是否是 DFileDrag
+  \brief DFileDragClient::checkMimeData
+  \a data
+  \return 包含 DND_MIME_PID 格式的数据时返回 true，否则返回 false
+  \note 通常在接收拖放数据的应用的dropEvent(QDropEvent *event)函数中检测当前 event->mimeData() 是否是 DFileDrag
  */
 bool DFileDragClient::checkMimeData(const QMimeData *data)
 {
@@ -179,11 +187,11 @@ bool DFileDragClient::checkMimeData(const QMimeData *data)
 }
 
 /*!
- * \~chinese \brief DFileDragClient::setTargetData
- * \~chinese \param data 拖放时传入的data,用于获取和发送数据的应用dbus通讯需要的一些信息
- * \~chinese \param key
- * \~chinese \param value
- * \~chinese \note 向文件发送方设置自定义数据
+  \brief DFileDragClient::setTargetData
+  \a data 拖放时传入的data,用于获取和发送数据的应用dbus通讯需要的一些信息
+  \a key
+  \a value
+  \note 向文件发送方设置自定义数据
  */
 void DFileDragClient::setTargetData(const QMimeData *data, QString key, QVariant value)
 {
@@ -200,10 +208,10 @@ void DFileDragClient::setTargetData(const QMimeData *data, QString key, QVariant
 }
 
 /*!
- * \~chinese \brief DFileDragClient::setTargetUrl
- * \~chinese \param data
- * \~chinese \param url
- * \~chinese \note 告知文件发送方拖拽目标路径
+  \brief DFileDragClient::setTargetUrl
+  \a data
+  \a url
+  \note 告知文件发送方拖拽目标路径
  */
 void DFileDragClient::setTargetUrl(const QMimeData *data, QUrl url)
 {

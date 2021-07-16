@@ -93,14 +93,15 @@ private:
 };
 
 /*!
- * \~chinese \class DFileDragServer
- * \~chinese \brief 提供拖拽文件时与文件接收方交互的接口。
+  \class Dtk::Gui::DFileDragServer
+  \inmodule dtkgui
+  \brief 提供拖拽文件时与文件接收方交互的接口.
  */
 
 /*!
- * \~chinese \fn DFileDragServer::targetDataChanged
- * \~chinese \param
- * \~chinese \brief 信号会在接收方调用 setData 变化时被发送
+  \fn void DFileDragServer::targetDataChanged(const QString &key)
+
+  \brief 信号会在接收方调用 setData 变化时被发送.
  */
 
 DFileDragServer::DFileDragServer(QObject *parent)
@@ -118,9 +119,9 @@ DFileDragServer::~DFileDragServer()
 }
 
 /*!
- * \~chinese \brief DFileDragServer::targetData
- * \~chinese \param key
- * \~chinese \return 返回文件接收方设置数据 key 对应的 value
+  \brief DFileDragServer::targetData.
+  \a key
+  \return 返回文件接收方设置数据 \a key 对应的 value
  */
 QVariant DFileDragServer::targetData(const QString &key) const
 {
@@ -130,9 +131,9 @@ QVariant DFileDragServer::targetData(const QString &key) const
 }
 
 /*!
- *\~chinese \brief DFileDragServer::setProgress
- *\~chinese \param progress 当前进度
- *\~chinese \brief 拖拽进度更新，接收方会受到 progressChanged 信号
+  \brief DFileDragServer::setProgress.
+  \a progress 当前进度
+  \brief 拖拽进度更新，接收方会受到 progressChanged 信号.
  */
 void DFileDragServer::setProgress(int progress)
 {
@@ -145,9 +146,9 @@ void DFileDragServer::setProgress(int progress)
 }
 
 /*!
- * \~chinese \brief DFileDragServer::setState
- * \~chinese \param state
- * \~chinese \brief 改变状态，接收方会受到 stateChanged 信号
+  \brief DFileDragServer::setState.
+  \a state
+  \brief 改变状态，接收方会受到 stateChanged 信号.
  */
 void DFileDragServer::setState(DFileDragState state)
 {

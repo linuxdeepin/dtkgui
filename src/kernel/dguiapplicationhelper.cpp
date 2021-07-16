@@ -192,9 +192,10 @@ void DInstanceGuard::shmInit()
 }
 
 /*!
-    \fn DInstanceGuard::setInstanceName(const QString &name) 设置实例名
+  \internal
+  \brief 设置实例名
 
-    根据实例名初始化对应的共享内存
+  根据实例名初始化对应的共享内存
 */
 bool DInstanceGuard::setInstanceName(const QString &name)
 {
@@ -209,11 +210,12 @@ bool DInstanceGuard::setInstanceName(const QString &name)
 }
 
 /*!
-    \fn DInstanceGuard::guard 创建 DInstanceGuard 实例
+  \internal
+  \brief 创建 DInstanceGuard 实例
 
-    传入 name 实例名，确保和当前 name 相同的实例在系统中只能同时存在不超过两个，确保后续可以完成后者到
-    前者的通信过程，最终只保留一个实例。负责完成 DGuiApplicationHelper::setSingleInstance 中的
-    第一阶段。
+  传入 name 实例名，确保和当前 name 相同的实例在系统中只能同时存在不超过两个，确保后续可以完成后者到
+  前者的通信过程，最终只保留一个实例。负责完成 DGuiApplicationHelper::setSingleInstance 中的
+  第一阶段。
  */
 bool DInstanceGuard::guard(const QString &name)
 {
@@ -259,11 +261,10 @@ void DInstanceGuard::destroy()
 }
 
 /*!
-    \fn void DInstanceGuard::enterCriticalSection()
-
-    进入临界区。 按 Guard 传入的 name 进行代码段的保护。不能单独使用，必须先调用 Guard。
-    不能用于同一进程内的多线程。根据实例名的 scope，最大可提供系统级的保护。
-    确保 DGuiApplicationHelper::setSingleInstance 中的第二阶段正确执行。
+  \internal
+  进入临界区。 按 Guard 传入的 name 进行代码段的保护。不能单独使用，必须先调用 Guard。
+  不能用于同一进程内的多线程。根据实例名的 scope，最大可提供系统级的保护。
+  确保 DGuiApplicationHelper::setSingleInstance 中的第二阶段正确执行。
 */
 void DInstanceGuard::enterCriticalSection() {
     errorExitIf(s_name.isEmpty() || !s_pSelf, u"Enter critical section failed. must set instance name first.");
@@ -474,54 +475,52 @@ bool DGuiApplicationHelperPrivate::isCustomPalette() const
 }
 
 /*!
- * \~chinese \class DGuiApplicationHelper
- * \~chinese \brief DGuiApplicationHelper 应用程序的 GUI ，如主题、调色板等
+  \class Dtk::Gui::DGuiApplicationHelper
+  \inmodule dtkgui
+  \brief DGuiApplicationHelper 应用程序的 GUI ，如主题、调色板等.
  */
 
 /*!
- *
- * \~chinese \enum DGuiApplicationHelper::ColorType
- * \~chinese DGuiApplicationHelper::ColorType 定义了主题类型
- *
- * \~chinese \var DGuiApplicationHelper:ColorType DGuiApplicationHelper::UnknownType
- * \~chinese 未知主题(浅色主题或深色主题)
- *
- * \~chinese \var DGuiApplicationHelper:ColorType DGuiApplicationHelper::LightType
- * \~chinese 浅色主题
- *
- * \~chinese \var DGuiApplicationHelper:ColorType DGuiApplicationHelper::DarkType
- * \~chinese 深色主题
+  \enum Dtk::Gui::DGuiApplicationHelper::ColorType
+  DGuiApplicationHelper::ColorType 定义了主题类型.
+  
+  \value UnknownType
+  未知主题(浅色主题或深色主题)
+  
+  \value LightType
+  浅色主题
+  
+  \value DarkType
+  深色主题
  */
 
 /*!
- *
- * \~chinese \enum DGuiApplicationHelper::Attribute
- * \~chinese DGuiApplicationHelper::Attribute 定义了功能属性
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::UseInactiveColorGroup
- * \~chinese 如果开启，当窗口处于Inactive状态时就会使用QPalette::Inactive的颜色，否则窗口将没有任何颜色变化。
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::ColorCompositing
- * \~chinese 是否采用半透明样式的调色板。
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::ReadOnlyLimit
- * \~chinese 区分只读枚举。
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsDeepinPlatformTheme
- * \~chinese 获取当前是否使用deepin的platformtheme插件，platformtheme插件可以为Qt程序提供特定的控件样式，默认使用chameleon主题。
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsDPlatformDXcb
- * \~chinese 获取当前使用的是不是dtk的xcb窗口插件，dxcb插件提供了窗口圆角和阴影功能。
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsXWindowPlatform
- * \~chinese 获取当前是否运行在X11环境中。
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsTableEnvironment
- * \~chinese 获取当前是否运行在deepin平板环境中，检测XDG_CURRENT_DESKTOP环境变量是不是tablet结尾。
- *
- * \~chinese \var DGuiApplicationHelper:Attribute DGuiApplicationHelper::IsDeepinEnvironment
- * \~chinese 获取当前是否运行在deepin桌面环境中，检测XDG_CURRENT_DESKTOP环境变量是不是deepin。
- *
+  \enum Dtk::Gui::DGuiApplicationHelper::Attribute
+  DGuiApplicationHelper::Attribute 定义了功能属性
+  
+  \value UseInactiveColorGroup
+  如果开启，当窗口处于Inactive状态时就会使用QPalette::Inactive的颜色，否则窗口将没有任何颜色变化。
+  
+  \value ColorCompositing
+  是否采用半透明样式的调色板。
+  
+  \value ReadOnlyLimit
+  区分只读枚举。
+  
+  \value IsDeepinPlatformTheme
+  获取当前是否使用deepin的platformtheme插件，platformtheme插件可以为Qt程序提供特定的控件样式，默认使用chameleon主题。
+  
+  \value IsDXcbPlatform
+  获取当前使用的是不是dtk的xcb窗口插件，dxcb插件提供了窗口圆角和阴影功能。
+  
+  \value IsXWindowPlatform
+  获取当前是否运行在X11环境中。
+  
+  \value IsTableEnvironment
+  获取当前是否运行在deepin平板环境中，检测XDG_CURRENT_DESKTOP环境变量是不是tablet结尾。
+  
+  \value IsDeepinEnvironment
+  获取当前是否运行在deepin桌面环境中，检测XDG_CURRENT_DESKTOP环境变量是不是deepin。
  */
 
 DGuiApplicationHelper::DGuiApplicationHelper()
@@ -539,9 +538,9 @@ void DGuiApplicationHelper::initialize()
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::registerInstanceCreator创建 DGuiApplicationHelper 对象
- * \~chinese \param creator 函数指针
- * \~chinese \note \row 一定要先调用此函数,再使用 DGuiApplicationHelper::instance()
+  \brief DGuiApplicationHelper::registerInstanceCreator创建 DGuiApplicationHelper 对象
+  \a creator 函数指针
+  \note 一定要先调用此函数,再使用 DGuiApplicationHelper::instance()
  */
 void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::HelperCreator creator)
 {
@@ -562,8 +561,8 @@ inline static int adjustColorValue(int base, qint8 increment, int max = 255)
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::instance返回 DGuiApplicationHelper 对象
- * \~chinese \return DGuiApplicationHelper对象
+  \brief DGuiApplicationHelper::instance返回 DGuiApplicationHelper 对象
+  \return DGuiApplicationHelper对象
  */
 DGuiApplicationHelper *DGuiApplicationHelper::instance()
 {
@@ -576,18 +575,18 @@ DGuiApplicationHelper::~DGuiApplicationHelper()
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::adjustColor 调整颜色
- * \~chinese \note \row 取值范围均为 -100 ~ 100 ,当三原色参数为-100时，颜色为黑色，参数为100时，颜色为白色.
- * \~chinese 以透明度( alphaFloat )为例,当参数为负数时基础色的 alphaFloat 值减少，现象偏向透明, 参数为正数alphaFloat 值增加，现象偏不透明
- * \~chinese \param base基础色
- * \~chinese \param hueFloat 色调
- * \~chinese \param saturationFloat 饱和度
- * \~chinese \param lightnessFloat 亮度
- * \~chinese \param redFloat 红色
- * \~chinese \param greenFloat 绿色
- * \~chinese \param blueFloat 蓝色
- * \~chinese \param alphaFloat Alpha通道(透明度)
- * \~chinese \return 经过调整的颜色
+  \brief DGuiApplicationHelper::adjustColor 调整颜色
+  \note 取值范围均为 -100 ~ 100 ,当三原色参数为-100时，颜色为黑色，参数为100时，颜色为白色.
+  以透明度( alphaFloat )为例,当参数为负数时基础色的 alphaFloat 值减少，现象偏向透明, 参数为正数alphaFloat 值增加，现象偏不透明
+  \a base 基础色
+  \a hueFloat 色调
+  \a saturationFloat 饱和度
+  \a lightnessFloat 亮度
+  \a redFloat 红色
+  \a greenFloat 绿色
+  \a blueFloat 蓝色
+  \a alphaFloat Alpha通道(透明度)
+  \return 经过调整的颜色
  */
 QColor DGuiApplicationHelper::adjustColor(const QColor &base,
                                           qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
@@ -618,10 +617,10 @@ QColor DGuiApplicationHelper::adjustColor(const QColor &base,
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::blendColor 将两种颜色混合，合成新的颜色
- * \~chinese \param substrate底层颜色
- * \~chinese \param superstratum上层颜色
- * \~chinese \return 混合颜色
+  \brief DGuiApplicationHelper::blendColor 将两种颜色混合，合成新的颜色
+  \a substrate 底层颜色
+  \a superstratum 上层颜色
+  \return 混合颜色
  */
 QColor DGuiApplicationHelper::blendColor(const QColor &substrate, const QColor &superstratum)
 {
@@ -717,9 +716,9 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
 };
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::standardPalett 根据主题获取标准调色板
- * \~chinese \param type 主题枚举值
- * \~chinese \return 调色板
+  \brief DGuiApplicationHelper::standardPalett 根据主题获取标准调色板
+  \a type 主题枚举值
+  \return 调色板
  */
 DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType type)
 {
@@ -884,10 +883,11 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::generatePaletteColor 获取调色板颜色
- * \~chinese \param base调色板
- * \~chinese \param \sa roleQPalette::ColorRole()
- * \~chinese \param type主题枚举值
+  \brief DGuiApplicationHelper::generatePaletteColor 获取调色板颜色
+  \a base 调色板
+  \a role 色码
+  \a type 主题枚举值
+  \sa QPalette::ColorRole()
  */
 void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::ColorRole role, DGuiApplicationHelper::ColorType type)
 {
@@ -909,17 +909,19 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::Color
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::generatePaletteColor
- * \~chinese 加工调色板的颜色. 一般我们只会为调色板的 \a QPalette::Normal 组设置颜色值, 但是
- * \~chinese 控件中也需要使用其他组的颜色, 此函数使用一些固定规则为 \a base 填充 \a QPalette::Disabled
- * \~chinese 和 \a QPalette::Inactive 分组的颜色. 不同的颜色类型会使用不同的加工规则, 如果为 \a LightType
- * \~chinese 类型, 则将颜色的alpha通道调整为 0.6 后作为 \a QPalette::Disabled 类的颜色使用, 调整为 0.4 后
- * \~chinese 作为 \a QPalette::Inactive 类的颜色使用. 如果为 \a DarkType 类型, 则将颜色的alpha通道调整为
- * \~chinese 0.7 后作为 \a QPalette::Disabled 类的颜色使用, 调整为 0.6 后作为 \a QPalette::Inactive
- * \~chinese 类的颜色使用.
- * \~chinese \param base 被加工的调色板
- * \~chinese \param role 加工的项
- * \~chinese \param type 加工时所使用的颜色类型, 如果值为 UnknownType 将使用 \a toColorType 获取颜色类型
+  \brief DGuiApplicationHelper::generatePaletteColor
+
+  加工调色板的颜色. 一般我们只会为调色板的 QPalette::Normal 组设置颜色值, 但是
+  控件中也需要使用其他组的颜色, 此函数使用一些固定规则为 \a base 填充 QPalette::Disabled
+  和 QPalette::Inactive 分组的颜色. 不同的颜色类型会使用不同的加工规则, 如果为 LightType
+  类型, 则将颜色的alpha通道调整为 0.6 后作为 QPalette::Disabled 类的颜色使用, 调整为 0.4 后
+  作为 QPalette::Inactive 类的颜色使用. 如果为 DarkType 类型, 则将颜色的alpha通道调整为
+  0.7 后作为 QPalette::Disabled 类的颜色使用, 调整为 0.6 后作为 QPalette::Inactive
+  类的颜色使用.
+
+  \a base 被加工的调色板
+  \a role 加工的项
+  \a type 加工时所使用的颜色类型, 如果值为 UnknownType 将使用 toColorType 获取颜色类型
  */
 void DGuiApplicationHelper::generatePaletteColor(DPalette &base, DPalette::ColorType role, DGuiApplicationHelper::ColorType type)
 {
@@ -927,11 +929,13 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, DPalette::Color
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::generatePalette
- * \~chinese 加工调色板的颜色. 同 \a generatePaletteColor, 将直接调用 \a generatePaletteColor 加工
- * \~chinese 所有类型的调色板颜色.
- * \~chinese \param base 被加工的调色板
- * \~chinese \param type 加工时所使用的颜色类型, 如果值为 UnknownType 将使用 \a toColorType 获取颜色类型
+  \brief DGuiApplicationHelper::generatePalette
+
+  加工调色板的颜色. 同 generatePaletteColor, 将直接调用 generatePaletteColor 加工
+  所有类型的调色板颜色.
+
+  \a base 被加工的调色板
+  \a type 加工时所使用的颜色类型, 如果值为 UnknownType 将使用 toColorType 获取颜色类型
  */
 void DGuiApplicationHelper::generatePalette(DPalette &base, ColorType type)
 {
@@ -952,14 +956,16 @@ void DGuiApplicationHelper::generatePalette(DPalette &base, ColorType type)
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::fetchPalette 获取调色板数据.
- * \~chinese 首先根据 DPlatformTheme::themeName 获取主题的颜色类型, 如果名称以
- * \~chinese  "dark" 结尾则认为其颜色类型为 \a DarkType, 否则为 \a LightType.
- * \~chinese 如果主题名称为空, 将使用其父主题的名称( \a DPlatformTheme::fallbackProperty ).
- * \~chinese 根据颜色类型将使用 \a standardPalette 获取基础调色板数据, 在此基础上
- * \~chinese 从 \a DPlatformTheme::fetchPalette 获取最终的调色板.
- * \~chinese \param theme 平台主题对象
- * \~chinese \return 调色板数据
+  \brief DGuiApplicationHelper::fetchPalette 获取调色板数据.
+
+  首先根据 DPlatformTheme::themeName 获取主题的颜色类型, 如果名称以
+   "dark" 结尾则认为其颜色类型为 DarkType, 否则为 LightType.
+  如果主题名称为空, 将使用其父主题的名称( DPlatformTheme::fallbackProperty ).
+  根据颜色类型将使用 standardPalette 获取基础调色板数据, 在此基础上
+  从 DPlatformTheme::fetchPalette 获取最终的调色板.
+
+  \a theme 平台主题对象
+  \return 调色板数据
  */
 DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
 {
@@ -993,9 +999,10 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setUseInactiveColorGroup设置是否将调色板的颜色改为半透明模式
- * \~chinese 一般用在主窗口背景为透明、模糊的程序中
- * \~chinese \param on 是否开启
+  \brief DGuiApplicationHelper::setUseInactiveColorGroup设置是否将调色板的颜色改为半透明模式.
+
+  一般用在主窗口背景为透明、模糊的程序中
+  \a on 是否开启
  */
 void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
 {
@@ -1003,8 +1010,9 @@ void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setColorCompositingEnabled设置是否开启混合颜色
- * \~chinese \param on 是否开启
+  \brief DGuiApplicationHelper::setColorCompositingEnabled设置是否开启混合颜色.
+
+  \a on 是否开启
  */
 void DGuiApplicationHelper::setColorCompositingEnabled(bool on)
 {
@@ -1017,8 +1025,9 @@ bool DGuiApplicationHelper::isXWindowPlatform()
 }
 
 /*!
- * \~chinese \brief isTabletEnvironment 用于判断当前桌面环境是否是平板电脑环境
- * \~chinese \return true 是平板电脑环境 false不是平板电脑环境
+  \brief isTabletEnvironment 用于判断当前桌面环境是否是平板电脑环境.
+
+  \return true 是平板电脑环境 false不是平板电脑环境
  */
 bool DGuiApplicationHelper::isTabletEnvironment()
 {
@@ -1026,11 +1035,12 @@ bool DGuiApplicationHelper::isTabletEnvironment()
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::systemTheme
- * \~chinese 返回系统级别的主题, 优先级低于 \a applicationTheme
- * \~chinese \return 平台主题对象
- * \~chinese \sa applicationTheme
- * \~chinese \sa windowTheme
+  \brief DGuiApplicationHelper::systemTheme.
+
+  返回系统级别的主题, 优先级低于 applicationTheme
+  \return 平台主题对象
+  \sa applicationTheme
+  \sa windowTheme
  */
 DPlatformTheme *DGuiApplicationHelper::systemTheme() const
 {
@@ -1040,11 +1050,12 @@ DPlatformTheme *DGuiApplicationHelper::systemTheme() const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::applicationTheme
- * \~chinese 同 systemTheme
- * \~chinese \return 平台主题对象
- * \~chinese \sa systemTheme
- * \~chinese \sa windowTheme
+  \brief DGuiApplicationHelper::applicationTheme.
+
+  同 systemTheme
+  \return 平台主题对象
+  \sa systemTheme
+  \sa windowTheme
  */
 DPlatformTheme *DGuiApplicationHelper::applicationTheme() const
 {
@@ -1060,13 +1071,13 @@ DPlatformTheme *DGuiApplicationHelper::applicationTheme() const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::windowTheme
- * \~chinese 返回窗口级别的主题, 优先级高于 \a windowTheme 和 \a systemTheme
- * \~chinese \param window 主题对象对应的窗口
- * \~chinese \return 平台主题对象
- * \~chinese \sa applicationTheme
- * \~chinese \sa windowTheme
- * \~chinese \warning 已废弃, 不再对外暴露为特定窗口设置主题的接口
+  \brief DGuiApplicationHelper::windowTheme.
+
+  返回窗口级别的主题, 优先级高于 \a windowTheme 和 \a systemTheme
+  \a window 主题对象对应的窗口
+  \return 平台主题对象
+  \sa applicationTheme()
+  \warning 已废弃, 不再对外暴露为特定窗口设置主题的接口
  */
 DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
 {
@@ -1083,18 +1094,19 @@ DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::applicationPalette返回应用程序调色板
- * \~chinese 如果使用 \a setApplicationPalette 设置过一个有效的调色板, 将直接返回保存的调色板. 否则
- * \~chinese 先计算调色板的ColorType, 再使用这个颜色类型通过 \a standardPalette 获取标准调色板. 计算
- * \~chinese ColorType的数据来源按优先级从高到低排列有以下几种方式:
- * \~chinese 1. 如果使用 \a setThemeType 设置过一个有效的颜色类型, 将直接使用 \a themeType 的值.
- * \~chinese 2. 如果为QGuiApplication设置过调色板(表现为 QGuiApplication::testAttribute(Qt::AA_SetPalette)
- * \~chinese 为true), 则将使用 QGuiApplication::palette 通过 \a toColorType 获取颜色类型.
- * \~chinese 3. 将根据 \a applicationTheme 的 DPlatformTheme::themeName 计算颜色类型.
- * \~chinese 如果ColorType来源自第2种方式, 则会直接使用 QGuiApplication::palette 覆盖标准调色板中的
- * \~chinese QPalette 部分, 且程序不会再跟随系统的活动色自动更新调色板.
- * \~chinese \warning 不应该在DTK程序中使用QGuiApplication/QApplication::setPalette
- * \~chinese \return 应用程序调色板
+  \brief DGuiApplicationHelper::applicationPalette返回应用程序调色板.
+
+  如果使用 setApplicationPalette 设置过一个有效的调色板, 将直接返回保存的调色板. 否则
+  先计算调色板的ColorType, 再使用这个颜色类型通过 standardPalette 获取标准调色板. 计算
+  ColorType的数据来源按优先级从高到低排列有以下几种方式:
+  1. 如果使用 setThemeType 设置过一个有效的颜色类型, 将直接使用 themeType 的值.
+  2. 如果为QGuiApplication设置过调色板(表现为 QGuiApplication::testAttribute(Qt::AA_SetPalette)
+  为true), 则将使用 QGuiApplication::palette 通过 toColorType 获取颜色类型.
+  3. 将根据 applicationTheme 的 DPlatformTheme::themeName 计算颜色类型.
+  如果ColorType来源自第2种方式, 则会直接使用 QGuiApplication::palette 覆盖标准调色板中的
+  QPalette 部分, 且程序不会再跟随系统的活动色自动更新调色板.
+  \warning 不应该在DTK程序中使用QGuiApplication/QApplication::setPalette
+  \return 应用程序调色板
  */
 DPalette DGuiApplicationHelper::applicationPalette() const
 {
@@ -1140,16 +1152,17 @@ DPalette DGuiApplicationHelper::applicationPalette() const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setApplicationPalette
- * \~chinese 自定义应用程序调色板, 如果没有为 QGuiApplication 设置过 QPalette, 则
- * \~chinese 将触发 \a QGuiApplication::palette 的更新. 如果仅需要控制程序使用亮色还是暗色的
- * \~chinese 调色板, 请使用 setThemeType.
- * \~chinese \note 主动设置调色板的操作会导致程序不再使用 DPlatformTheme 中调色板相关的数据, 也
- * \~chinese 包括窗口级别的 \a windowTheme 所对应的 DPlatformTheme, 届时设置 DPlatformTheme
- * \~chinese 的 themeName 和所有与 palette 相关的属性都不再生效.
- * \~chinese \warning 使用此方式设置的调色板将不会自动跟随活动色的变化
- * \~chinese \warning 如果使用过QGuiApplication::setPalette, 此方式可能不会生效
- * \~chinese \param palette 要设置的调色板
+  \brief DGuiApplicationHelper::setApplicationPalette.
+
+  自定义应用程序调色板, 如果没有为 QGuiApplication 设置过 QPalette, 则
+  将触发 QGuiApplication::palette 的更新. 如果仅需要控制程序使用亮色还是暗色的
+  调色板, 请使用 setThemeType.
+  \note 主动设置调色板的操作会导致程序不再使用 DPlatformTheme 中调色板相关的数据, 也
+  包括窗口级别的 windowTheme 所对应的 DPlatformTheme, 届时设置 DPlatformTheme
+  的 themeName 和所有与 \a palette 相关的属性都不再生效.
+  \warning 使用此方式设置的调色板将不会自动跟随活动色的变化
+  \warning 如果使用过QGuiApplication::setPalette, 此方式可能不会生效
+  \a palette 要设置的调色板
  */
 void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
 {
@@ -1176,22 +1189,23 @@ void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::windowPalette
- * \~chinese 返回窗口所对应的调色板数据, 同 \a applicationPalette, 如果程序中自定义了
- * \~chinese 调色板, 则直接使用 \a applicationPalette. 自定义调色板的三种方式如下:
- * \~chinese 1. 通过 \a setApplicationPalette 固定调色板
- * \~chinese 2. 通过 \a setThemeType 固定调色板的类型
- * \~chinese 3. 通过 \a QGuiApplication::setPalette 固定调色板, 需要注意此方法不可逆.
- * \~chinese 否则将基于窗口所对应的 \a DPlatformTheme 获取调色板(\sa fetchPalette).
- * \~chinese \param window
- * \~chinese \return 调色板
- * \~chinese \sa windowTheme
- * \~chinese \sa fetchPalette
- * \~chinese \sa standardPalette
- * \~chinese \sa generatePalette
- * \~chinese \sa applicationPalette
- * \~chinese \warning 使用时要同时关注 \a paletteChanged, 收到此信号后可能需要重新获取窗口的调色板
- * \~chinese \warning 已废弃, 不再对外暴露控制窗口级别调色板的接口
+  \brief DGuiApplicationHelper::windowPalette.
+
+  返回窗口所对应的调色板数据, 同 applicationPalette, 如果程序中自定义了
+  调色板, 则直接使用 applicationPalette. 自定义调色板的三种方式如下:
+  1. 通过 setApplicationPalette 固定调色板
+  2. 通过 setThemeType 固定调色板的类型
+  3. 通过 QGuiApplication::setPalette 固定调色板, 需要注意此方法不可逆.
+  否则将基于窗口所对应的 DPlatformTheme 获取调色板( fetchPalette).
+  \a window
+  \return 调色板
+  \sa windowTheme
+  \sa fetchPalette
+  \sa standardPalette
+  \sa generatePalette
+  \sa applicationPalette
+  \warning 使用时要同时关注 paletteChanged, 收到此信号后可能需要重新获取窗口的调色板
+  \warning 已废弃, 不再对外暴露控制窗口级别调色板的接口
  */
 DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
 {
@@ -1212,10 +1226,11 @@ DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::fontManager
- * \~chinese 程序中唯一的DFontManager对象, 会根据程序的fontChanged信号
- * \~chinese 更新 DFontManager::baseFontPixelSize
- * \~chinese \warning 请不要尝试更改它的 baseFontPixelSize 属性
+  \brief DGuiApplicationHelper::fontManager.
+
+  程序中唯一的DFontManager对象, 会根据程序的fontChanged信号
+  更新 DFontManager::baseFontPixelSize
+  \warning 请不要尝试更改它的 baseFontPixelSize 属性
  */
 const DFontManager *DGuiApplicationHelper::fontManager() const
 {
@@ -1228,11 +1243,12 @@ const DFontManager *DGuiApplicationHelper::fontManager() const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::toColorType 获取颜色的明亮度，将其转换为主题类型的枚举值。
- * \~chinese 转换的策略为：先将颜色转换为rgb格式，再根据 Y = 0.299R + 0.587G + 0.114B 的公式
- * \~chinese 计算出颜色的亮度，亮度大于 191 时认为其为浅色，否则认为其为深色。
- * \~chinese \param color 需要转换为主题的类型的颜色
- * \~chinese \return 颜色类型的枚举值
+  \brief DGuiApplicationHelper::toColorType 获取颜色的明亮度，将其转换为主题类型的枚举值.
+
+  转换的策略为：先将颜色转换为rgb格式，再根据 Y = 0.299R + 0.587G + 0.114B 的公式
+  计算出颜色的亮度，亮度大于 191 时认为其为浅色，否则认为其为深色。
+  \a color 需要转换为主题的类型的颜色
+  \return 颜色类型的枚举值
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QColor &color)
 {
@@ -1251,11 +1267,12 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QColor
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::toColorType
- * \~chinese 使用 QPalette::background 获取颜色的明亮度，将其转换为主题类型的枚举值。
- * \~chinese \row 返回调色板的颜色类型
- * \~chinese \param palette调色板
- * \~chinese \return 颜色类型的枚举值
+  \brief DGuiApplicationHelper::toColorType.
+
+  使用 QPalette::background 获取颜色的明亮度，将其转换为主题类型的枚举值。
+  返回调色板的颜色类型
+  \a palette 调色板
+  \return 颜色类型的枚举值
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QPalette &palette)
 {
@@ -1263,13 +1280,14 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QPalet
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::themeType
- * \~chinese \row 返回程序的主题类型, 当themeType为UnknownType时, 将自动根据
- * \~chinese GuiApplication::palette的QPalette::background颜色计算主题
- * \~chinese 类型, 否则与 \a paletteType 的值一致. 程序中应当使用此值作为
- * \~chinese 暗色/亮色主题类型的判断.
- * \~chinese \return 主题的颜色类型
- * \~chinese \sa toColorType
+  \brief DGuiApplicationHelper::themeType.
+
+  返回程序的主题类型, 当themeType为UnknownType时, 将自动根据
+  GuiApplication::palette的QPalette::background颜色计算主题
+  类型, 否则与 paletteType 的值一致. 程序中应当使用此值作为
+  暗色/亮色主题类型的判断.
+  \return 主题的颜色类型
+  \sa toColorType
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
 {
@@ -1283,10 +1301,11 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::paletteType
- * \~chinese 返回当前已设置的调色板类型，如果未调用过 setPaletteType, 默认为 UnknownType.
- * \~chinese \warning 与 themetype 不同，此值与程序当前的 QPalette 没有关系。
- * \~chinese \sa DGuiApplicationHelper::themeType
+  \brief DGuiApplicationHelper::paletteType.
+
+  返回当前已设置的调色板类型，如果未调用过 setPaletteType, 默认为 UnknownType.
+  \warning 与 themetype 不同，此值与程序当前的 QPalette 没有关系。
+  \sa DGuiApplicationHelper::themeType
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
 {
@@ -1295,12 +1314,13 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setSingleInstance 设置DGuiApplicationHelper实例
- * \~chinese \param key 实例关键字
- * \~chinese \param singleScope 实例使用范围
- * \~chinese \return 设置是否成功
- * \~chinese \note 此处所用到DGuiApplicationHelperPrivate::waitTime默认值为3000ms，可通过
- * \~chinese \note DGuiApplicationHelper::setSingleInstanceInterval设置
+  \brief DGuiApplicationHelper::setSingleInstance 设置DGuiApplicationHelper实例.
+
+  \a key 实例关键字
+  \a singleScope 实例使用范围
+  \return 设置是否成功
+  \note 此处所用到DGuiApplicationHelperPrivate::waitTime默认值为3000ms，可通过
+  \note DGuiApplicationHelper::setSingleInstanceInterval设置
  */
 bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicationHelper::SingleScope singleScope)
 {
@@ -1400,10 +1420,11 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间，
- * \~chinese \brief 用于在重新创建DGuiApplicationHelper单例时，检测DGuiApplicationHelper单例是否存在且有响应
- * \~chinese \param interval等待时间，如 interval 为 -1 则没有超时一直等待，默认和 QLocalSocket 一致 3000ms
- * \~chinese \note 需要在 DGuiApplicationHelper::setSingleInstance 之前调用否则无效。
+  \brief 设置从QLocalServer获取消息的等待时间.
+
+  用于在重新创建DGuiApplicationHelper单例时，检测DGuiApplicationHelper单例是否存在且有响应
+  \a interval 等待时间，如 \a interval 为 -1 则没有超时一直等待，默认和 QLocalSocket 一致 3000ms
+  \note 需要在 DGuiApplicationHelper::setSingleInstance 之前调用否则无效。
  */
 void DGuiApplicationHelper::setSingleInstanceInterval(int interval)
 {
@@ -1412,8 +1433,8 @@ void DGuiApplicationHelper::setSingleInstanceInterval(int interval)
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间
- * \~chinese \param interval等待时间， typo 请使用 DGuiApplicationHelper::setSingleInstanceInterval
+  \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间
+  \a interval 等待时间，typo 请使用 DGuiApplicationHelper::setSingleInstanceInterval
  */
 void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
 {
@@ -1453,8 +1474,9 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setThemeType
- * \~chinese 同 setPaletteType， 已废弃，请不要再使用。
+  \brief DGuiApplicationHelper::setThemeType.
+
+  同 setPaletteType， 已废弃，请不要再使用。
  */
 void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeType)
 {
@@ -1462,14 +1484,14 @@ void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeT
 }
 
 /*!
- * \~chinese \brief DGuiApplicationHelper::setPaletteType 设置程序所应用的调色板类型。
- * \~chinese 将固定程序的调色板类型, 此行为可能导致 applicationPalette 变化, 前提是未使用
- * \~chinese \a setApplicationPalette 固定过程序的调色板, 此方法不影响程序的调色板跟随
- * \~chinese 活动色改变, 可用于控制程序使用亮色还是暗色调色板.
- * \~chinese \note 主动设置调色板颜色类型的操作会导致程序不再使用 DPlatformTheme 中调色板相关的数据, 也
- * \~chinese 包括窗口级别的 \a windowTheme 所对应的 DPlatformTheme, 届时设置 DPlatformTheme
- * \~chinese 的 themeName 和所有与 palette 相关的属性都不再生效.
- * \~chinese \param paletteType主题类型的枚举值
+  \brief DGuiApplicationHelper::setPaletteType 设置程序所应用的调色板类型。
+  将固定程序的调色板类型, 此行为可能导致 applicationPalette 变化, 前提是未使用
+  setApplicationPalette 固定过程序的调色板, 此方法不影响程序的调色板跟随
+  活动色改变, 可用于控制程序使用亮色还是暗色调色板.
+  \note 主动设置调色板颜色类型的操作会导致程序不再使用 DPlatformTheme 中调色板相关的数据, 也
+  包括窗口级别的 windowTheme 所对应的 DPlatformTheme, 届时设置 DPlatformTheme
+  的 themeName 和所有与 palette 相关的属性都不再生效.
+  \a paletteType 主题类型的枚举值
  */
 void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType paletteType)
 {

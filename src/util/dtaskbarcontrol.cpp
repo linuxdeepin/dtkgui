@@ -48,9 +48,12 @@ DTaskbarControlPrivate::~DTaskbarControlPrivate()
 }
 
 /*!
- * \~chinese class DTaskbarControl
- * \~chinese brief DTaskbarControl提供了一个Launcher API接口，用于方便应用程序控制taskbar进度条,设置当前任务数量
- * \~chinese 如果想隐藏或者不使用进度条和任务数的显示，可以使用setProgress,setCounter 传递false隐藏相关显示
+  \class Dtk::Gui::DTaskbarControl
+  \inmodule dtkgui
+
+  \brief DTaskbarControl提供了一个Launcher API接口，用于方便应用程序控制taskbar进度条,设置当前任务数量.
+
+  如果想隐藏或者不使用进度条和任务数的显示，可以使用setProgress,setCounter 传递false隐藏相关显示.
  */
 
 DTaskbarControl::DTaskbarControl(QObject *parent)
@@ -66,9 +69,9 @@ DTaskbarControl::~DTaskbarControl()
 }
 
 /*!
- * \~chinese brief DTaskbarControl::setProgress 设置当前进度和进度条是否可见
- * \~chinese param progressVisible true可见 false不可见
- * \~chinese param progress 当前进度值 0-1(换算成百分比)
+  \brief DTaskbarControl::setProgress 设置当前进度和进度条是否可见
+  \a progressVisible true可见 false不可见
+  \a progress 当前进度值 0-1(换算成百分比)
  */
 void DTaskbarControl::setProgress(bool progressVisible, double progress)
 {
@@ -89,9 +92,9 @@ void DTaskbarControl::setProgress(bool progressVisible, double progress)
 }
 
 /*!
- * \~chinese brief DTaskbarControl::setCounter 设置当前任务数量
- * \~chinese param counterVisible true任务数可见 false任务数不可见
- * \~chinese param counter
+  \brief DTaskbarControl::setCounter 设置当前任务数量
+  \a counterVisible true任务数可见 false任务数不可见
+  \a counter
  */
 void DTaskbarControl::setCounter(bool counterVisible, int counter)
 {
@@ -112,8 +115,8 @@ void DTaskbarControl::setCounter(bool counterVisible, int counter)
 }
 
 /*!
- * \~chinese brief DTaskbarControl::counter 获取当前任务数
- * \~chinese return 任务数量
+  brief DTaskbarControl::counter 获取当前任务数
+  return 任务数量
  */
 int DTaskbarControl::counter() const
 {
@@ -121,9 +124,9 @@ int DTaskbarControl::counter() const
 }
 
 /*!
- * \~chinese brief DTaskbarControl::setCounterVisible 设置任务数是否可见
- * \~chinese param counterVisible true可见 false不可见
- * \~chinese 如果需要隐藏,建议设置counter的值为0并且设置为false，只设置false，有可能会显示
+  \brief DTaskbarControl::setCounterVisible 设置任务数是否可见
+  \a counterVisible true可见 false不可见
+  如果需要隐藏,建议设置counter的值为0并且设置为false，只设置false，有可能会显示
  */
 void DTaskbarControl::setCounterVisible(bool counterVisible)
 {
@@ -138,8 +141,8 @@ void DTaskbarControl::setCounterVisible(bool counterVisible)
 }
 
 /*!
- * \~chinese brief DTaskbarControl::counterVisible 返回任务数是否可见
- * \~chinese return true可见 false不可见
+  \brief DTaskbarControl::counterVisible 返回任务数是否可见
+  \return true可见 false不可见
  */
 bool DTaskbarControl::counterVisible() const
 {
@@ -147,8 +150,8 @@ bool DTaskbarControl::counterVisible() const
 }
 
 /*!
- * \~chinese brief DTaskbarControl::setUrgency 设置任务的紧急程度
- * \~chinese param val true 任务紧急 false普通任务
+  \brief DTaskbarControl::setUrgency 设置任务的紧急程度
+  \a val true 任务紧急 false普通任务
  */
 void DTaskbarControl::setUrgency(bool val)
 {
