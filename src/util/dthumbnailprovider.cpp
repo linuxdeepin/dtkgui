@@ -122,9 +122,9 @@ DThumbnailProvider *DThumbnailProvider::instance()
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::hasThumbnail缩略图是否存在
- * \~chinese \param info文件信息
- * \~chinese \return true存在　false不存在
+  \brief DThumbnailProvider::hasThumbnail缩略图是否存在
+  \a info 文件信息
+  \return true 存在　false 不存在
  */
 bool DThumbnailProvider::hasThumbnail(const QFileInfo &info) const
 {
@@ -179,10 +179,10 @@ bool DThumbnailProvider::hasThumbnail(const QMimeType &mimeType) const
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::thumbnailFilePath返回文件缩略图文件路径
- * \~chinese \param info文件信息
- * \~chinese \param size 图片大小
- * \~chinese \return 路径信息
+  \brief DThumbnailProvider::thumbnailFilePath返回文件缩略图文件路径
+  \a info 文件信息
+  \a size 图片大小
+  \return 路径信息
  */
 QString DThumbnailProvider::thumbnailFilePath(const QFileInfo &info, Size size) const
 {
@@ -222,10 +222,10 @@ QString DThumbnailProvider::thumbnailFilePath(const QFileInfo &info, Size size) 
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::createThumbnail创建缩略图
- * \~chinese \param info 文件信息
- * \~chinese \param size 图片大小
- * \~chinese \return 成功返回绝对路径信息，失败则返回空
+  \brief DThumbnailProvider::createThumbnail创建缩略图
+  \a info 文件信息
+  \a size 图片大小
+  \return 成功返回绝对路径信息，失败则返回空
  */
 QString DThumbnailProvider::createThumbnail(const QFileInfo &info, DThumbnailProvider::Size size)
 {
@@ -368,9 +368,9 @@ void DThumbnailProvider::appendToProduceQueue(const QFileInfo &info, DThumbnailP
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::removeInProduceQueue将缩略图从列表中删除
- * \~chinese \param info缩略图文件
- * \~chinese \param size缩略图大小
+  \brief DThumbnailProvider::removeInProduceQueue将缩略图从列表中删除
+  \a info 缩略图文件
+  \a size 缩略图大小
  */
 void DThumbnailProvider::removeInProduceQueue(const QFileInfo &info, DThumbnailProvider::Size size)
 {
@@ -386,8 +386,8 @@ void DThumbnailProvider::removeInProduceQueue(const QFileInfo &info, DThumbnailP
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::errorString返回错误信息
- * \~chinese \return 错误信息
+  \brief DThumbnailProvider::errorString返回错误信息
+  \return 错误信息
  */
 QString DThumbnailProvider::errorString() const
 {
@@ -397,8 +397,8 @@ QString DThumbnailProvider::errorString() const
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::defaultSizeLimit返回缩略图默认大小
- * \~chinese \return 默认的大小
+  \brief DThumbnailProvider::defaultSizeLimit返回缩略图默认大小
+  \return 默认的大小
  */
 qint64 DThumbnailProvider::defaultSizeLimit() const
 {
@@ -408,8 +408,8 @@ qint64 DThumbnailProvider::defaultSizeLimit() const
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::setDefaultSizeLimit设置缩略图的默认大小
- * \~chinese \param size 大小
+  \brief DThumbnailProvider::setDefaultSizeLimit设置缩略图的默认大小
+  \a size 大小
  */
 void DThumbnailProvider::setDefaultSizeLimit(qint64 size)
 {
@@ -419,9 +419,9 @@ void DThumbnailProvider::setDefaultSizeLimit(qint64 size)
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::sizeLimit　返回文件大小
- * \~chinese \param mimeType 由MIME类型字符串表示的文件或数据类型
- * \~chinese \return
+  \brief DThumbnailProvider::sizeLimit　返回文件大小
+  \a mimeType 由MIME类型字符串表示的文件或数据类型
+  \return
  */
 qint64 DThumbnailProvider::sizeLimit(const QMimeType &mimeType) const
 {
@@ -431,9 +431,9 @@ qint64 DThumbnailProvider::sizeLimit(const QMimeType &mimeType) const
 }
 
 /*!
- * \~chinese \brief DThumbnailProvider::setSizeLimit 设置文件的大小
- * \~chinese \param mimeType 由MIME类型字符串表示的文件或数据类型
- * \~chinese \param size 范围
+  \brief DThumbnailProvider::setSizeLimit 设置文件的大小
+  \a mimeType 由MIME类型字符串表示的文件或数据类型
+  \a size 范围
  */
 void DThumbnailProvider::setSizeLimit(const QMimeType &mimeType, qint64 size)
 {
@@ -443,12 +443,14 @@ void DThumbnailProvider::setSizeLimit(const QMimeType &mimeType, qint64 size)
 }
 
 /*!
- * \~chinese \class DThumbnailProvider
- * \~chinese \brief 缩略图生成类
- * \~chinese　\note 缩略图创建失败
- * \~chinese \li 该文件格式未知，无法由程序加载。
- * \~chinese \li 文件格式是已知的，但是文件已被损坏，因此无法读取。
- * \~chinese \li 由于文件很大，缩略图的生成将花费很长时间
+  \class Dtk::Gui::DThumbnailProvider
+  \inmodule dtkgui
+
+  \brief 缩略图生成类.
+　\note 缩略图创建失败
+  该文件格式未知，无法由程序加载。
+  文件格式是已知的，但是文件已被损坏，因此无法读取。
+  由于文件很大，缩略图的生成将花费很长时间
  */
 
 DThumbnailProvider::DThumbnailProvider(QObject *parent)

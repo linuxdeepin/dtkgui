@@ -90,254 +90,287 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
 }
 
 /*!
- * \~chinese \class DWindowHandle
- * \~chinese \brief 一个和Qt dxcb平台插件交互的工具类，实质性的功能皆在dxcb插件中实现，此插件目前只
- * \~chinese 支持X11平台，在其它平台上使用这个类不会有任何效果。关于dxcb：它介于Qt应用和Qt xcb平台
- * \~chinese 插件之间，通过覆写xcb插件中某些对象的虚函数来改变它的一些行为，本质上来讲是Qt xcb插件的
- * \~chinese 扩展，在X11平台上为DTK应用提供了一些改变窗口效果的功能（比如自定义窗口的边框）、其它和平
- * \~chinese 台密切相关的实现（比如修复Qt应用在X11平台的一些bug），不能脱离Qt xcb插件独立运行。dxcb
- * \~chinese 通过重载 QPlatformNativeInterface 提供接口，DWindowHandle 中使用
- * \~chinese QGuiApplication::platformFunction 调用这些接口。Application、dxcb、qt xcb 之间
- * \~chinese 的关系：
- * \~chinese \htmlonly
- * <pre style="font-family: FreeMono, Consolas, Menlo, 'Noto Mono', 'Courier New', Courier, monospace;line-height: 100%;">
- *       ┏━━━━━━━━━━━━━━━━┓
- *       ┃   Application  ┃
- *       ┗━━━━━━━━━━━━━━━━┛
- *               ⇅
- *     ┏━━━━━━━━━━━━━━━━━━━━┓
- *     ┃     dxcb plugin    ┃
- *     ┗━━━━━━━━━━━━━━━━━━━━┛
- *               ⇅
- *  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
- *  ┃      qt xcb platform      ┃
- *  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
- * </pre>
- * \endhtmlonly
- * \~chinese \sa \href{http://doc.qt.io/qt-5/qpa.html,QPA}
- * \~chinese \sa \href{https://github.com/linuxdeepin/qt5dxcb-plugin/,dxcb插件}
- * \~chinese \sa DPlatformHandle::isDXcbPlatform
- * \~chinese \sa QGuiApplication::platformNativeInterface
- * \~chinese \sa DMainWindow
- * \~chinese \sa DWindowManagerHelper
- * \~chinese \warning 使用此工具前要确保应用加载了dxcb插件
- * \~chinese \warning 因为 QGuiApplication::platformFunction 是在 Qt 5.4.0 版本引入的新接口，
- * \~chinese 所以 DWindowHandle 不支持 Qt 5.4.0 以下版本。
+  \class Dtk::Gui::DPlatformHandle
+  \inmodule dtkgui
+  \brief 一个和Qt dxcb平台插件交互的工具类.
+
+  实质性的功能皆在dxcb插件中实现，此插件目前只
+  支持X11平台，在其它平台上使用这个类不会有任何效果。关于dxcb：它介于Qt应用和Qt xcb平台
+  插件之间，通过覆写xcb插件中某些对象的虚函数来改变它的一些行为，本质上来讲是Qt xcb插件的
+  扩展，在X11平台上为DTK应用提供了一些改变窗口效果的功能（比如自定义窗口的边框）、其它和平
+  台密切相关的实现（比如修复Qt应用在X11平台的一些bug），不能脱离Qt xcb插件独立运行。dxcb
+  通过重载 QPlatformNativeInterface 提供接口，DPlatformHandle 中使用
+  QGuiApplication::platformFunction 调用这些接口。Application、dxcb、qt xcb 之间
+  的关系：
+  \raw HTML
+  <pre style="font-family: FreeMono, Consolas, Menlo, 'Noto Mono', 'Courier New', Courier, monospace;line-height: 100%;">
+        ┏━━━━━━━━━━━━━━━━┓
+        ┃   Application  ┃
+        ┗━━━━━━━━━━━━━━━━┛
+                ⇅
+      ┏━━━━━━━━━━━━━━━━━━━━┓
+      ┃     dxcb plugin    ┃
+      ┗━━━━━━━━━━━━━━━━━━━━┛
+                ⇅
+   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+   ┃      qt xcb platform      ┃
+   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  </pre>
+  \endraw
+
+  \l {http://doc.qt.io/qt-5/qpa.html}{QPA}
+  \l {https://github.com/linuxdeepin/qt5dxcb-plugin/}{dxcb插件}
+  \sa Dtk::Gui::DPlatformHandle::isDXcbPlatform
+  \sa QGuiApplication::platformNativeInterface
+  \sa Dtk::Widget::DMainWindow
+  \sa DWindowManagerHelper
+  \warning 使用此工具前要确保应用加载了dxcb插件
+  \warning 因为 QGuiApplication::platformFunction 是在 Qt 5.4.0 版本引入的新接口，
+  所以 DPlatformHandle 不支持 Qt 5.4.0 以下版本。
  */
 
 /*!
-  * \~chinese \property DWindowHandle::windowRadius
-  * \~chinese \brief 窗口的圆角半径。默认情况下，窗口管理器支持混成时，圆角半径为4，否则为0，并且
-  * \~chinese 会随着窗口管理器开启/关闭混成效果而变化
-  * \~chinese \note 可读可写
-  * \~chinese \note 窗口为半屏、全屏或最大化状态时此值不生效
-  * \~chinese \warning 手动设置值后将无法再随着窗口管理器是否支持混成而自动更新边框宽度
-  * \~chinese \sa DWindowManagerHelper::hasComposite
+  \property DPlatformHandle::windowRadius
+  \brief 窗口的圆角半径。默认情况下，窗口管理器支持混成时，圆角半径为4，否则为0，并且
+  会随着窗口管理器开启/关闭混成效果而变化
+  \note 可读可写
+  \note 窗口为半屏、全屏或最大化状态时此值不生效
+  \warning 手动设置值后将无法再随着窗口管理器是否支持混成而自动更新边框宽度
+  \sa DWindowManagerHelper::hasComposite
   */
 
 /*!
-  * \~chinese \property DWindowHandle::borderWidth
-  * \~chinese \brief 窗口的外边框宽度。默认情况下，窗口管理器支持混成时，边框宽度为1，否则对于可以
-  * \~chinese 改变大小的窗口其值为2，否则为1，并且会随着窗口管理器开启/关闭混成效果而变化
-  * \~chinese \note 可读可写
-  * \~chinese \warning 手动设置值后将无法再随着窗口管理器是否支持混成而自动更新边框宽度
-  * \~chinese \sa DWindowManagerHelper::hasComposite
+  \property DPlatformHandle::borderWidth
+  \brief 窗口的外边框宽度。默认情况下，窗口管理器支持混成时，边框宽度为1，否则对于可以
+  改变大小的窗口其值为2，否则为1，并且会随着窗口管理器开启/关闭混成效果而变化
+  \note 可读可写
+  \warning 手动设置值后将无法再随着窗口管理器是否支持混成而自动更新边框宽度
+  \sa DWindowManagerHelper::hasComposite
   */
 
 /*!
-  * \~chinese \property DWindowHandle::borderColor
-  * \~chinese \brief 窗口外边框的颜色。默认情况下，窗口管理器支持混成时，颜色为 QColor(0, 0, 0, 255 * 0.15)，
-  * \~chinese 否则为边框颜色和 #e0e0e0 的混合，并且会随着窗口管理器开启/关闭混成效果而变化
-  * \~chinese \note 可读可写
-  * \~chinese \sa DWindowManagerHelper::hasComposite
+  \property DPlatformHandle::borderColor
+  \brief 窗口外边框的颜色。默认情况下，窗口管理器支持混成时，颜色为 QColor(0, 0, 0, 255 * 0.15)，
+  否则为边框颜色和 #e0e0e0 的混合，并且会随着窗口管理器开启/关闭混成效果而变化
+  \note 可读可写
+  \sa DWindowManagerHelper::hasComposite
   */
 
 /*!
-  * \~chinese \property DWindowHandle::shadowRadius
-  * \~chinese \brief 窗口的阴影半径。默认为 60
-  * \~chinese \note 可读可写
-  * \~chinese \note 窗口管理器不支持混成时此值无效
-  * \~chinese \sa DWindowManagerHelper::hasComposite
+  \property DPlatformHandle::shadowRadius
+  \brief 窗口的阴影半径。默认为 60
+  \note 可读可写
+  \note 窗口管理器不支持混成时此值无效
+  \sa DWindowManagerHelper::hasComposite
   */
 
 /*!
-  * \~chinese \property DWindowHandle::shadowOffset
-  * \~chinese \brief 窗口阴影的偏移量。默认为 QPoint(0，16)
-  * \~chinese \note 可读可写
-  * \~chinese \note 窗口管理器不支持混成时此值无效
-  * \~chinese \sa DWindowManagerHelper::hasComposite
+  \property DPlatformHandle::shadowOffset
+  \brief 窗口阴影的偏移量。默认为 QPoint(0，16)
+  \note 可读可写
+  \note 窗口管理器不支持混成时此值无效
+  \sa DWindowManagerHelper::hasComposite
   */
 
 /*!
-  * \~chinese \property DWindowHandle::shadowColor
-  * \~chinese \brief 窗口阴影的颜色。默认为 QColor(0, 0, 0, 255 * 0.6)
-  * \~chinese \note 可读可写
-  * \~chinese \note 窗口管理器不支持混成时此值无效
-  * \~chinese \sa DWindowManagerHelper::hasComposite
+  \property DPlatformHandle::shadowColor
+  \brief 窗口阴影的颜色。默认为 QColor(0, 0, 0, 255 * 0.6)
+  \note 可读可写
+  \note 窗口管理器不支持混成时此值无效
+  \sa DWindowManagerHelper::hasComposite
   */
 
 /*!
-  * \~chinese \property DWindowHandle::clipPath
-  * \~chinese \brief 窗口的裁剪区域。处于路径内部的区域为窗口有效区域，非有效区域内的窗口内容
-  * \~chinese 将无法显示，并且无法收到鼠标和触摸事件。示例：
-  * \~chinese \code
-  * QWidget w;
-  * QPainterPath path;
-  * QFont font;
-  *
-  * font.setPixelSize(100);
-  * path.addText(0, 150, font, "deepin");
-  *
-  * DWindowHandle handle(&w);
-  *
-  * handle.setClipPath(path);
-  * w.resize(400, 200);
-  * w.show();
-  * \endcode
-  * \~chinese \image html clip_window_demo.gif
-  * \~chinese \note 可读可写
-  * \~chinese \note 窗口的阴影和外边框绘制和其有效区域密切相关
-  * \~chinese \warning 设置此属性后将导致 DWindowHandle::windowRadius 失效
+  \property DPlatformHandle::clipPath
+  \brief 窗口的裁剪区域。处于路径内部的区域为窗口有效区域，非有效区域内的窗口内容
+  将无法显示，并且无法收到鼠标和触摸事件。示例：
+  \code
+  QWidget w;
+  QPainterPath path;
+  QFont font;
+  
+  font.setPixelSize(100);
+  path.addText(0, 150, font, "deepin");
+  
+  DPlatformHandle handle(&w);
+  
+  handle.setClipPath(path);
+  w.resize(400, 200);
+  w.show();
+  \endcode
+  \image clip_window_demo.gif
+  \note 可读可写
+  \note 窗口的阴影和外边框绘制和其有效区域密切相关
+  \warning 设置此属性后将导致 DPlatformHandle::windowRadius 失效
   */
 
 /*!
-  * \~chinese \property DWindowHandle::frameMask
-  * \~chinese \brief 设置 Frame Window 的遮罩，和 \a clipPath 不同的是，它的裁剪包括阴影
-  * \~chinese 部分。示例：
-  * \~chinese \code
-  * QWidget w;
-  * DWindowHandle handle(&w);
-  *
-  * // 为何更好的观察效果，此处将阴影改为蓝色
-  * handle.setShadowColor(Qt::blue);
-  * w.resize(400, 200);
-  * w.show();
-  * QRect frame_rect = w.rect() + handle.frameMargins();
-  * frame_rect.moveTopLeft(QPoint(0, 0));
-  * handle.setFrameMask(QRegion(frame_rect, QRegion::Ellipse));
-  * \endcode
-  * \~chinese \image html frame_mask_demo.png
-  * \~chinese \note 可读可写
-  * \~chinese \note 由于实现机制限制，使用此属性裁剪 Frame Window 时，无法去除边缘产生的锯齿
+  \property DPlatformHandle::frameMask
+  \brief 设置 Frame Window 的遮罩，和 \a clipPath 不同的是，它的裁剪包括阴影
+  部分。示例：
+  \code
+  QWidget w;
+  DPlatformHandle handle(&w);
+  
+  // 为何更好的观察效果，此处将阴影改为蓝色
+  handle.setShadowColor(Qt::blue);
+  w.resize(400, 200);
+  w.show();
+  QRect frame_rect = w.rect() + handle.frameMargins();
+  frame_rect.moveTopLeft(QPoint(0, 0));
+  handle.setFrameMask(QRegion(frame_rect, QRegion::Ellipse));
+  \endcode
+  \image frame_mask_demo.png
+  \note 可读可写
+  \note 由于实现机制限制，使用此属性裁剪 Frame Window 时，无法去除边缘产生的锯齿
   */
 
 /*!
-  * \~chinese \property DWindowHandle::frameMargins
-  * \~chinese \brief Sub Window 相对于 Frame Window 的边距
-  * \~chinese \image html frame_margins.png
-  * \~chinese \note 只读
-  * \~chinese \warning 在窗口隐藏时不保证此值的正确性
+  \property DPlatformHandle::frameMargins
+  \brief Sub Window 相对于 Frame Window 的边距
+  \image frame_margins.png
+  \note 只读
+  \warning 在窗口隐藏时不保证此值的正确性
   */
 
 /*!
-  * \~chinese \property DWindowHandle::translucentBackground
-  * \~chinese \brief 如果此属性值为 true，则在更新窗口绘制内容之前会先清空要更新区域内的图像，
-  * \~chinese 否则不清空，默认为 false
-  * \~chinese \note 可读可写
+  \property DPlatformHandle::translucentBackground
+  \brief 如果此属性值为 true，则在更新窗口绘制内容之前会先清空要更新区域内的图像，
+  否则不清空，默认为 false
+  \note 可读可写
   */
 
 /*!
-  * \~chinese \property DWindowHandle::enableSystemResize
-  * \~chinese \brief 如果此属性值为 true，则允许外界改变窗口的大小（如使用鼠标拖拽窗口边框），
-  * \~chinese 否则不允许。默认为 true
-  * \~chinese \note 无论属性值是多少，Qt::Popup 和 Qt::BypassWindowManagerHint 类型的
-  * \~chinese 窗口都不允许改变大小
-  * \~chinese \note 可读可写
-  * \~chinese \note 此属性仅仅控制 dxcb 中的行为，不会影响窗口管理器的行为
-  * \~chinese \sa QWidget::setFixedSize
-  * \~chinese \sa QWindow::setMinimumSize
-  * \~chinese \sa QWindow::setMaximumSize
-  * \~chinese \sa DWindowManagerHelper::FUNC_RESIZE
+  \property DPlatformHandle::enableSystemResize
+  \brief 如果此属性值为 true，则允许外界改变窗口的大小（如使用鼠标拖拽窗口边框），
+  否则不允许。默认为 true
+  \note 无论属性值是多少，Qt::Popup 和 Qt::BypassWindowManagerHint 类型的
+  窗口都不允许改变大小
+  \note 可读可写
+  \note 此属性仅仅控制 dxcb 中的行为，不会影响窗口管理器的行为
+  \sa QWidget::setFixedSize
+  \sa QWindow::setMinimumSize
+  \sa QWindow::setMaximumSize
+  \sa DWindowManagerHelper::FUNC_RESIZE
   */
 
 /*!
-  * \~chinese \property DWindowHandle::enableSystemMove
-  * \~chinese \brief 如果此属性值为 ture，则允许外界移动窗口的位置（如使用鼠标拖拽移动窗口），
-  * \~chinese 否则不允许。默认为 true
-  * \~chinese \note 无论属性值是多少，Qt::Popup 和 Qt::BypassWindowManagerHint 类型的
-  * \~chinese 窗口都不允许改变大小
-  * \~chinese \note 可读可写
-  * \~chinese \note 此属性仅仅控制 dxcb 中的行为，不会影响窗口管理器的行为
-  * \~chinese \sa DWindowManagerHelper::FUNC_MOVE
+  \property DPlatformHandle::enableSystemMove
+  \brief 如果此属性值为 ture，则允许外界移动窗口的位置（如使用鼠标拖拽移动窗口），
+  否则不允许。默认为 true
+  \note 无论属性值是多少，Qt::Popup 和 Qt::BypassWindowManagerHint 类型的
+  窗口都不允许改变大小
+  \note 可读可写
+  \note 此属性仅仅控制 dxcb 中的行为，不会影响窗口管理器的行为
+  \sa DWindowManagerHelper::FUNC_MOVE
   */
 
 /*!
-  * \~chinese \property DWindowHandle::enableBlurWindow
-  * \~chinese \brief 如果此属性为 true，则窗口有效区域内的背景将呈现出模糊效果，否则无特效。
-  * \~chinese 默认为 false
-  * \~chinese \note 可读可写
-  * \~chinese \sa DWindowHandle::setWindowBlurAreaByWM
+  \property DPlatformHandle::enableBlurWindow
+  \brief 如果此属性为 true，则窗口有效区域内的背景将呈现出模糊效果，否则无特效。
+  默认为 false
+  \note 可读可写
+  \sa DPlatformHandle::setWindowBlurAreaByWM
   */
 
 /*!
-  * \~chinese \property DWindowHandle::autoInputMaskByClipPath
-  * \~chinese \brief 如果此属性值为 true，则窗口可输入区域跟随其 \a clipPath 属性，否则不
-  * \~chinese 跟随。默认为 true
-  * \~chinese \note 可输入区域指可接收鼠标或触摸事件的区域
-  * \~chinese \note 可读可写
+  \property DPlatformHandle::autoInputMaskByClipPath
+  \brief 如果此属性值为 true，则窗口可输入区域跟随其 \a clipPath 属性，否则不
+  跟随。默认为 true
+  \note 可输入区域指可接收鼠标或触摸事件的区域
+  \note 可读可写
   */
 
 /*!
-  * \~chinese \property DWindowHandle::realWindowId
-  * \~chinese \brief Sub Window 的窗口 id，直接使用 QWindow::winId 或 QWidget::winId
-  * \~chinese 获取到的是 Frame Window 的窗口 id
-  * \~chinese \note 只读
+  \property DPlatformHandle::realWindowId
+  \brief Sub Window 的窗口 id，直接使用 QWindow::winId 或 QWidget::winId
+  获取到的是 Frame Window 的窗口 id
+  \note 只读
   */
 
 /*!
- * \~chinese \fn DWindowHandle::frameMarginsChanged
- * \~chinese \brief 信号会在 frameMargins 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::windowRadiusChanged
- * \~chinese \brief 信号会在 windowRadius 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::borderWidthChanged
- * \~chinese \brief 信号会在 borderWidth 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::borderColorChanged
- * \~chinese \brief 信号会在 borderColor 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::shadowRadiusChanged
- * \~chinese \brief 信号会在 shadowRadius 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::shadowOffsetChanged
- * \~chinese \brief 信号会在 shadowOffset 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::shadowColorChanged
- * \~chinese \brief 信号会在 shadowColor 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::clipPathChanged
- * \~chinese \brief 信号会在 clipPath 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::frameMaskChanged
- * \~chinese \brief 信号会在 frameMask 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::translucentBackgroundChanged
- * \~chinese \brief 信号会在 translucentBackground 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::enableSystemResizeChanged
- * \~chinese \brief 信号会在 enableSystemResize 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::enableSystemMoveChanged
- * \~chinese \brief 信号会在 enableSystemMove 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::enableBlurWindowChanged
- * \~chinese \brief 信号会在 enableBlurWindow 属性的值改变时被发送
- * \~chinese \fn DWindowHandle::autoInputMaskByClipPathChanged
- * \~chinese \brief 信号会在 autoInputMaskByClipPath 属性的值改变时被发送
+  \fn void DPlatformHandle::frameMarginsChanged()
+  \brief 信号会在 frameMargins 属性的值改变时被发送.
+ */
+/*!
+  \fn void DPlatformHandle::windowRadiusChanged()
+  \brief 信号会在 windowRadius 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::borderWidthChanged()
+  \brief 信号会在 borderWidth 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::borderColorChanged()
+  \brief 信号会在 borderColor 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::shadowRadiusChanged()
+  \brief 信号会在 shadowRadius 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::shadowOffsetChanged()
+  \brief 信号会在 shadowOffset 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::shadowColorChanged()
+  \brief 信号会在 shadowColor 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::clipPathChanged()
+  \brief 信号会在 clipPath 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::frameMaskChanged()
+  \brief 信号会在 frameMask 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::translucentBackgroundChanged()
+  \brief 信号会在 translucentBackground 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::enableSystemResizeChanged()
+  \brief 信号会在 enableSystemResize 属性的值改变时被发送
+  */
+/*!
+  \fn void DPlatformHandle::enableSystemMoveChanged()
+  \brief 信号会在 enableSystemMove 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::enableBlurWindowChanged()
+  \brief 信号会在 enableBlurWindow 属性的值改变时被发送
+ */
+/*!
+  \fn void DPlatformHandle::autoInputMaskByClipPathChanged()
+  \brief 信号会在 autoInputMaskByClipPath 属性的值改变时被发送
  */
 
 /*!
- * \~chinese \struct DWindowHandle::WMBlurArea
- * \~chinese \brief 描述窗口背景模糊区域的数据结构，包含位置、大小、圆角半径等信息
- * \var DWindowHandle::WMBlurArea::x
- * 水平方向的坐标
- * \var DWindowHandle::WMBlurArea::y
- * 竖直方向的坐标
- * \var DWindowHandle::WMBlurArea::width
- * 区域的宽度
- * \var DWindowHandle::WMBlurArea::height
- * 区域的高度
- * \var DWindowHandle::WMBlurArea::xRadius
- * 水平方向的圆角半径
- * \var DWindowHandle::WMBlurArea::yRaduis
- * 竖直方向的圆角半径
+  \class Dtk::Gui::DPlatformHandle::WMBlurArea
+  \inmodule dtkgui
+
+  \brief 描述窗口背景模糊区域的数据结构，包含位置、大小、圆角半径等信息.
+
+  \value x
+  水平方向的坐标
+  \value y
+  竖直方向的坐标
+  \value width
+  区域的宽度
+  \value height
+  区域的高度
+  \value xRadius
+  水平方向的圆角半径
+  \value yRaduis
+  竖直方向的圆角半径
 */
 
 /*!
- * \~chinese \brief DWindowHandle::DWindowHandle
- * \~chinese 将 \a window 对象传递给 enableDXcbForWindow
- * \~chinese \param window 要开启DTK风格的主窗口
- * \~chinese \param parent DWindowHandle 对象的父对象
- * \~chinese \sa DWindowHandle::enableDXcbForWindow(QWindow *)
+  \brief DPlatformHandle::DPlatformHandle
+  将 \a window 对象传递给 enableDXcbForWindow
+  \a window 要开启DTK风格的主窗口
+  \a parent DPlatformHandle 对象的父对象
+  \sa DPlatformHandle::enableDXcbForWindow(QWindow *)
  */
 DPlatformHandle::DPlatformHandle(QWindow *window, QObject *parent)
     : QObject(parent)
@@ -349,9 +382,9 @@ DPlatformHandle::DPlatformHandle(QWindow *window, QObject *parent)
 }
 
 /*!
- * \~chinese \brief DWindowHandle::pluginVersion
- * \~chinese \return 返回dxcb插件的版本
- * \~chinese \note 在旧版dxcb插件中未实现获取版本的接口，将会返回一个空的 QString 对象
+  \brief DPlatformHandle::pluginVersion
+  \return 返回dxcb插件的版本
+  \note 在旧版dxcb插件中未实现获取版本的接口，将会返回一个空的 QString 对象
  */
 QString DPlatformHandle::pluginVersion()
 {
@@ -368,8 +401,8 @@ QString DPlatformHandle::pluginVersion()
 }
 
 /*!
- * \~chinese \brief DPlatformHandle::isDXcbPlatform 检查当前程序是否使用了dxcb平台插件。
- * \~chinese \return 正在使用返回 true，否则返回 false。
+  \brief DPlatformHandle::isDXcbPlatform 检查当前程序是否使用了dxcb平台插件。
+  \return 正在使用返回 true，否则返回 false。
  */
 bool DPlatformHandle::isDXcbPlatform()
 {
@@ -382,95 +415,95 @@ bool DPlatformHandle::isDXcbPlatform()
 }
 
 /*!
- * \~chinese \brief DWindowHandle::enableDXcbForWindow
- * \~chinese 将 QWindow 的窗口装饰设置为 DTK 风格，这将使用 Qt::FramelessWindowHint 去除本地窗口管理器
- * \~chinese 给窗口附加的边框修饰以及窗口阴影效果，并且，会创建一个对应的本地窗口（在X11平台就是指X Window）
- * \~chinese 作为此窗口的父窗口，父窗口（Frame Window）中将根据子窗口（Sub Window）的有效区域绘制阴影和边
- * \~chinese 框等效果，默认情况下，子窗口的有效区域为一个圆角矩形，结构如下：
- * \~chinese \htmlonly
- * <pre style="font-family: FreeMono, Consolas, Menlo, 'Noto Mono', 'Courier New', Courier, monospace;line-height: 100%;">
- * ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
- * ┃    Frame Window             ┃
- * ┃                             ┃
- * ┃                             ┃
- * ┃     ╭┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅╮     ┃
- * ┃     ┋    Sub Window   ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ┋                 ┋     ┃
- * ┃     ╰┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅╯     ┃
- * ┃                             ┃
- * ┃                             ┃
- * ┃                             ┃
- * ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
- * </pre>
- * \endhtmlonly
- *
- * 但是，如果窗口管理器自身支持隐藏窗口标题栏，则此方法将优先调用 enableNoTitlebarForWindow 实现同样的效果。
- *
- * 例子：
- * \~chinese \code
- * QWidget w1;
- *
- * w1.setWindowTitle("使用系统边框的窗口");
- * w1.show();
- *
- * DMainWindow w2;
- * QWidget w3;
- *
- * w2.titlebar()->setTitle("使用DTK风格边框带标题栏的窗口");
- * w3.setWindowTitle("使用DTK风格边框没有标题栏的窗口");
- * w2.show();
- *
- * DWindowHandle::enableDXcbForWindow(&w3);
- * w3.show(); // 因为这个窗口没有标题栏，所以不会显示窗口标题
- *
- * \endcode
- * \~chinese \image html dtk_and_system_window.jpeg
- * \~chinese 开启了dxcb的窗口，在窗口外边缘10像素的范围按下鼠标左键可以触发改变窗口大小的行为，
- * \~chinese 而且会自动将鼠标吸附到对应的窗口边缘，增强了拖拽改变窗口大小的体验。效果：
- * \~chinese \image html dtk_window_cursor_effect.gif
- * \~chinese 另外，所有到达主窗口的鼠标移动事件如果没有调用 QEvent::accepted ，则会触发主窗
- * \~chinese 口的移动效果，默认情况下，一个没有子控件的DTK窗口，如果没有重写 QWidget::mouseMoveEvent ，
- * \~chinese 则使用鼠标左键在窗口的任意地方按住并移动都会触发移动窗口的动作。如：
- * \~chinese \code
- * class Window : public QWidget
- * {
- * public:
- *    explicit Window() {
- *
- *    }
+  \brief DPlatformHandle::enableDXcbForWindow
+  将 QWindow 的窗口装饰设置为 DTK 风格，这将使用 Qt::FramelessWindowHint 去除本地窗口管理器
+  给窗口附加的边框修饰以及窗口阴影效果，并且，会创建一个对应的本地窗口（在X11平台就是指X Window）
+  作为此窗口的父窗口，父窗口（Frame Window）中将根据子窗口（Sub Window）的有效区域绘制阴影和边
+  框等效果，默认情况下，子窗口的有效区域为一个圆角矩形，结构如下：
+  \raw HTML
+  <pre style="font-family: FreeMono, Consolas, Menlo, 'Noto Mono', 'Courier New', Courier, monospace;line-height: 100%;">
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃    Frame Window             ┃
+  ┃                             ┃
+  ┃                             ┃
+  ┃     ╭┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅╮     ┃
+  ┃     ┋    Sub Window   ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ┋                 ┋     ┃
+  ┃     ╰┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅╯     ┃
+  ┃                             ┃
+  ┃                             ┃
+  ┃                             ┃
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  </pre>
+  \endraw
+  
+  但是，如果窗口管理器自身支持隐藏窗口标题栏，则此方法将优先调用 enableNoTitlebarForWindow 实现同样的效果。
+  
+  例子：
+  \code
+  QWidget w1;
+  
+  w1.setWindowTitle("使用系统边框的窗口");
+  w1.show();
+  
+  DMainWindow w2;
+  QWidget w3;
+  
+  w2.titlebar()->setTitle("使用DTK风格边框带标题栏的窗口");
+  w3.setWindowTitle("使用DTK风格边框没有标题栏的窗口");
+  w2.show();
+  
+  DPlatformHandle::enableDXcbForWindow(&w3);
+  w3.show(); // 因为这个窗口没有标题栏，所以不会显示窗口标题
+  
+  \endcode
+  \image dtk_and_system_window.jpeg
+  开启了dxcb的窗口，在窗口外边缘10像素的范围按下鼠标左键可以触发改变窗口大小的行为，
+  而且会自动将鼠标吸附到对应的窗口边缘，增强了拖拽改变窗口大小的体验。效果：
+  \image dtk_window_cursor_effect.gif
+  另外，所有到达主窗口的鼠标移动事件如果没有调用 QEvent::accepted ，则会触发主窗
+  口的移动效果，默认情况下，一个没有子控件的DTK窗口，如果没有重写 QWidget::mouseMoveEvent ，
+  则使用鼠标左键在窗口的任意地方按住并移动都会触发移动窗口的动作。如：
+  \code
+  class Window : public QWidget
+  {
+  public:
+     explicit Window() {
+  
+     }
 
- * protected:
- *    void mouseMoveEvent(QMouseEvent *event) override {
- *        event->accept();
- *    }
- * };
- * \endcode
- * \~chinese \code
- * Window w;
- * DWindowHandle::enableDXcbForWindow(&w);
- * w.show();
- * \endcode
- * \~chinese 将无法使用鼠标移动窗口w
- *
- * \~chinese 窗口管理器（如X11平台上的Window Manager）是否支持混成会影响dxcb插件对窗口添加的默认装饰。
- * \~chinese \note 在 Deepin 桌面环境中，打开窗口特效则支持混成，关闭窗口特效则不支持混成
- *
- * \~chinese 支持混成：
- * \~chinese \image html enable_composite.png
- * \~chinese 不支持混成：
- * \~chinese \image html disable_composite.png
- * \~chinese 并且，在不支持混成的窗口管理器中，上述“窗口边缘的鼠标吸附”效果也会被禁用。可以使用
- * \~chinese DWindowManagerHelper::hasComposite 或 QX11Info::isCompositingManagerRunning
- * \~chinese 判断当前运行的窗口管理器是否支持混成。
- * \~chinese \param window
- * \~chinese \sa DWindowHandle::setEnableNoTitlebarForWindow
+  protected:
+     void mouseMoveEvent(QMouseEvent *event) override {
+         event->accept();
+     }
+  };
+  \endcode
+  \code
+  Window w;
+  DPlatformHandle::enableDXcbForWindow(&w);
+  w.show();
+  \endcode
+  将无法使用鼠标移动窗口w
+  
+  窗口管理器（如X11平台上的Window Manager）是否支持混成会影响dxcb插件对窗口添加的默认装饰。
+  \note 在 Deepin 桌面环境中，打开窗口特效则支持混成，关闭窗口特效则不支持混成
+  
+  支持混成：
+  \image enable_composite.png
+  不支持混成：
+  \image disable_composite.png
+  并且，在不支持混成的窗口管理器中，上述“窗口边缘的鼠标吸附”效果也会被禁用。可以使用
+  DWindowManagerHelper::hasComposite 或 QX11Info::isCompositingManagerRunning
+  判断当前运行的窗口管理器是否支持混成。
+  \a window
+  \sa Dtk::Gui::DPlatformHandle::setEnableNoTitlebarForWindow()
  */
 void DPlatformHandle::enableDXcbForWindow(QWindow *window)
 {
@@ -491,7 +524,7 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window)
     if (enable_dxcb) {
         (*reinterpret_cast<bool(*)(QWindow*)>(enable_dxcb))(window);
     } else if (window->handle()) {
-        Q_ASSERT_X(window->property(_useDxcb).toBool(), "DWindowHandler:",
+        Q_ASSERT_X(window->property(_useDxcb).toBool(), "DPlatformHandler:",
                    "Must be called before window handle has been created. See also QWindow::handle()");
     } else {
         window->setProperty(_useDxcb, true);
@@ -499,18 +532,20 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window)
 }
 
 /*!
- * \~chinese \brief DWindowHandle::enableDXcbForWindow
- * \~chinese 功能上和 DWindowHandle::enableDXcbForWindow(QWindow *) 一致
- * \~chinese \param window
- * \~chinese \param redirectContent 如果值为 true，Sub Window 将不可见，且它的绘制内容会
- * \~chinese 被合成到外层的 Frame Window（它的父窗口），否则 Sub Window 和 Frame Window
- * \~chinese 会分开绘制和显示。默认情况下只需要使用 DWindowHandle::enableDXcbForWindow(QWindow *)，
- * \~chinese dxcb插件中会自动根据窗口渲染类型选择使用更合适的实现方式，使用 OpenGL 渲染的窗口将开启
- * \~chinese redirectContent 模式。
- * \~chinese \note 如果窗口内嵌入了其它的本地窗口（如X11平台的X Window），默认情况下，这个窗口
- * \~chinese 绘制的内容不受dxcb插件的控制，它的绘制内容可能会超过 Sub Window 的有效区域，这种
- * \~chinese 情况下，应该使用此接口，并将 redirectContent 指定为 true。
- * \~chinese \sa X11 Damage: https://www.x.org/releases/X11R7.5/doc/damageproto/damageproto.txt
+  \brief DPlatformHandle::enableDXcbForWindow
+  功能上和 DPlatformHandle::enableDXcbForWindow(QWindow *) 一致.
+
+  \a window
+  \a redirectContent 如果值为 true，Sub Window 将不可见，且它的绘制内容会
+  被合成到外层的 Frame Window（它的父窗口），否则 Sub Window 和 Frame Window
+  会分开绘制和显示。默认情况下只需要使用 DPlatformHandle::enableDXcbForWindow(QWindow *)，
+  dxcb插件中会自动根据窗口渲染类型选择使用更合适的实现方式，使用 OpenGL 渲染的窗口将开启
+  redirectContent 模式。
+  \note 如果窗口内嵌入了其它的本地窗口（如X11平台的X Window），默认情况下，这个窗口
+  绘制的内容不受dxcb插件的控制，它的绘制内容可能会超过 Sub Window 的有效区域，这种
+  情况下，应该使用此接口，并将 redirectContent 指定为 true。
+
+  \l {https://www.x.org/releases/X11R7.5/doc/damageproto/damageproto.txt}{X11 Damage}
  */
 void DPlatformHandle::enableDXcbForWindow(QWindow *window, bool redirectContent)
 {
@@ -520,10 +555,10 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window, bool redirectContent)
 }
 
 /*!
- * \~chinese \brief DWindowHandle::isEnabledDXcb
- * \~chinese \param widget
- * \~chinese \return 如果窗口开启了DTK风格的窗口修饰则返回 true，否则返回 false
- * \~chinese \sa DWindowHandle::isEnableNoTitlebar
+  \brief DPlatformHandle::isEnabledDXcb.
+
+  \return 如果窗口开启了DTK风格的窗口修饰则返回 true，否则返回 false
+  \sa DPlatformHandle::isEnableNoTitlebar()
  */
 bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
 {
@@ -576,13 +611,14 @@ public:
 };
 
 /*!
- * \~chinese \brief DWindowHandle::setEnableNoTitlebarForWindow
- * \~chinese 使用窗口管理器提供的方式隐藏窗口的标题栏，目前已适配 DDE KWin 窗管，在窗口管理器支持的前提下，
- * \~chinese 此方法将通过设置窗口属性 _DEEPIN_SCISSOR_WINDOW 的值为 1 来开启无标题栏效果。
- * \~chinese \param window
- * \~chinese \param enable
- * \~chinese \sa DWindowHandle::enableDXcbForWindow(QWindow *)
- * \~chinese \sa DWindowManagerHelper::hasNoTitlebar
+  \brief DPlatformHandle::setEnableNoTitlebarForWindow.
+
+  使用窗口管理器提供的方式隐藏窗口的标题栏，目前已适配 DDE KWin 窗管，在窗口管理器支持的前提下，
+  此方法将通过设置窗口属性 _DEEPIN_SCISSOR_WINDOW 的值为 1 来开启无标题栏效果。
+  \a window
+  \a enable
+  \sa DPlatformHandle::enableDXcbForWindow(QWindow *)
+  \sa DWindowManagerHelper::hasNoTitlebar
  */
 bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable)
 {
@@ -612,10 +648,10 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
 }
 
 /*!
- * \~chinese \brief DWindowHandle::isEnableNoTitlebar
- * \~chinese \param window
- * \~chinese \return 如果窗口使用窗管提供的方式隐藏了标题栏则返回 true，否则返回 false
- * \~chinese \sa DWindowHandle::isEnabledDXcb
+  \brief DPlatformHandle::isEnableNoTitlebar
+  \a window
+  \return 如果窗口使用窗管提供的方式隐藏了标题栏则返回 true，否则返回 false
+  \sa DPlatformHandle::isEnabledDXcb
  */
 bool DPlatformHandle::isEnabledNoTitlebar(const QWindow *window)
 {
@@ -650,46 +686,46 @@ inline DPlatformHandle::WMBlurArea operator *(const DPlatformHandle::WMBlurArea 
 }
 
 /*!
- * \~chinese \brief DWindowHandle::setWindowBlurAreaByWM
- * \~chinese 设置窗口背景的模糊区域，示例：
- * \~chinese \code
- * QWindow w;
- * QVector<DWindowHandle::WMBlurArea> area_list;
- * DWindowHandle::WMBlurArea area;
- *
- * area.x = 50;
- * area.y = 50;
- * area.width = 200;
- * area.height = 200;
- * area.xRadius = 10;
- * area.yRaduis = 10;
- * area_list.append(area);
- *
- * DWindowHandle::setWindowBlurAreaByWM(&w, area_list);
- *
- * QSurfaceFormat format = w.format();
- * format.setAlphaBufferSize(8);
- *
- * w.setFormat(format);
- * w.resize(300, 300);
- * w.show();
- *
- * \endcode
- * \~chinese \image html blur_window_demo1.png
- * \~chinese \param window 目标窗口对象
- * \~chinese \param area 模糊区域，此区域范围内的窗口背景将填充为窗口后面内容模糊之后的图像
- * \~chinese \return 如果设置成功则返回 true，否则返回 false
- * \~chinese \note 对于需要显示模糊背景的窗口，需要将其 QSurfaceFormat 的 alpha 通道设置为8
- * \~chinese \note 调用此接口设置窗口背景模糊区域后将覆盖之前所设置的区域，包括调用
- * \~chinese setWindowBlurAreaByWM(QWindow *, const QList<QPainterPath> &)
- * \~chinese 所设置的区域
- * \~chinees \note 建议使用 DBlurEffectWidget 实现窗口背景模糊效果
- * \~chinese \note 此功能依赖于窗口管理器的实现，目前仅支持 deepin-wm 和 kwin 这两个窗口管理器
- * \~chinese \sa DBlurEffectWidget
- * \~chinese \sa QSurfaceFormat::setAlphaBufferSize
- * \~chinese \sa QWindow::setFormat
- * \~chinese \sa DWindowManagerHelper::hasBlurWindow
- * \~chinese \sa DWindowHandle::setWindowBlurAreaByWM(QWindow *, const QList<QPainterPath> &)
+  \brief DPlatformHandle::setWindowBlurAreaByWM
+  设置窗口背景的模糊区域，示例：
+  \code
+  QWindow w;
+  QVector<DPlatformHandle::WMBlurArea> area_list;
+  DPlatformHandle::WMBlurArea area;
+  
+  area.x = 50;
+  area.y = 50;
+  area.width = 200;
+  area.height = 200;
+  area.xRadius = 10;
+  area.yRaduis = 10;
+  area_list.append(area);
+  
+  DPlatformHandle::setWindowBlurAreaByWM(&w, area_list);
+  
+  QSurfaceFormat format = w.format();
+  format.setAlphaBufferSize(8);
+  
+  w.setFormat(format);
+  w.resize(300, 300);
+  w.show();
+  
+  \endcode
+  \image blur_window_demo1.png
+  \a window 目标窗口对象
+  \a area 模糊区域，此区域范围内的窗口背景将填充为窗口后面内容模糊之后的图像
+  \return 如果设置成功则返回 true，否则返回 false
+  \note 对于需要显示模糊背景的窗口，需要将其 QSurfaceFormat 的 alpha 通道设置为8
+  \note 调用此接口设置窗口背景模糊区域后将覆盖之前所设置的区域，包括调用
+  setWindowBlurAreaByWM(QWindow *, const QList<QPainterPath> &)
+  所设置的区域
+  \note 建议使用 DBlurEffectWidget 实现窗口背景模糊效果
+  \note 此功能依赖于窗口管理器的实现，目前仅支持 deepin-wm 和 kwin 这两个窗口管理器
+  \sa Dtk::Widget::DBlurEffectWidget
+  \sa QSurfaceFormat::setAlphaBufferSize
+  \sa QWindow::setFormat
+  \sa DWindowManagerHelper::hasBlurWindow
+  \sa DPlatformHandle::setWindowBlurAreaByWM(QWindow *, const QList<QPainterPath> &)
  */
 bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QVector<DPlatformHandle::WMBlurArea> &area)
 {
@@ -754,48 +790,48 @@ inline QPainterPath operator *(const QPainterPath &path, qreal scale)
 }
 
 /*!
- * \~chinese \brief DWindowHandle::setWindowBlurAreaByWM
- * \~chinese 设置窗口背景的模糊区域，使用 QPainterPath 描述模糊区域，使用起来更加的灵活，可以
- * \~chinese 实现任何形状，但是性能要低于使用 QVector<DWindowHandle::WMBlurArea>
- * \~chinese 描述模糊区域。示例：
- * \~chinese \code
- * QWindow w;
- * QList<QPainterPath> path_list;
- * QPainterPath path;
- * QFont font;
- *
- * font.setPixelSize(100);
- * font.setBold(true);
- * path.addText(0, 150, font, "deepin");
- * path_list.append(path);
- *
- * DWindowHandle::setWindowBlurAreaByWM(&w, path_list);
- *
- * QSurfaceFormat format = w.format();
- * format.setAlphaBufferSize(8);
- *
- * w.setFormat(format);
- * w.resize(300, 300);
- * w.show();
- *
- * \endcode
- * \~chinese \image html blur_window_demo2.png
- * \~chinese \param window 目标窗口对象
- * \~chinese \param paths 模糊区域，此区域范围内的窗口背景将填充为窗口后面内容模糊之后的图像
- * \~chinese \return 如果设置成功则返回 true，否则返回 false
- * \~chinese \note 调用此接口设置窗口背景模糊区域后将覆盖之前所设置的区域，包括调用
- * \~chinese setWindowBlurAreaByWM(QWindow *, QVector<DWindowHandle::WMBlurArea> &)
- * \~chinese 设置的窗口背景模糊路径
- * \~chinese \note 对于需要显示模糊背景的窗口，需要将其 QSurfaceFormat 的 alpha 通道设置为8
- * \~chinees \note 建议使用 DBlurEffectWidget 实现窗口背景模糊效果
- * \~chinese \note 此功能依赖于窗口管理器的实现，目前仅支持 deepin-wm 和 kwin 这两个窗口管理器
- * \~chinese \warning setWindowBlurAreaByWM(QWindow *, QVector<DWindowHandle::WMBlurArea> &)
- * \~chinese 能满足需求请不要使用此接口
- * \~chinese \sa DBlurEffectWidget
- * \~chinese \sa QSurfaceFormat::setAlphaBufferSize
- * \~chinese \sa QWindow::setFormat
- * \~chinese \sa DWindowManagerHelper::hasBlurWindow
- * \~chinese \sa DWindowHandle::setWindowBlurAreaByWM(QWindow *, QVector<DWindowHandle::WMBlurArea> &)
+  \brief DPlatformHandle::setWindowBlurAreaByWM
+  设置窗口背景的模糊区域，使用 QPainterPath 描述模糊区域，使用起来更加的灵活，可以
+  实现任何形状，但是性能要低于使用 QVector<DPlatformHandle::WMBlurArea>
+  描述模糊区域。示例：
+  \code
+  QWindow w;
+  QList<QPainterPath> path_list;
+  QPainterPath path;
+  QFont font;
+  
+  font.setPixelSize(100);
+  font.setBold(true);
+  path.addText(0, 150, font, "deepin");
+  path_list.append(path);
+  
+  DPlatformHandle::setWindowBlurAreaByWM(&w, path_list);
+  
+  QSurfaceFormat format = w.format();
+  format.setAlphaBufferSize(8);
+  
+  w.setFormat(format);
+  w.resize(300, 300);
+  w.show();
+  
+  \endcode
+  \image blur_window_demo2.png
+  \a window 目标窗口对象
+  \a paths 模糊区域，此区域范围内的窗口背景将填充为窗口后面内容模糊之后的图像
+  \return 如果设置成功则返回 true，否则返回 false
+  \note 调用此接口设置窗口背景模糊区域后将覆盖之前所设置的区域，包括调用
+  setWindowBlurAreaByWM(QWindow *, QVector<DPlatformHandle::WMBlurArea> &)
+  设置的窗口背景模糊路径
+  \note 对于需要显示模糊背景的窗口，需要将其 QSurfaceFormat 的 alpha 通道设置为8
+  \note 建议使用 DBlurEffectWidget 实现窗口背景模糊效果
+  \note 此功能依赖于窗口管理器的实现，目前仅支持 deepin-wm 和 kwin 这两个窗口管理器
+  \warning setWindowBlurAreaByWM(QWindow *, QVector<DPlatformHandle::WMBlurArea> &)
+  能满足需求请不要使用此接口
+  \sa Dtk::Widget::DBlurEffectWidget
+  \sa QSurfaceFormat::setAlphaBufferSize
+  \sa QWindow::setFormat
+  \sa DWindowManagerHelper::hasBlurWindow
+  \sa DPlatformHandle::setWindowBlurAreaByWM()
  */
 bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QList<QPainterPath> &paths)
 {
@@ -844,12 +880,12 @@ bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QList<QPainte
 }
 
 /*!
- * \~chinese \brief DWindowHandle::connectWindowManagerChangedSignal
- * \~chinese 将窗口管理器变化的信号链接到 object 对象的 slot 槽，建议使用　DWindowManager::windowManagerChanged
- * \~chinese \param object
- * \~chinese \param slot
- * \~chinese \return 如果链接成功则返回 true，否则返回 false
- * \~chinese \sa DWindowManager::windowManagerChanged
+  \brief DPlatformHandle::connectWindowManagerChangedSignal
+  将窗口管理器变化的信号链接到 \a object 对象的 \a slot 槽，建议使用　DWindowManager::windowManagerChanged
+  \a object
+  \a slot
+  \return 如果链接成功则返回 true，否则返回 false
+  \sa DWindowManagerHelper::windowManagerChanged()
  */
 bool DPlatformHandle::connectWindowManagerChangedSignal(QObject *object, std::function<void ()> slot)
 {
@@ -861,13 +897,13 @@ bool DPlatformHandle::connectWindowManagerChangedSignal(QObject *object, std::fu
 }
 
 /*!
- * \~chinese \brief DWindowHandle::connectHasBlurWindowChanged
- * \~chinese 将窗口管理器是否支持背景模糊的信号链接到 object 对象的 slot 槽，建议使用
- * \~chinese DWindowManager::hasBlurWindowChanged
- * \~chinese \param object
- * \~chinese \param slot
- * \~chinese \return 如果链接成功则返回 true，否则返回 false
- * \~chinese \sa DWindowManager::hasBlurWindowChanged
+  \brief DPlatformHandle::connectHasBlurWindowChanged
+  将窗口管理器是否支持背景模糊的信号链接到 object 对象的 slot 槽，建议使用
+  DWindowManager::hasBlurWindowChanged
+  \a object
+  \a slot
+  \return 如果链接成功则返回 true，否则返回 false
+  \sa DWindowManagerHelper::hasBlurWindowChanged
  */
 bool DPlatformHandle::connectHasBlurWindowChanged(QObject *object, std::function<void ()> slot)
 {
@@ -879,12 +915,12 @@ bool DPlatformHandle::connectHasBlurWindowChanged(QObject *object, std::function
 }
 
 /*!
- * \~chinese \brief DWindowHandle::setWindowBlurAreaByWM
- * \~chinese 这只是一个重载的函数，将调用 setWindowBlurAreaByWM(QWindow *, const QVector<DWindowHandle::WMBlurArea> &)
- * \~chinese 并将构造对象时传递的主窗口当做第一个参数
- * \~chinese \param area
- * \~chinese \return
- * \~chinese \sa DWindowHandle::setWindowBlurAreaByWM(QWindow *, const QVector<DWindowHandle::WMBlurArea> &)
+  \brief DPlatformHandle::setWindowBlurAreaByWM
+  这只是一个重载的函数，将调用 setWindowBlurAreaByWM(const QList<QPainterPath> &paths)
+  并将构造对象时传递的主窗口当做第一个参数
+  \a area
+  \return
+  \sa DPlatformHandle::setWindowBlurAreaByWM(const QList<QPainterPath> &paths)
  */
 bool DPlatformHandle::setWindowBlurAreaByWM(const QVector<DPlatformHandle::WMBlurArea> &area)
 {
@@ -892,12 +928,12 @@ bool DPlatformHandle::setWindowBlurAreaByWM(const QVector<DPlatformHandle::WMBlu
 }
 
 /*!
- * \~chinese \brief DWindowHandle::setWindowBlurAreaByWM
- * \~chinese 这只是一个重载的函数，将调用 setWindowBlurAreaByWM(QWindow *, const QList<QPainterPath> &)
- * \~chinese 并将构造对象时传递的主窗口当做第一个参数
- * \~chinese \param area
- * \~chinese \return
- * \~chinese \sa DWindowHandle::setWindowBlurAreaByWM(QWindow *, const QList<QPainterPath> &)
+  \brief DPlatformHandle::setWindowBlurAreaByWM
+  这只是一个重载的函数，将调用 setWindowBlurAreaByWM(const QVector<DPlatformHandle::WMBlurArea> &area)
+  并将构造对象时传递的主窗口当做第一个参数
+  \a paths
+  \return
+  \sa DPlatformHandle::setWindowBlurAreaByWM()
  */
 bool DPlatformHandle::setWindowBlurAreaByWM(const QList<QPainterPath> &paths)
 {
@@ -905,11 +941,11 @@ bool DPlatformHandle::setWindowBlurAreaByWM(const QList<QPainterPath> &paths)
 }
 
 /*!
- * \~chinese \brief DWindowHandle::setDisableWindowOverrideCursor
- * \~chinese 如果 \a disable 为 true，则禁止窗口 \a window 改变光标样式，否则允许改变光标样式。
- * \~chinese 窗口被禁止改变光标样式后，使用 QWindow::setCursor 将不会产生任何效果。
- * \~chinese \param window
- * \~chinese \param disable
+  \brief DPlatformHandle::setDisableWindowOverrideCursor
+  如果 \a disable 为 true，则禁止窗口 \a window 改变光标样式，否则允许改变光标样式。
+  窗口被禁止改变光标样式后，使用 QWindow::setCursor 将不会产生任何效果。
+  \a window
+  \a disable
  */
 void DPlatformHandle::setDisableWindowOverrideCursor(QWindow *window, bool disable)
 {

@@ -135,8 +135,10 @@ void DPlatformThemePrivate::notifyPaletteChanged()
 }
 
 /*!
- * \~chinese \class DPlatformTheme
- * \~chinese \brief 一个提供窗口主题的类
+  \class Dtk::Gui::DPlatformTheme
+  \inmodule dtkgui
+  \brief 一个提供窗口主题的类.
+
  */
 DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
     : DNativeSettings(*new DPlatformThemePrivate(this),
