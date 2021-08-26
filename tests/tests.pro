@@ -46,7 +46,7 @@ SOURCES += \
     src/ut_dforeignwindow.cpp \
     src/ut_dpalette.cpp \
     src/ut_dplatformhandle.cpp \
-    src/ut_dplatformtheme.cpp \
+    # src/ut_dplatformtheme.cpp
     src/ut_dwindowmanagerhelper.cpp \
     src/ut_dwindowgroupleader.cpp \
 #    src/ut_dfontmanager.cpp \
