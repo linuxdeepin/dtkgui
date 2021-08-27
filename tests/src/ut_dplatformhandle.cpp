@@ -25,6 +25,7 @@
 #include <QBuffer>
 
 #include "dplatformhandle.h"
+#include "dwindowmanagerhelper.h"
 
 #define DXCB_PLUGIN_KEY "dxcb"
 #define DXCB_PLUGIN_SYMBOLIC_PROPERTY "_d_isDxcb"
@@ -93,14 +94,16 @@ TEST_F(TDPlatformHandle, testFunction)
     QVector<DPlatformHandle::WMBlurArea> wmAreaVector;
     wmAreaVector << dMakeWMBlurArea(0, 0, 20, 20, 4, 4);
 
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(window,  wmAreaVector));
+    if (DWindowManagerHelper::instance()->hasBlurWindow()) {
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(window,  wmAreaVector));
 
-    QPainterPath pPath;
-    pPath.addRect({0, 0, 20, 20});
+        QPainterPath pPath;
+        pPath.addRect({0, 0, 20, 20});
 
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(window, {pPath}));
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(wmAreaVector));
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM({pPath}));
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(window, {pPath}));
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(wmAreaVector));
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM({pPath}));
+    }
 
 //    if (qApp->platformFunction(SETWMWALLPAPERPARAMETER)) {
 //        EXPECT_TRUE(pHandle->setWindowWallpaperParaByWM(window, {0, 0, 20, 20}, DPlatformHandle::FollowScreen, DPlatformHandle::PreserveAspectFit));

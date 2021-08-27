@@ -78,9 +78,11 @@ TEST_F(TDWindowMangerHelper, testFunctions)
     if (qgetenv("QT_QPA_PLATFORM").contains("offscreen"))
         return;
 
-    ASSERT_TRUE(wm_helper->hasBlurWindow());
-    ASSERT_TRUE(wm_helper->hasComposite());
-    ASSERT_TRUE(wm_helper->hasNoTitlebar());
+    qDebug() << wm_helper->windowManagerNameString() <<
+                "\nhas blur window:" << wm_helper->hasBlurWindow() <<
+                "\nhas composite:" << wm_helper->hasComposite() <<
+                "\nhas not titlebar:" << wm_helper->hasNoTitlebar();
+
 //    ASSERT_TRUE(wm_helper->hasWallpaperEffect());
     ASSERT_FALSE(wm_helper->windowManagerNameString().isEmpty());
     if (wm_helper->windowManagerNameString().contains(QStringLiteral("DeepinGala"))) {
