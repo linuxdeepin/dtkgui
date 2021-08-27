@@ -26,6 +26,7 @@
 #include <QBuffer>
 
 #include "dplatformhandle.h"
+#include "dwindowmanagerhelper.h"
 
 #define DXCB_PLUGIN_KEY "dxcb"
 #define DXCB_PLUGIN_SYMBOLIC_PROPERTY "_d_isDxcb"
@@ -55,25 +56,22 @@ protected:
     void SetUp();
     void TearDown();
 
-    QWidget *widget;
+    QWindow *window;
     DPlatformHandle *pHandle;
 };
 
 void TDPlatformHandle::SetUp()
 {
-    widget = new QWidget;
-    widget->show();
-    ASSERT_TRUE(QTest::qWaitForWindowExposed(widget));
+    window = new QWindow;
+    window->create();
 
-    if (QWindow *wHandle = widget->windowHandle()) {
-        pHandle = new DPlatformHandle(wHandle);
-        ASSERT_TRUE(pHandle);
-    }
+    pHandle = new DPlatformHandle(window);
+    ASSERT_TRUE(pHandle);
 }
 
 void TDPlatformHandle::TearDown()
 {
-    delete widget;
+    delete window;
     delete pHandle;
 }
 
@@ -82,32 +80,36 @@ TEST_F(TDPlatformHandle, testFunction)
     if (!pHandle || qgetenv("QT_QPA_PLATFORM").contains("offscreen"))
         return;
 
-    EXPECT_FALSE(DPlatformHandle::pluginVersion().isEmpty());
+    qDebug() << "pluginVersion is " << DPlatformHandle::pluginVersion();
+
     EXPECT_EQ(DPlatformHandle::isDXcbPlatform(), (qApp->platformName() == DXCB_PLUGIN_KEY || qApp->property(DXCB_PLUGIN_SYMBOLIC_PROPERTY).toBool()));
-    (DPlatformHandle::enableDXcbForWindow(widget->windowHandle()));
-    (DPlatformHandle::enableDXcbForWindow(widget->windowHandle(), true));
+    (DPlatformHandle::enableDXcbForWindow(window));
+    (DPlatformHandle::enableDXcbForWindow(window, true));
 
-    qInfo() << "TDPlatformHandle(isEnabledDXcb):" << DPlatformHandle::isEnabledDXcb(widget->windowHandle());
+    qInfo() << "TDPlatformHandle(isEnabledDXcb):" << DPlatformHandle::isEnabledDXcb(window);
 
-    EXPECT_TRUE(DPlatformHandle::setEnabledNoTitlebarForWindow(widget->windowHandle(), true));
-    EXPECT_TRUE(DPlatformHandle::setEnabledNoTitlebarForWindow(widget->windowHandle(), false));
+    if (DPlatformHandle::isEnabledDXcb(window)) {
+        EXPECT_TRUE(DPlatformHandle::setEnabledNoTitlebarForWindow(window, true));
+        EXPECT_TRUE(DPlatformHandle::setEnabledNoTitlebarForWindow(window, false));
+    }
 
     QVector<DPlatformHandle::WMBlurArea> wmAreaVector;
     wmAreaVector << dMakeWMBlurArea(0, 0, 20, 20, 4, 4);
 
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(widget->windowHandle(),  wmAreaVector));
+    if (DWindowManagerHelper::instance()->hasBlurWindow()) {
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(window, wmAreaVector));
 
-    QPainterPath pPath;
-    pPath.addRect({0, 0, 20, 20});
-
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(widget->windowHandle(), {pPath}));
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(wmAreaVector));
-    EXPECT_TRUE(pHandle->setWindowBlurAreaByWM({pPath}));
+        QPainterPath pPath;
+        pPath.addRect({0, 0, 20, 20});
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(window, {pPath}));
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM(wmAreaVector));
+        EXPECT_TRUE(pHandle->setWindowBlurAreaByWM({pPath}));
+    }
 
     if (qApp->platformFunction(SETWMWALLPAPERPARAMETER)) {
-        EXPECT_TRUE(pHandle->setWindowWallpaperParaByWM(widget->windowHandle(), {0, 0, 20, 20}, DPlatformHandle::FollowScreen, DPlatformHandle::PreserveAspectFit));
+        EXPECT_TRUE(pHandle->setWindowWallpaperParaByWM(window, {0, 0, 20, 20}, DPlatformHandle::FollowScreen, DPlatformHandle::PreserveAspectFit));
     } else {
-        EXPECT_FALSE(pHandle->setWindowWallpaperParaByWM(widget->windowHandle(), {0, 0, 20, 20}, DPlatformHandle::FollowScreen, DPlatformHandle::PreserveAspectFit));
+        EXPECT_FALSE(pHandle->setWindowWallpaperParaByWM(window, {0, 0, 20, 20}, DPlatformHandle::FollowScreen, DPlatformHandle::PreserveAspectFit));
     }
 
 
@@ -117,14 +119,14 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_FALSE(DPlatformHandle::windowLeader());
     }
 
-    DPlatformHandle::setDisableWindowOverrideCursor(widget->windowHandle(), true);
-    QVariant windowRadius = widget->windowHandle()->property(WINDOWRADIUS);
+    DPlatformHandle::setDisableWindowOverrideCursor(window, true);
+    QVariant windowRadius = window->property(WINDOWRADIUS);
 
     if (windowRadius.isValid() && windowRadius.canConvert(QVariant::Int)) {
         ASSERT_EQ(pHandle->windowRadius(), windowRadius.toInt());
     }
 
-    QVariant borderWidth = widget->windowHandle()->property(BORDERWIDTH);
+    QVariant borderWidth = window->property(BORDERWIDTH);
 
     if (borderWidth.isValid() && borderWidth.canConvert(QVariant::Int)) {
         ASSERT_EQ(pHandle->borderWidth(), borderWidth.toInt());
@@ -132,7 +134,7 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_EQ(pHandle->borderWidth(), 0);
     }
 
-    QVariant borderColor = widget->windowHandle()->property(BORDRCOLOR);
+    QVariant borderColor = window->property(BORDRCOLOR);
 
     if (borderColor.isValid() && borderColor.canConvert(QVariant::Color)) {
         ASSERT_EQ(pHandle->borderColor(), borderColor.value<QColor>());
@@ -140,7 +142,7 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_FALSE(pHandle->borderColor().isValid());
     }
 
-    QVariant shadowRadius = widget->windowHandle()->property(SHADOWRADIUS);
+    QVariant shadowRadius = window->property(SHADOWRADIUS);
 
     if (shadowRadius.isValid() && shadowRadius.canConvert(QVariant::Int)) {
         ASSERT_EQ(pHandle->shadowRadius(), shadowRadius.toInt());
@@ -148,7 +150,7 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_FALSE(pHandle->borderColor().isValid());
     }
 
-    QVariant shadowOffset = widget->windowHandle()->property(SHADOWOFFSET);
+    QVariant shadowOffset = window->property(SHADOWOFFSET);
 
     if (shadowOffset.isValid() && shadowOffset.canConvert(QVariant::Point)) {
         ASSERT_EQ(pHandle->shadowOffset(), shadowOffset.value<QPoint>());
@@ -156,7 +158,7 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_TRUE(pHandle->shadowOffset().isNull());
     }
 
-    QVariant shadowColor = widget->windowHandle()->property(SHADOWCOLOR);
+    QVariant shadowColor = window->property(SHADOWCOLOR);
 
     if (shadowColor.isValid() && shadowColor.canConvert(QVariant::Color)) {
         ASSERT_EQ(pHandle->shadowColor(), shadowColor.value<QColor>());
@@ -164,7 +166,7 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_FALSE(pHandle->shadowColor().isValid());
     }
 
-    QVariant clipPath = widget->windowHandle()->property(CLIPPATH);
+    QVariant clipPath = window->property(CLIPPATH);
 
     if (clipPath.isValid() && !clipPath.value<QPainterPath>().isEmpty()) {
         ASSERT_EQ(pHandle->clipPath(), clipPath.value<QPainterPath>());
@@ -172,7 +174,7 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_TRUE(pHandle->clipPath().isEmpty());
     }
 
-    QVariant frameMask = widget->windowHandle()->property(FRAMEMASK);
+    QVariant frameMask = window->property(FRAMEMASK);
 
     if (frameMask.isValid() && frameMask.canConvert(QVariant::Region)) {
         ASSERT_EQ(pHandle->frameMask(), frameMask.value<QRegion>());
@@ -180,7 +182,7 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_TRUE(pHandle->frameMask().isEmpty());
     }
 
-    QVariant frameMargins = widget->windowHandle()->property(FRAMEMARGINS);
+    QVariant frameMargins = window->property(FRAMEMARGINS);
 
     if (frameMargins.isValid() && !frameMargins.value<QMargins>().isNull()) {
         ASSERT_EQ(pHandle->frameMargins(), frameMargins.value<QMargins>());
@@ -188,42 +190,42 @@ TEST_F(TDPlatformHandle, testFunction)
         ASSERT_TRUE(pHandle->frameMargins().isNull());
     }
 
-    QVariant translucentBackground = widget->windowHandle()->property(TRANSLUCENTBACKGROUND);
+    QVariant translucentBackground = window->property(TRANSLUCENTBACKGROUND);
     if (translucentBackground.isValid() && translucentBackground.canConvert(QVariant::Bool)) {
         ASSERT_EQ(pHandle->translucentBackground(), translucentBackground.toBool());
     } else {
         ASSERT_FALSE(pHandle->translucentBackground());
     }
 
-    QVariant enableSystemResize = widget->windowHandle()->property(ENABLESYSTEMRESIZE);
+    QVariant enableSystemResize = window->property(ENABLESYSTEMRESIZE);
     if (enableSystemResize.isValid() && enableSystemResize.canConvert(QVariant::Bool)) {
         ASSERT_EQ(pHandle->enableSystemResize(), enableSystemResize.toBool());
     } else {
         ASSERT_FALSE(pHandle->enableSystemResize());
     }
 
-    QVariant enableSystemMove = widget->windowHandle()->property(ENABLESYSTEMMOVE);
+    QVariant enableSystemMove = window->property(ENABLESYSTEMMOVE);
     if (enableSystemMove.isValid() && enableSystemMove.canConvert(QVariant::Bool)) {
         ASSERT_EQ(pHandle->enableSystemMove(), enableSystemMove.toBool());
     } else {
         ASSERT_FALSE(pHandle->enableSystemMove());
     }
 
-    QVariant enableBlurWindow = widget->windowHandle()->property(ENABLEBLURWINDOW);
+    QVariant enableBlurWindow = window->property(ENABLEBLURWINDOW);
     if (enableBlurWindow.isValid() && enableBlurWindow.canConvert(QVariant::Bool)) {
         ASSERT_EQ(pHandle->enableBlurWindow(), enableBlurWindow.toBool());
     } else {
         ASSERT_FALSE(pHandle->enableBlurWindow());
     }
 
-    QVariant autoInputMaskByClipPath = widget->windowHandle()->property(AUTOINPUTMASKBYCLIPPATH);
+    QVariant autoInputMaskByClipPath = window->property(AUTOINPUTMASKBYCLIPPATH);
     if (autoInputMaskByClipPath.isValid() && autoInputMaskByClipPath.canConvert(QVariant::Bool)) {
         ASSERT_EQ(pHandle->autoInputMaskByClipPath(), autoInputMaskByClipPath.toBool());
     } else {
         ASSERT_FALSE(pHandle->autoInputMaskByClipPath());
     }
 
-    QVariant realWindowId = widget->windowHandle()->property(REALWINDOWID);
+    QVariant realWindowId = window->property(REALWINDOWID);
     if (enableBlurWindow.isValid() && enableBlurWindow.value<WId>() != 0) {
         ASSERT_EQ(pHandle->realWindowId(), enableBlurWindow.value<WId>());
     } else {

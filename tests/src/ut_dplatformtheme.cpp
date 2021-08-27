@@ -83,6 +83,11 @@ TEST_F(TDPlatformTheme, testSetFunction)
     if (qgetenv("QT_QPA_PLATFORM").contains("offscreen"))
         return;
 
+    if (!theme->isValid()) {
+        qDebug() << "PlatformTheme is not valid";
+        return;
+    }
+
     enum { TEST_COLOR = Qt::blue, TEST_DATA = 50 };
 
     ASSERT_EQ_BY_VALUE(setCursorBlinkTime, cursorBlinkTime, TEST_DATA);
