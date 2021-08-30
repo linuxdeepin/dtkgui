@@ -100,8 +100,15 @@ TEST_F(TDWindowMangerHelper, testFunctions)
         ASSERT_EQ(wm_helper->windowManagerName(), DWindowManagerHelper::OtherWM);
     }
 
-    ASSERT_FALSE(wm_helper->allWindowIdList().isEmpty());
-    ASSERT_FALSE(wm_helper->currentWorkspaceWindowIdList().isEmpty());
-    ASSERT_FALSE(wm_helper->currentWorkspaceWindows().isEmpty());
-    ASSERT_TRUE(wm_helper->windowFromPoint(wm_helper->currentWorkspaceWindows().first()->position()));
+    if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM) {
+        ASSERT_FALSE(wm_helper->allWindowIdList().isEmpty());
+        ASSERT_FALSE(wm_helper->currentWorkspaceWindowIdList().isEmpty());
+        ASSERT_FALSE(wm_helper->currentWorkspaceWindows().isEmpty());
+        ASSERT_TRUE(wm_helper->windowFromPoint(wm_helper->currentWorkspaceWindows().first()->position()));
+    } else {
+        qDebug() << "allWindowIdList count:" << wm_helper->allWindowIdList().count() <<
+                    "\ncurrentWorkspaceWindowIdList count:" << wm_helper->currentWorkspaceWindowIdList().count() <<
+                    "\ncurrentWorkspaceWindows count:" << wm_helper->currentWorkspaceWindows().count() <<
+                    "\nwindowFromPoint:" << wm_helper->windowFromPoint(QPoint());
+    }
 }

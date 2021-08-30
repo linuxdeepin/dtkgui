@@ -86,6 +86,20 @@ TEST_F(TDSvgRenderer, testLoad)
     ASSERT_FALSE(renderer->viewBoxF().isEmpty());
 }
 
+TEST_F(TDSvgRenderer, setViewBox)
+{
+    ASSERT_TRUE(renderer->load(QStringLiteral(":/images/logo_icon.svg")));
+    ASSERT_TRUE(renderer->isValid());
+
+    QRect rc(0, 0, 10, 10);
+    QRectF rcf(0, 0, 3.14, 3.14);
+    renderer->setViewBox(rc);
+    qDebug() << "viewBox:" << renderer->viewBox();
+    ASSERT_EQ(renderer->viewBox(), rc);
+    renderer->setViewBox(rcf);
+    ASSERT_EQ(renderer->viewBoxF(), rcf);
+}
+
 static bool testPixmapHasData(const QPixmap &pixmap)
 {
     QImage image = pixmap.toImage();

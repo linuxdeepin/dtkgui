@@ -19,9 +19,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <dwindowmanagerhelper.h>
 #include <QSignalSpy>
 #include <QDebug>
+#include <QGuiApplication>
 #include "test.h"
 #include "dforeignwindow.h"
 
@@ -35,31 +35,43 @@ class TDForeignWindow : public DTest
 protected:
     virtual void SetUp()
     {
-        const QVector<quint32> &currentIdList = DWindowManagerHelper::instance()->currentWorkspaceWindowIdList();
-        foreignWindows.clear();
-        for (quint32 currentId : qAsConst(currentIdList)) {
-            foreignWindows.append(DForeignWindow::fromWinId(currentId));
-        }
+
+        foreignWindow = new DForeignWindow();
     }
     virtual void TearDown()
     {
-        qDeleteAll(foreignWindows);
-        foreignWindows.clear();
+        foreignWindow->close();
+        delete foreignWindow;
     }
 
-    QList<DForeignWindow *> foreignWindows;
+    //QWindow *window = nullptr;
+    DForeignWindow * foreignWindow = nullptr;
 };
+
+TEST_F(TDForeignWindow, fromWinId)
+{
+    QWindow *window = new QWindow;
+
+    window->create();
+    DForeignWindow *fw = DForeignWindow::fromWinId(window->winId());
+    ASSERT_TRUE(fw);
+    // qDebug() << "widnowid"  << window->winId() << fw->wmClass() << fw->pid();
+
+    delete fw;
+    delete window;
+}
 
 TEST_F(TDForeignWindow, wmClass)
 {
-    for (auto foreignWindow : qAsConst(foreignWindows))
-        ASSERT_NE(foreignWindow->wmClass(), QString());
+    foreignWindow->setProperty(WmClass, "d_testwmclass");
+    qDebug() << "wmClass" << foreignWindow->wmClass();
 }
 
 TEST_F(TDForeignWindow, pid)
 {
-    for (auto foreignWindow : qAsConst(foreignWindows))
-        ASSERT_NE(foreignWindow->pid(), 0);
+    __pid_t pid = getpid();
+    foreignWindow->setProperty(ProcessId, pid);
+    ASSERT_EQ(foreignWindow->pid(), pid);
 }
 
 TEST_F(TDForeignWindow, event)
@@ -67,15 +79,13 @@ TEST_F(TDForeignWindow, event)
     QDynamicPropertyChangeEvent wmevent(WmClass);
     QDynamicPropertyChangeEvent pidevent(ProcessId);
 
-    for (auto foreignWindow : qAsConst(foreignWindows)) {
-        QSignalSpy wmspy(foreignWindow, SIGNAL(wmClassChanged()));
-        ASSERT_TRUE(foreignWindow->event(&wmevent));
-        ASSERT_EQ(wmspy.count(), 1);
+    QSignalSpy wmspy(foreignWindow, SIGNAL(wmClassChanged()));
+    ASSERT_TRUE(QGuiApplication::sendEvent(foreignWindow, &wmevent));
+    ASSERT_EQ(wmspy.count(), 1);
 
-        QSignalSpy pidspy(foreignWindow, SIGNAL(pidChanged()));
-        ASSERT_TRUE(foreignWindow->event(&pidevent));
-        ASSERT_EQ(pidspy.count(), 1);
-    }
+    QSignalSpy pidspy(foreignWindow, SIGNAL(pidChanged()));
+    ASSERT_TRUE(QGuiApplication::sendEvent(foreignWindow, &pidevent));
+    ASSERT_EQ(pidspy.count(), 1);
 }
 
 DGUI_END_NAMESPACE
