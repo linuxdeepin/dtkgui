@@ -41,7 +41,7 @@ HEADERS += test.h
 
 SOURCES += \
     main.cpp \
-    #src/ut_dguiapplicationhelper.cpp \
+    src/ut_dguiapplicationhelper.cpp \
     src/ut_dregionmonitor.cpp \
     src/ut_dforeignwindow.cpp \
     src/ut_dpalette.cpp \

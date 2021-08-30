@@ -1,9 +1,9 @@
 /*
  * Copyright (C) 2021 ~ 2021 Deepin Technology Co., Ltd.
  *
- * Author:     Chen Bin <chenbin@uniontech.com>
+ * Author:     Wang Peng <993381@qq.com>
  *
- * Maintainer: Chen Bin <chenbin@uniontech.com>
+ * Maintainer: Wang Peng <wangpenga@uniontech.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -18,112 +18,88 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <QMap>
-
+#include "DGuiApplicationHelper"
 #include "test.h"
-#include "dguiapplicationhelper.h"
-#include "dguiapplicationhelper_p.h"
+#include <QDebug>
+#include <QWindow>
 
+DGUI_USE_NAMESPACE
 
-DGUI_BEGIN_NAMESPACE
-
-class TDGuiApplicationHelper : public testing::Test
+class TDGuiApplicationHelper : public DTest
 {
 protected:
-    virtual void SetUp()
-    {
-        helper = DGuiApplicationHelper::instance();
-        helper_d = helper->d_func();
-
-        /* read write */
-        readWriteDatas << DGuiApplicationHelper::Attribute::UseInactiveColorGroup
-                       << DGuiApplicationHelper::Attribute::ColorCompositing;
-
-        /* read only */
-        readOnlyDatas << DGuiApplicationHelper::Attribute::IsDeepinPlatformTheme
-                      << DGuiApplicationHelper::Attribute::IsDXcbPlatform
-                      << DGuiApplicationHelper::Attribute::IsXWindowPlatform
-                      << DGuiApplicationHelper::Attribute::IsTableEnvironment
-                      << DGuiApplicationHelper::Attribute::IsDeepinEnvironment;
-    }
-
-    DGuiApplicationHelper *helper = nullptr;
-    DGuiApplicationHelperPrivate *helper_d = nullptr;
-    QList<DGuiApplicationHelper::Attribute> readWriteDatas;
-    QList<DGuiApplicationHelper::Attribute> readOnlyDatas;
+    void SetUp();
+    void TearDown();
 };
 
-TEST_F(TDGuiApplicationHelper, testFunction)
+void TDGuiApplicationHelper::SetUp()
 {
-    QColor testColor(Qt::red);
-    QColor adjustedColor = helper->adjustColor(testColor, 0, 0, 0, 0, 0, 0, -20);
-    ASSERT_NE(testColor, adjustedColor);
-    ASSERT_TRUE(adjustedColor.isValid());
-
-    QColor disBlendColor = Qt::black;
-    QColor blendedColor = helper->blendColor(testColor, disBlendColor);
-    ASSERT_NE(testColor, blendedColor);
-    ASSERT_TRUE(blendedColor.isValid());
-
-    DPalette tPalette;
-    helper->generatePaletteColor(tPalette, QPalette::Window, DGuiApplicationHelper::ColorType::LightType);
-    ASSERT_EQ(tPalette.brush(QPalette::Disabled, QPalette::Window), tPalette.brush(QPalette::Normal, QPalette::Window));
-
-    tPalette.setColor(DPalette::Background, Qt::black);
-    helper->generatePaletteColor(tPalette, QPalette::Highlight, DGuiApplicationHelper::ColorType::DarkType);
-    ASSERT_TRUE(tPalette.highlight().color().isValid());
-
-    // 初始化调色板为默认值
-    helper->generatePalette(tPalette);
-
-    ASSERT_EQ(helper->isXWindowPlatform(), DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsXWindowPlatform));
-    ASSERT_EQ(helper->isTabletEnvironment(), DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTableEnvironment));
-
-    ASSERT_TRUE(helper->applicationTheme());
-    ASSERT_TRUE(helper->systemTheme());
-    ASSERT_NE(helper->applicationPalette(), tPalette);
-    qGuiApp->setAttribute(Qt::AA_SetPalette, false);
-    helper->setPaletteType(DGuiApplicationHelper::DarkType);
-    ASSERT_NE(helper->applicationPalette(), tPalette);
-
-    helper->setApplicationPalette(tPalette);
-    ASSERT_EQ(helper->applicationPalette(), tPalette);
-
-    ASSERT_TRUE(helper->fontManager());
-    ASSERT_EQ(helper->toColorType(QColor(Qt::white)), DGuiApplicationHelper::LightType);
-    ASSERT_EQ(helper->toColorType(QColor(Qt::black)), DGuiApplicationHelper::DarkType);
-    ASSERT_EQ(helper->themeType(), DGuiApplicationHelper::DarkType);
-    ASSERT_EQ(helper->paletteType(), DGuiApplicationHelper::DarkType);
-    ASSERT_TRUE(helper->setSingleInstance("dtkgui-ut"));
 }
 
-TEST_F(TDGuiApplicationHelper, AttributeReadWrite)
+void TDGuiApplicationHelper::TearDown()
 {
-    QMap<DGuiApplicationHelper::Attribute, bool> oldData;
-
-    for (const DGuiApplicationHelper::Attribute attribute : readWriteDatas) {
-        oldData[attribute] = helper->testAttribute(attribute);
-    }
-
-    for (const DGuiApplicationHelper::Attribute attribute : readWriteDatas) {
-        helper->setAttribute(attribute, !oldData[attribute]);
-        EXPECT_EQ(helper->testAttribute(attribute), !oldData[attribute]);
-    }
 }
 
-TEST_F(TDGuiApplicationHelper, AttributeReadOnly)
+TEST_F(TDGuiApplicationHelper, testLoad)
 {
-    QMap<DGuiApplicationHelper::Attribute, bool> oldData;
+    QWindow window;
+    DGuiApplicationHelper::instance()->windowTheme(&window);
 
-    for (const DGuiApplicationHelper::Attribute attribute : readOnlyDatas) {
-        oldData[attribute] = helper->testAttribute(attribute);
+    QColor color1(0, 0, 0, 0);
+    QColor color2(DGuiApplicationHelper::instance()->adjustColor(color1, 0, 0, 0, 0, 0, 0, 0));
+    ASSERT_EQ(color1, color2);
+
+    QColor color3(DGuiApplicationHelper::blendColor(color1, color2));
+    ASSERT_EQ(color1, color3);
+
+    DGuiApplicationHelper::instance()->setApplicationPalette(QPalette());
+    DGuiApplicationHelper::instance()->toColorType(QPalette());
+    DGuiApplicationHelper::instance()->toColorType(QColor());
+
+    // test theme type
+    DGuiApplicationHelper::instance()->setThemeType(DGuiApplicationHelper::DarkType);
+    ASSERT_EQ(DGuiApplicationHelper::instance()->themeType(), DGuiApplicationHelper::DarkType);
+
+    DGuiApplicationHelper::instance()->setThemeType(DGuiApplicationHelper::LightType);
+    ASSERT_EQ(DGuiApplicationHelper::instance()->themeType(), DGuiApplicationHelper::LightType);
+
+    // test palette type
+    DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::ColorType::DarkType);
+    ASSERT_EQ(DGuiApplicationHelper::instance()->paletteType(), DGuiApplicationHelper::ColorType::DarkType);
+
+    DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::ColorType::LightType);
+    ASSERT_EQ(DGuiApplicationHelper::instance()->paletteType(), DGuiApplicationHelper::ColorType::LightType);
+
+    DGuiApplicationHelper::instance()->setSingelInstanceInterval(300);
+
+    QPalette palette = DGuiApplicationHelper::instance()->applicationPalette();
+
+    DGuiApplicationHelper::instance()->setUseInactiveColorGroup(true);
+
+    // test generate palette
+    DPalette basePalette;
+    QPalette::ColorRole role =  QPalette::ColorRole::Dark;
+    basePalette.setColor(DPalette::Active, role, QColor(Qt::red));
+    DGuiApplicationHelper::ColorType type = DGuiApplicationHelper::ColorType::DarkType;
+    DGuiApplicationHelper::instance()->generatePalette(basePalette, type);
+
+    //  test generate color role
+    for (int i = 0; i < QPalette::NColorRoles; ++i) {
+        QPalette::ColorRole role = static_cast<QPalette::ColorRole>(i);
+        type = DGuiApplicationHelper::ColorType::DarkType;
+        DGuiApplicationHelper::instance()->generatePaletteColor(basePalette, role, type);
+
+        type = DGuiApplicationHelper::ColorType::LightType;
+        DGuiApplicationHelper::instance()->generatePaletteColor(basePalette, role, type);
+
+        type = DGuiApplicationHelper::ColorType::UnknownType;
+        DGuiApplicationHelper::instance()->generatePaletteColor(basePalette, role, type);
     }
 
-    for (const DGuiApplicationHelper::Attribute attribute : readOnlyDatas) {
-        helper->setAttribute(attribute, !oldData[attribute]);
-        EXPECT_EQ(helper->testAttribute(attribute), oldData[attribute]);
-    }
+    DPalette dPallette1 = DGuiApplicationHelper::instance()->standardPalette(DGuiApplicationHelper::ColorType::LightType);
+    DPalette dPallette2 = DGuiApplicationHelper::instance()->standardPalette(DGuiApplicationHelper::ColorType::DarkType);
+    DPalette dPallette3 = DGuiApplicationHelper::instance()->standardPalette(DGuiApplicationHelper::ColorType::UnknownType);
+
+    ASSERT_NE(dPallette1, dPallette2);
+    ASSERT_NE(dPallette2, dPallette3);
 }
-
-DGUI_END_NAMESPACE
