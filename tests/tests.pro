@@ -52,7 +52,8 @@ SOURCES += \
 #    src/ut_dfontmanager.cpp \
     src/ut_dsvgrenderer.cpp \
     src/ut_dtaskbarcontrol.cpp \
-    src/ut_dthumbnailprovider.cpp
+    src/ut_dthumbnailprovider.cpp \
+    src/ut_dnativesettings.cpp
 
 RESOURCES += \
     res.qrc
