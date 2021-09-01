@@ -21,6 +21,7 @@
 
 #include <QDebug>
 #include <QWindow>
+#include <QTest>
 
 #define private public
 #include "dnativesettings.h"
@@ -58,10 +59,9 @@ TEST_F(TDNativeSettings, getSetting)
 
 TEST_F(TDNativeSettings, allkeys)
 {
-    if (!settings->isValid()) {
-        qDebug() << "isValid false";
-    }
+    qDebug() << "settings isValid" << settings->isValid();
 
+    settings->__setAllKeys({"foo", "num"});
     // print all keys
     qDebug() << *settings;
 }
@@ -79,9 +79,14 @@ TEST_F(TDNativeSettings, propertyChanged)
         ++count;
     });
 
-    settings->setSetting("foo", "bar1");
-    ASSERT_EQ(count, 1);
+    settings->propertyChanged("foo", "bar") ;
+    ASSERT_TRUE(QTest::qWaitFor([&]{
+        return count == 1;
+    }, 1000));
+
     settings->__setAllKeys({});
-    ASSERT_EQ(count, 2);
+    ASSERT_TRUE(QTest::qWaitFor([&]{
+        return count == 2;
+    }, 1000));
 }
 

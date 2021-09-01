@@ -17,11 +17,11 @@ cd $BUILD_DIR
 
 qmake .. CONFIG+=debug
 export ASAN_OPTIONS=halt_on_error=0
-TESTARGS="--gtest_output=xml:dde_test_report_dtkgui.xml"  make check -j$(nproc)
+TESTARGS="--gtest_output=xml:dde_test_report_dtkgui.xml" XDG_CURRENT_DESKTOP=Deepin  make check -j$(nproc)
 
 lcov -d ./ -c -o coverage_all.info
 #lcov --extract coverage_all.info $EXTRACT_ARGS --output-file coverage.info
-lcov --remove coverage_all.info "*/dplatformtheme.cpp" "*/filedrag/*" "*/dbus/*" "*/tests/*" "*/usr/include*" "*build/src*" --output-file coverage.info
+lcov --remove coverage_all.info "*/private/dplatformtheme_p.h" "*/dplatformtheme.cpp" "*/filedrag/*" "*/dbus/*" "*/tests/*" "*/usr/include*" "*build/src*" --output-file coverage.info
 cd ..
 genhtml -o $REPORT_DIR $BUILD_DIR/coverage.info
 
