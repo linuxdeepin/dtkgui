@@ -19,7 +19,8 @@ HEADERS += \
     $$PWD/dtaskbarcontrol.h \
     $$PWD/dthumbnailprovider.h \
     $$PWD/dicontheme.h \
-    $$PWD/private/dbuiltiniconengine_p.h
+    $$PWD/private/dbuiltiniconengine_p.h \
+    $$PWD/ddciicon.h
 
 SOURCES += \
     $$PWD/dfontmanager.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
     $$PWD/dtaskbarcontrol.cpp \
     $$PWD/dthumbnailprovider.cpp \
     $$PWD/dicontheme.cpp \
-    $$PWD/private/dbuiltiniconengine.cpp
+    $$PWD/private/dbuiltiniconengine.cpp \
+    $$PWD/ddciicon.cpp
 
 RESOURCES += $$PWD/icons/deepin-theme-plugin-icons.qrc
