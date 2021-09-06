@@ -44,31 +44,31 @@ TEST_F(TDWindowMangerHelper, testStaticFunction)
     if (qgetenv("QT_QPA_PLATFORM").contains("offscreen"))
         return;
 
-    QWindow *w = new QWindow;
-    w->create();
+    QWindow w;
+    w.create();
 
     enum { TestMotifFunction = DWindowManagerHelper::FUNC_RESIZE | DWindowManagerHelper::FUNC_MOVE, TestAllMotifFunction = DWindowManagerHelper::FUNC_ALL};
     enum { TestDecorations = DWindowManagerHelper::DECOR_BORDER | DWindowManagerHelper::DECOR_RESIZEH, TestAllDecorations = DWindowManagerHelper::DECOR_ALL };
 
     // 测试静态函数测试是否正常
-    DWindowManagerHelper::setMotifFunctions(w, DWindowManagerHelper::MotifFunctions(TestMotifFunction));
-    DWindowManagerHelper::MotifFunctions mFuncs = DWindowManagerHelper::getMotifFunctions(w);
+    DWindowManagerHelper::setMotifFunctions(&w, DWindowManagerHelper::MotifFunctions(TestMotifFunction));
+    DWindowManagerHelper::MotifFunctions mFuncs = DWindowManagerHelper::getMotifFunctions(&w);
     if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM) {
         ASSERT_EQ(mFuncs, TestMotifFunction);
     } else {
         qDebug() << "not support other wm";
     }
 
-    mFuncs = DWindowManagerHelper::setMotifFunctions(w, DWindowManagerHelper::MotifFunctions(TestAllMotifFunction), true);
+    mFuncs = DWindowManagerHelper::setMotifFunctions(&w, DWindowManagerHelper::MotifFunctions(TestAllMotifFunction), true);
     if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM)
         ASSERT_EQ(mFuncs, TestAllMotifFunction);
 
-    DWindowManagerHelper::setMotifDecorations(w, DWindowManagerHelper::MotifDecorations(TestDecorations));
-    DWindowManagerHelper::MotifDecorations mDecos = DWindowManagerHelper::getMotifDecorations(w);
+    DWindowManagerHelper::setMotifDecorations(&w, DWindowManagerHelper::MotifDecorations(TestDecorations));
+    DWindowManagerHelper::MotifDecorations mDecos = DWindowManagerHelper::getMotifDecorations(&w);
     if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM)
         ASSERT_EQ(mDecos, TestDecorations);
 
-    mDecos = DWindowManagerHelper::setMotifDecorations(w, DWindowManagerHelper::MotifDecorations(TestAllDecorations), true);
+    mDecos = DWindowManagerHelper::setMotifDecorations(&w, DWindowManagerHelper::MotifDecorations(TestAllDecorations), true);
     if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM)
         ASSERT_EQ(mDecos, TestAllDecorations);
 
@@ -77,7 +77,6 @@ TEST_F(TDWindowMangerHelper, testStaticFunction)
 //    DWindowManagerHelper::setWmWindowTypes(w, DWindowManagerHelper::WmWindowTypes(TestWindowType));
 //    DWindowManagerHelper::setWmClassName(QByteArrayLiteral("TestWmClass"));
 //    DWindowManagerHelper::popupSystemWindowMenu(w);
-    delete w;
 }
 
 TEST_F(TDWindowMangerHelper, testFunctions)
