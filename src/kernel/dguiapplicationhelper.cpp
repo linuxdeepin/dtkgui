@@ -538,7 +538,8 @@ void DGuiApplicationHelper::initialize()
 }
 
 /*!
-  \brief DGuiApplicationHelper::registerInstanceCreator创建 DGuiApplicationHelper 对象
+  \brief 创建 DGuiApplicationHelper 对象.
+
   \a creator 函数指针
   \note 一定要先调用此函数,再使用 DGuiApplicationHelper::instance()
  */
@@ -575,7 +576,8 @@ DGuiApplicationHelper::~DGuiApplicationHelper()
 }
 
 /*!
-  \brief DGuiApplicationHelper::adjustColor 调整颜色
+  \brief 调整颜色.
+
   \note 取值范围均为 -100 ~ 100 ,当三原色参数为-100时，颜色为黑色，参数为100时，颜色为白色.
   以透明度( alphaFloat )为例,当参数为负数时基础色的 alphaFloat 值减少，现象偏向透明, 参数为正数alphaFloat 值增加，现象偏不透明
   \a base 基础色
@@ -617,7 +619,8 @@ QColor DGuiApplicationHelper::adjustColor(const QColor &base,
 }
 
 /*!
-  \brief DGuiApplicationHelper::blendColor 将两种颜色混合，合成新的颜色
+  \brief 将两种颜色混合，合成新的颜色.
+
   \a substrate 底层颜色
   \a superstratum 上层颜色
   \return 混合颜色
@@ -716,7 +719,8 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
 };
 
 /*!
-  \brief DGuiApplicationHelper::standardPalett 根据主题获取标准调色板
+  \brief 根据主题获取标准调色板.
+
   \a type 主题枚举值
   \return 调色板
  */
@@ -883,11 +887,12 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
 }
 
 /*!
-  \brief DGuiApplicationHelper::generatePaletteColor 获取调色板颜色
+  \brief 获取调色板颜色.
+
   \a base 调色板
   \a role 色码
   \a type 主题枚举值
-  \sa QPalette::ColorRole()
+  \sa QPalette::ColorRole
  */
 void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::ColorRole role, DGuiApplicationHelper::ColorType type)
 {
@@ -909,9 +914,10 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::Color
 }
 
 /*!
-  \brief DGuiApplicationHelper::generatePaletteColor
+  \brief 加工调色板的颜色.
+  \overload
 
-  加工调色板的颜色. 一般我们只会为调色板的 QPalette::Normal 组设置颜色值, 但是
+   一般我们只会为调色板的 QPalette::Normal 组设置颜色值, 但是
   控件中也需要使用其他组的颜色, 此函数使用一些固定规则为 \a base 填充 QPalette::Disabled
   和 QPalette::Inactive 分组的颜色. 不同的颜色类型会使用不同的加工规则, 如果为 LightType
   类型, 则将颜色的alpha通道调整为 0.6 后作为 QPalette::Disabled 类的颜色使用, 调整为 0.4 后
@@ -929,9 +935,10 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, DPalette::Color
 }
 
 /*!
-  \brief DGuiApplicationHelper::generatePalette
+  \brief 加工调色板的颜色.
+  \overload
 
-  加工调色板的颜色. 同 generatePaletteColor, 将直接调用 generatePaletteColor 加工
+  同 generatePaletteColor, 将直接调用 generatePaletteColor 加工
   所有类型的调色板颜色.
 
   \a base 被加工的调色板
@@ -956,7 +963,7 @@ void DGuiApplicationHelper::generatePalette(DPalette &base, ColorType type)
 }
 
 /*!
-  \brief DGuiApplicationHelper::fetchPalette 获取调色板数据.
+  \brief 获取调色板数据.
 
   首先根据 DPlatformTheme::themeName 获取主题的颜色类型, 如果名称以
    "dark" 结尾则认为其颜色类型为 DarkType, 否则为 LightType.
@@ -999,7 +1006,7 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
 }
 
 /*!
-  \brief DGuiApplicationHelper::setUseInactiveColorGroup设置是否将调色板的颜色改为半透明模式.
+  \brief 设置是否将调色板的颜色改为半透明模式.
 
   一般用在主窗口背景为透明、模糊的程序中
   \a on 是否开启
@@ -1010,7 +1017,7 @@ void DGuiApplicationHelper::setUseInactiveColorGroup(bool on)
 }
 
 /*!
-  \brief DGuiApplicationHelper::setColorCompositingEnabled设置是否开启混合颜色.
+  \brief 设置是否开启混合颜色.
 
   \a on 是否开启
  */
@@ -1025,7 +1032,7 @@ bool DGuiApplicationHelper::isXWindowPlatform()
 }
 
 /*!
-  \brief isTabletEnvironment 用于判断当前桌面环境是否是平板电脑环境.
+  \brief 用于判断当前桌面环境是否是平板电脑环境.
 
   \return true 是平板电脑环境 false不是平板电脑环境
  */
@@ -1071,9 +1078,8 @@ DPlatformTheme *DGuiApplicationHelper::applicationTheme() const
 }
 
 /*!
-  \brief DGuiApplicationHelper::windowTheme.
+  \brief 返回窗口级别的主题, 优先级高于 windowTheme 和 systemTheme.
 
-  返回窗口级别的主题, 优先级高于 \a windowTheme 和 \a systemTheme
   \a window 主题对象对应的窗口
   \return 平台主题对象
   \sa applicationTheme()
@@ -1094,7 +1100,7 @@ DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
 }
 
 /*!
-  \brief DGuiApplicationHelper::applicationPalette返回应用程序调色板.
+  \brief 返回应用程序调色板.
 
   如果使用 setApplicationPalette 设置过一个有效的调色板, 将直接返回保存的调色板. 否则
   先计算调色板的ColorType, 再使用这个颜色类型通过 standardPalette 获取标准调色板. 计算
@@ -1243,7 +1249,7 @@ const DFontManager *DGuiApplicationHelper::fontManager() const
 }
 
 /*!
-  \brief DGuiApplicationHelper::toColorType 获取颜色的明亮度，将其转换为主题类型的枚举值.
+  \brief 获取颜色的明亮度，将其转换为主题类型的枚举值.
 
   转换的策略为：先将颜色转换为rgb格式，再根据 Y = 0.299R + 0.587G + 0.114B 的公式
   计算出颜色的亮度，亮度大于 191 时认为其为浅色，否则认为其为深色。
@@ -1267,10 +1273,12 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QColor
 }
 
 /*!
-  \brief DGuiApplicationHelper::toColorType.
+  \brief 将调色板 \a palette 转换为主题类型的枚举.
+  \overload
 
   使用 QPalette::background 获取颜色的明亮度，将其转换为主题类型的枚举值。
   返回调色板的颜色类型
+
   \a palette 调色板
   \return 颜色类型的枚举值
  */
@@ -1280,13 +1288,14 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QPalet
 }
 
 /*!
-  \brief DGuiApplicationHelper::themeType.
+  \brief 返回程序的主题类型.
 
-  返回程序的主题类型, 当themeType为UnknownType时, 将自动根据
+  当themeType为UnknownType时, 将自动根据
   GuiApplication::palette的QPalette::background颜色计算主题
   类型, 否则与 paletteType 的值一致. 程序中应当使用此值作为
   暗色/亮色主题类型的判断.
-  \return 主题的颜色类型
+
+  \return 主题的颜色类型.
   \sa toColorType
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
@@ -1301,9 +1310,11 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
 }
 
 /*!
-  \brief DGuiApplicationHelper::paletteType.
+  \brief 返回当前已设置的调色板类型.
 
-  返回当前已设置的调色板类型，如果未调用过 setPaletteType, 默认为 UnknownType.
+  如果未调用过 setPaletteType, 默认为 UnknownType.
+
+  \return 返回当前已设置的调色板类型.
   \warning 与 themetype 不同，此值与程序当前的 QPalette 没有关系。
   \sa DGuiApplicationHelper::themeType
  */
@@ -1314,7 +1325,7 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
 }
 
 /*!
-  \brief DGuiApplicationHelper::setSingleInstance 设置DGuiApplicationHelper实例.
+  \brief 设置DGuiApplicationHelper实例.
 
   \a key 实例关键字
   \a singleScope 实例使用范围
@@ -1433,7 +1444,8 @@ void DGuiApplicationHelper::setSingleInstanceInterval(int interval)
 }
 
 /*!
-  \brief DGuiApplicationHelper::setSingelInstanceInterval设置从QLocalServer获取消息的等待时间
+  \brief 设置从QLocalServer获取消息的等待时间.
+
   \a interval 等待时间，typo 请使用 DGuiApplicationHelper::setSingleInstanceInterval
  */
 void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
@@ -1475,8 +1487,10 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
 
 /*!
   \brief DGuiApplicationHelper::setThemeType.
+  \obsolete
 
   同 setPaletteType， 已废弃，请不要再使用。
+  \a themeType 主题类型.
  */
 void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeType)
 {
@@ -1484,7 +1498,8 @@ void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeT
 }
 
 /*!
-  \brief DGuiApplicationHelper::setPaletteType 设置程序所应用的调色板类型。
+  \brief 设置程序所应用的调色板类型.
+
   将固定程序的调色板类型, 此行为可能导致 applicationPalette 变化, 前提是未使用
   setApplicationPalette 固定过程序的调色板, 此方法不影响程序的调色板跟随
   活动色改变, 可用于控制程序使用亮色还是暗色调色板.

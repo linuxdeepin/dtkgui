@@ -14,24 +14,17 @@ DGUI_BEGIN_NAMESPACE
  */
 
 /*!
-  \enum Dtk::Gui::DRegionMonitor::RegisterdFlag
+  \enum DRegionMonitor::RegisterdFlag
   DRegionMonitor::RegisterdFlag 定义了 DRegionMonitor 监听标志。
-  
+
   \value Motion
   代表监听鼠标移动。
-  
+
   \value Button
   代表监听鼠标按键。
-  
+
   \value Key
   代表监听键盘按键。
- */
-
-/*!
-  \fn void DRegionMonitor::registerdFlagsChanged(RegisterdFlags flags) const
-  \brief registerdFlagChanged 信号会在监听标志 registerdFlags 被改变的时候被触发.
-  
-  \sa DRegionMonitor::setRegisterFlags(RegisterdFlags flags)
  */
 
 DRegionMonitor::DRegionMonitor(QObject *parent)
@@ -57,12 +50,6 @@ QRegion DRegionMonitor::watchedRegion() const
     return d->watchedRegion;
 }
 
-/*!
-  \brief DRegionMonitor::registerFlags.
-  \brief 获取监听模式.
-
-  \sa setRegisterFlags()
- */
 DRegionMonitor::RegisterdFlags DRegionMonitor::registerFlags() const
 {
     D_DC(DRegionMonitor);
@@ -107,12 +94,16 @@ void DRegionMonitor::setWatchedRegion(const QRegion &region)
 }
 
 /*!
-  \brief DRegionMonitor::setRegisterFlags
-  \brief 设置监听模式
-  \a flags
-  \brief 监听模式，需要注意DRegionMonitor::Motion监听鼠标移动会影响性能，默认包含，如果
-  \brief 需要可通过此函数去掉DRegionMonitor::Motion
-  \sa DRegionMonitor::registerFlags()
+  \property DRegionMonitor::registerdFlags
+
+  \brief 监听模式属性.
+  \brief 监听模式，需要注意 DRegionMonitor::Motion 监听鼠标移动会影响性能，默认包含，如果
+  需要可通过此函数去掉 DRegionMonitor::Motion .
+
+  registerdFlagChanged 信号会在监听标志 registerdFlags 被改变的时候被触发.
+
+  \a flags 监听模式.
+
  */
 void DRegionMonitor::setRegisterFlags(RegisterdFlags flags)
 {
