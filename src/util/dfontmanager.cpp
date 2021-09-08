@@ -78,17 +78,8 @@ DFontManager::~DFontManager()
  */
 
 /*!
-  \brief 将字体的大小枚举 SizeType 和控件 widget 进行绑定, 其控件的字体大小(随绑定的枚举的)对应值的改变而改变;
-         系统自定义的绑定枚举值 T6, 若 T6 = 14px,  则其他枚举 T1 - T10 的数值,依次为:40, 30, 24, 20, 17, 14(T6), 13, 12, 11, 10;
-         系统自定义的绑定枚举值 T6 改为 T6 = 20px, 则其他枚举 T1 - T10 的数值,依次为:46, 36, 30, 26, 23, 20(T6), 19, 18, 17, 16;
-         即: 其对应的无论 T6 为何值, 其两个相邻的 T 值的差是定值: T(n) - T(n-1) == 定值
-         而系统是只设置 T6 这以枚举, 作为基准
-  \a widget 将要绑定字体大小枚举数值的控件
-  \a type 字体的枚举类型, 每一个枚举数值对应着一个字体像素大小
- */
+  \brief 获取字体像素的大小.
 
-/*!
-  \brief 获取字体像素的大小
   \a type 字体枚举类型
   \return 返回字体像素的大小
  */
@@ -104,7 +95,8 @@ int DFontManager::fontPixelSize(DFontManager::SizeType type) const
 }
 
 /*!
-  \brief 设置字体像素大小
+  \brief 设置字体像素大小.
+
   \a type 字体枚举类型
   \a size 字体大小
  */
@@ -124,8 +116,9 @@ void DFontManager::setFontPixelSize(DFontManager::SizeType type, int size)
 }
 
 /*!
-  \brief 设置字体的通用像素大小
-  \a size 预设计的字体像素的大小
+  \brief 设置字体的通用像素大小.
+
+  \a font 预设计的字体像素的大小
  */
 void DFontManager::setBaseFont(const QFont &font)
 {
@@ -157,7 +150,8 @@ void DFontManager::resetBaseFont()
 }
 
 /*!
-  \brief 获取字体
+  \brief 获取字体.
+
   \a pixelSize 字体的像素大小
   \a base 要基于的字体
   \return 返回设置字体大小后的字体

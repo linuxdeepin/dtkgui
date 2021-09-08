@@ -51,8 +51,10 @@ class DFileDragPrivate : DCORE_NAMESPACE::DObjectPrivate
 /*!
   \fn void DFileDrag::targetUrlChanged(QUrl url)
 
-  \brief 信号会在接收方调用 setTargetUrl 时被发送
-  \brief 可以用于获取被拖拽至的目标目录
+  \brief 信号会在接收方调用 setTargetUrl 时被发送.
+  可以用于获取被拖拽至的目标目录
+
+  \a url 发生改变的目标链接.
  */
 
 DFileDrag::DFileDrag(QObject *source, DFileDragServer *server)

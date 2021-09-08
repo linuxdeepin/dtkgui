@@ -101,7 +101,7 @@ private:
 /*!
   \fn void DFileDragServer::targetDataChanged(const QString &key)
 
-  \brief 信号会在接收方调用 setData 变化时被发送.
+  \brief 信号会在接收方调用 setData 变化时被发送， \a key 为改变的键值.
  */
 
 DFileDragServer::DFileDragServer(QObject *parent)

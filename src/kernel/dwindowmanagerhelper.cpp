@@ -147,7 +147,7 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
   \sa {https://github.com/linuxdeepin/qt5dxcb-plugin/}{dxcb插件}
   \sa Dtk::Widget::DApplication::loadDXcbPlugin
   \sa Dtk::Widget::DApplication::isDXcbPlatform
-  \sa Dtk::Gui::DPlatformWindowHandle
+  \sa Dtk::Widget::DPlatformWindowHandle
  */
 
 /*!
@@ -169,7 +169,7 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
   \brief 窗口管理器是否支持隐藏窗口标题栏。如果支持，则 DPlatformWindowHandle::enableDXcbForWindow
   会优先使用此方法支持自定义窗口标题栏。
   \note 只读
-  \sa Dtk::Gui::DPlatformHandle::enableNoTitlebarForWindow
+  \sa Dtk::Gui::DPlatformHandle::setEnabledNoTitlebarForWindow
  */
 
 /*!
@@ -177,19 +177,19 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
   \brief 窗口管理器是否支持窗口背景特效绘制。如果支持，则 绘制背景到透明窗口
   会使用此方法开启特效窗口壁纸背景绘制。
   \note 只读
-  \sa Dtk::Gui::DPlatformHandle::hasWallpaperEffectChanged()
+  \sa hasWallpaperEffectChanged()
  */
 
 /*!
   \enum Dtk::Gui::DWindowManagerHelper::MotifFunction
   MotifFunction::MotifFunction 窗口管理器对窗口所能控制的行为
-  
+
   \value FUNC_RESIZE
   控制窗口大小。如果存在此标志，则窗口管理器可以改变窗口大小（如使用鼠标拖拽窗口边缘），
   否则无法通过外部行为调整窗口大小。
   \code
   DMainWindow w;
-  
+
   w.resize(400, 200);
   w.show();
   DWindowManagerHelper::setMotifFunctions(w.windowHandle(), DWindowManagerHelper::FUNC_RESIZE, false);
@@ -202,7 +202,7 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
   此标志无效。
   \sa Dtk::Gui::DPlatformHandle::enableDXcbForWindow
   \sa Dtk::Gui::DPlatformHandle::isEnabledDXcb
-  
+
   \value FUNC_MOVE
   控制窗口位置。如果存在此标志，则窗口管理器可以移动窗口（如使用鼠标拖动标题栏），否则
   无法通过外部行为移动窗口位置。
@@ -217,27 +217,24 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
   \code
   DWindowManagerHelper::setMotifFunctions(w.windowHandle(), DWindowManagerHelper::FUNC_MINIMIZE, false);
   \endcode
-  \image disable_minimize_function.gif
   \note 设置此标志后也会影响窗口标题栏对应功能入口的状态
-  
+
   \value FUNC_MAXIMIZE
   最大化窗口。如果存在此标志，则窗口可以被最大化（如点击标题栏的最大化按钮），否则无法
   通过外部行为最大化窗口。
   \code
   DWindowManagerHelper::setMotifFunctions(w.windowHandle(), DWindowManagerHelper::FUNC_MAXIMIZE, false);
   \endcode
-  \image disable_maximize_function.gif
   \note 设置此标志后也会影响窗口标题栏对应功能入口的状态
-  
+
   \value FUNC_CLOSE
   关闭窗口。如果存在此标志，则窗口可以被关闭（如点击标题栏的关闭按钮或使用Alt+F4快捷键），
   否则无法通过外部行为关闭窗口。
   \code
   DWindowManagerHelper::setMotifFunctions(w.windowHandle(), DWindowManagerHelper::FUNC_CLOSE, false);
   \endcode
-  \image disable_close_function.gif
   \note 设置此标志后也会影响窗口标题栏对应功能入口的状态
-  
+
   \value FUNC_ALL
   所有功能性行为
  */
@@ -246,41 +243,41 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
   \enum Dtk::Gui::DWindowManagerHelper::MotifDecoration
   MotifFunction::MotifDecoration 窗口管理器对窗口添加的修饰。只影响窗口上对应功能
   的入口，不影响实际的功能，比如：禁用掉 FUNC_MAXIMIZE 后，还可以使用快捷键最大化窗口
-  
+
   \value DECOR_BORDER
   窗口描边。如果存在此标志，则窗口管理器会为窗口绘制描边，否则窗口没有描边。
   否则无法通过外部行为调整窗口大小。
   \note 只支持使用系统标题栏的窗口，此功能和具体窗口管理器实现相关，deepin-wm 中设置
   此标志无效。
-  
+
   \value DECOR_RESIZEH
   改变窗口大小。如果存在此标志，则窗口管理器会在窗口的修饰上显示一个更改窗口大小的控件，
   否则无此控件。
   \note 只支持使用系统标题栏的窗口，此功能和具体窗口管理器实现相关，deepin-wm 中设置
   此标志无效。
-  
+
   \value DECOR_TITLE
   窗口标题。如果存在此标志，则窗口管理器会在窗口的修饰上显示窗口标题，否则不显示。
   \note 只支持使用系统标题栏的窗口，此功能和具体窗口管理器实现相关，deepin-wm 中设置
   此标志无效。
-  
+
   \value DECOR_MENU
   窗口菜单。如果存在此标志，则窗口管理器会在窗口的修饰上显示一个窗口菜单控件，否则不显示。
   \note 只支持使用系统标题栏的窗口，此功能和具体窗口管理器实现相关，deepin-wm 中设置
   此标志无效。
-  
+
   \value DECOR_MINIMIZE
   窗口最小化。如果存在此标志，则窗口管理器会在窗口的修饰上显示一个最小化窗口控件，否则不显示。
   \note 只支持使用系统标题栏的窗口，此功能和具体窗口管理器实现相关，deepin-wm 中设置
   此标志无效。
   \sa Qt::WindowMinimizeButtonHint
-  
+
   \value DECOR_MAXIMIZE
   窗口最大化。如果存在此标志，则窗口管理器会在窗口的修饰上显示一个最大化窗口控件，否则不显示。
   \note 只支持使用系统标题栏的窗口，此功能和具体窗口管理器实现相关，deepin-wm 中设置
   此标志无效。
   \sa Qt::WindowMaximizeButtonHint
-  
+
   \value DECOR_ALL
   所有窗口修饰。
  */
@@ -290,10 +287,10 @@ Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
   DWindowManagerHelper::WMName 窗口管理器类型
   \value DeepinWM
   深度系统桌面环境窗口管理器
-  
+
   \value KWinWM
   KDE系统桌面环境窗口管理器
-  
+
   \value OtherWM
   其它窗口管理器
  */
@@ -368,7 +365,7 @@ void DWindowManagerHelper::setMotifFunctions(const QWindow *window, MotifFunctio
         /*
   fix bug: 18775, 3391
    当所有function标志都设置时,用MWM_FUNC_ALL代替会导致窗管无法正确处理 dock栏发送的关闭消息.所以取消此设置
-  
+
      if (hints == FUNC_ALL)
          hints = (MotifFunction)MWM_FUNC_ALL;
     */

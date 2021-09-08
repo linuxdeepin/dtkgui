@@ -503,7 +503,7 @@ bool DPlatformHandle::isDXcbPlatform()
   DWindowManagerHelper::hasComposite 或 QX11Info::isCompositingManagerRunning
   判断当前运行的窗口管理器是否支持混成。
   \a window
-  \sa Dtk::Gui::DPlatformHandle::setEnableNoTitlebarForWindow()
+  \sa Dtk::Gui::DPlatformHandle::setEnabledNoTitlebarForWindow()
  */
 void DPlatformHandle::enableDXcbForWindow(QWindow *window)
 {
@@ -557,8 +557,8 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window, bool redirectContent)
 /*!
   \brief DPlatformHandle::isEnabledDXcb.
 
-  \return 如果窗口开启了DTK风格的窗口修饰则返回 true，否则返回 false
-  \sa DPlatformHandle::isEnableNoTitlebar()
+  \return 如果窗口 \a window 开启了DTK风格的窗口修饰则返回 true，否则返回 false
+  \sa DPlatformHandle::isEnabledNoTitlebar()
  */
 bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
 {
@@ -611,14 +611,16 @@ public:
 };
 
 /*!
-  \brief DPlatformHandle::setEnableNoTitlebarForWindow.
+  \brief DPlatformHandle::setEnabledNoTitlebarForWindow.
 
   使用窗口管理器提供的方式隐藏窗口的标题栏，目前已适配 DDE KWin 窗管，在窗口管理器支持的前提下，
   此方法将通过设置窗口属性 _DEEPIN_SCISSOR_WINDOW 的值为 1 来开启无标题栏效果。
-  \a window
-  \a enable
-  \sa DPlatformHandle::enableDXcbForWindow(QWindow *)
-  \sa DWindowManagerHelper::hasNoTitlebar
+  \a window 被设置的 QWindow 实例.
+  \a enable 是否开启无标题属性.
+  \return 设置成功返回 true,否则返回false.
+
+  \sa DPlatformHandle::enableDXcbForWindow()
+  \sa DWindowManagerHelper::hasNoTitlebar()
  */
 bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable)
 {

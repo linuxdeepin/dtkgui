@@ -58,8 +58,8 @@ public:
   dxcb 插件的应用中使用时结果未知
 
   \sa DWindowManagerHelper::currentWorkspaceWindows
-  \sa DApplication::loadDXcbPlugin
-  \sa DApplication::isDXcbPlatform
+  \sa Dtk::Widget::DApplication::loadDXcbPlugin
+  \sa Dtk::Widget::DApplication::isDXcbPlatform
  */
 
 /*!
