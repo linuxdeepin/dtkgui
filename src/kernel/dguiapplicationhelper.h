@@ -67,6 +67,7 @@ public:
         IsXWindowPlatform        = ReadOnlyLimit << 2,
         IsTableEnvironment       = ReadOnlyLimit << 3,
         IsDeepinEnvironment      = ReadOnlyLimit << 4,
+        IsSpecialEffectsEnvironment = ReadOnlyLimit << 5
     };
     Q_ENUM(Attribute)
     Q_DECLARE_FLAGS(Attributes, Attribute)
@@ -88,6 +89,7 @@ public:
     Q_DECL_DEPRECATED_X("Use ColorCompositing enum with setAttribute.") static void setColorCompositingEnabled(bool on);
     static bool isXWindowPlatform();
     static bool isTabletEnvironment();
+    static bool isSpecialEffectsEnvironment();
     static void setAttribute(Attribute attribute, bool enable);
     static bool testAttribute(Attribute attribute);
 

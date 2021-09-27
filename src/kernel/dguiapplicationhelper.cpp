@@ -1042,6 +1042,15 @@ bool DGuiApplicationHelper::isTabletEnvironment()
 }
 
 /*!
+   \brief isAnimationEnvironment 用于判断当前桌面环境是否是开启了动画等特效的环境
+   \return true开启了 false没有开启
+ */
+bool DGuiApplicationHelper::isSpecialEffectsEnvironment()
+{
+    return DGuiApplicationHelper::testAttribute(Attribute::IsSpecialEffectsEnvironment);
+}
+
+/*!
   \brief DGuiApplicationHelper::systemTheme.
 
   返回系统级别的主题, 优先级低于 applicationTheme
@@ -1480,6 +1489,9 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
         return QString(typeid(*QGuiApplicationPrivate::platform_theme).name()).contains("QDeepinTheme");
     case IsDeepinEnvironment:
         return QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment().toLower().contains("deepin");
+    case IsSpecialEffectsEnvironment: {
+        return qgetenv("DTK_DISABLED_SPECIAL_EFFECTS").toInt() != 1;
+    }
     default:
         return DGuiApplicationHelperPrivate::attributes.testFlag(attribute);
     }
