@@ -34,6 +34,7 @@ unix:LIBS += -lgtest -lglib-2.0
 include($$PWD/../src/filedrag/filedrag.pri)
 include($$PWD/../src/kernel/kernel.pri)
 include($$PWD/../src/util/util.pri)
+include($$PWD/../src/private/private.pri)
 
 linux* {
     # don't link library
@@ -60,8 +61,10 @@ SOURCES += \
     src/ut_dfontmanager.cpp \
     src/ut_dsvgrenderer.cpp \
     src/ut_dtaskbarcontrol.cpp \
-    src/ut_dthumbnailprovider.cpp
+    src/ut_dthumbnailprovider.cpp \
+    src/ut_dicontheme.cpp
 
 RESOURCES += \
-    res.qrc
+    res.qrc \
+    $$PWD/../src/util/icons/deepin-theme-plugin-icons.qrc
 
