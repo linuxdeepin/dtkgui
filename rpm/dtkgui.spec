@@ -1,5 +1,5 @@
 Name:           dtkgui
-Version:        5.4.0
+Version:        5.5.17
 Release:        1%{?dist}
 Summary:        Deepin dtkgui
 License:        LGPLv3+
@@ -8,15 +8,18 @@ URL:            https://github.com/linuxdeepin/dtkgui
 %if 0%{?fedora}
 Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
 %else
-Source0:        %{name}_%{version}.orig.tar.xz
+Source0:        %{name}-%{version}.orig.tar.xz
 %endif
 BuildRequires:  qt5-qtx11extras-devel
+BuildRequires:  dtkcommon-devel
 BuildRequires:  dtkcore-devel
 BuildRequires:  librsvg2-devel
 BuildRequires:  gcc-c++
 BuildRequires:  annobin
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(gsettings-qt)
+BuildRequires:  pkgconfig(gtest)
+BuildRequires:  pkgconfig(gmock)
 %if 0%{?fedora}
 BuildRequires:  qt5-qtbase-private-devel
 %{?_qt5:Requires: %{_qt5}%{?_isa} = %{_qt5_version}}
@@ -55,7 +58,7 @@ export PATH=%{_qt5_bindir}:$PATH
 %{_libdir}/lib%{name}.so.5*
 %{_libexecdir}/dtk5/deepin-gui-settings
 %{_libexecdir}/dtk5/taskbar
-%{_sysconfdir}/dbus-1/system.d/com.deepin.dtk.FileDrag.conf
+%{_libexecdir}/dtk5/dde-kwin-debug
 
 %files devel
 %{_includedir}/libdtk-*/
