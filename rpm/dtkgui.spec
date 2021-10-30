@@ -14,11 +14,11 @@ BuildRequires:  qt5-qtx11extras-devel
 BuildRequires:  dtkcommon-devel
 BuildRequires:  dtkcore-devel
 BuildRequires:  librsvg2-devel
+BuildRequires:  gtest-devel
 BuildRequires:  gcc-c++
 BuildRequires:  annobin
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(gsettings-qt)
-BuildRequires:  pkgconfig(gtest)
 BuildRequires:  pkgconfig(gmock)
 %if 0%{?fedora}
 BuildRequires:  qt5-qtbase-private-devel
