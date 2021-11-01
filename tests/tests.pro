@@ -29,7 +29,7 @@ MOC_DIR=$$OUT_PWD/../src
 
 DEPENDPATH += $$PWD/../src
 unix:QMAKE_RPATHDIR += $$OUT_PWD/../src
-unix:LIBS += -L$$OUT_PWD/../src/ -ldtkgui -lgtest -lglib-2.0
+unix:LIBS += -lgtest -lglib-2.0
 
 include($$PWD/../src/filedrag/filedrag.pri)
 include($$PWD/../src/kernel/kernel.pri)
