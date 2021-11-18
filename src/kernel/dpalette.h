@@ -71,7 +71,7 @@ public:
     inline const QColor &color(ColorType ct) const { return color(Current, ct); }
     inline const QBrush &brush(ColorType ct) const { return brush(Current, ct); }
     inline const QBrush &itemBackground() const { return brush(ItemBackground); }
-    inline const QBrush &textTiele() const { return brush(TextTitle); }
+    inline const QBrush &textTitle() const { return brush(TextTitle); }
     inline const QBrush &textTips() const { return brush(TextTips); }
     inline const QBrush &textWarning() const { return brush(TextWarning); }
     inline const QBrush &textLively() const { return brush(TextLively); }

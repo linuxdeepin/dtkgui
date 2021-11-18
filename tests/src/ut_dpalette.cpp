@@ -83,7 +83,7 @@ TEST_F(TDPalette, testColorFunction)
     QBrush brush = palette.itemBackground();
     ASSERT_TRUE(brush.color().isValid());
 
-    brush = palette.textTiele();
+    brush = palette.textTitle();
     ASSERT_TRUE(brush.color().isValid());
 
     brush = palette.textTips();
