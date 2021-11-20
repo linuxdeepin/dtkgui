@@ -1344,13 +1344,6 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
  */
 bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicationHelper::SingleScope singleScope)
 {
-    // for bug: 多次调用导致的控制中心起不来. 原则上禁止多次调用.
-    static bool multiCallFlag = false;
-    if (multiCallFlag) {
-        return true;
-    }
-    multiCallFlag = true;
-
     bool new_server = !_d_singleServer.exists();
 
     if (_d_singleServer->isListening()) {
@@ -1380,9 +1373,13 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     socket_key += key;
 
 #ifdef Q_OS_LINUX
-    if (!DInstanceGuard::guard(socket_key)) {
+    // for bug: 多次调用导致的控制中心起不来. 原则上禁止多次调用.
+    static bool multiCallFlag = false;
+    if (!multiCallFlag && !DInstanceGuard::guard(socket_key)) {
         return false;
     }
+
+    multiCallFlag = true;
     DInstanceGuard::DCriticalHolder holder;
 #endif
 
