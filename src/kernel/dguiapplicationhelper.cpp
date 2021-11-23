@@ -1494,7 +1494,7 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
     case IsDeepinEnvironment:
         return QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment().toLower().contains("deepin");
     case IsSpecialEffectsEnvironment: {
-        return qgetenv("DTK_DISABLED_SPECIAL_EFFECTS").toInt() != 0;
+        return qgetenv("DTK_DISABLED_SPECIAL_EFFECTS").toInt() != 1;
     }
     default:
         return DGuiApplicationHelperPrivate::attributes.testFlag(attribute);
