@@ -652,6 +652,9 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
     if (!(isDXcbPlatform() || isDWaylandPlatform()))
         return false;
 
+    if (isEnabledNoTitlebar(window) == enable)
+        return true;
+
     QFunctionPointer enable_no_titlear = nullptr;
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
@@ -660,7 +663,7 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
 
     if (enable_no_titlear) {
         bool ok = (*reinterpret_cast<bool(*)(QWindow*, bool)>(enable_no_titlear))(window, enable);
-        if (ok) {
+        if (ok && enable) {
             if (window->handle()) {
                 initWindowRadius(window);
             } else {
