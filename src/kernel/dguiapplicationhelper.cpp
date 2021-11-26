@@ -50,6 +50,17 @@
 #endif
 #include <QDir>
 #include <QLockFile>
+#include <QDirIterator>
+
+#ifdef Q_OS_UNIX
+#include <QDBusError>
+#include <QDBusReply>
+#include <QDBusInterface>
+#include <QDBusPendingCall>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QProcess>
+#endif
 
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformservices.h>
@@ -1464,7 +1475,6 @@ void DGuiApplicationHelper::openUrl(const QString &url)
         QDesktopServices::openUrl(url);
     }
 }
-
 DGUI_END_NAMESPACE
 
 #include "moc_dguiapplicationhelper.cpp"
