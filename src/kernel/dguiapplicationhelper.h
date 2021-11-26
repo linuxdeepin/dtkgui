@@ -40,6 +40,7 @@ class DGuiApplicationHelper : public QObject, public DCORE_NAMESPACE::DObject
 
     Q_PROPERTY(ColorType themeType READ themeType NOTIFY themeTypeChanged)
     Q_PROPERTY(ColorType paletteType READ paletteType WRITE setPaletteType NOTIFY paletteTypeChanged)
+    Q_PROPERTY(bool hasUserManual READ hasUserManual)
 
 public:
     enum ColorType {
@@ -112,9 +113,12 @@ public:
     static void setSingleInstanceInterval(int interval = 3000);
     D_DECL_DEPRECATED static void setSingelInstanceInterval(int interval = 3000);
 
+    bool hasUserManual() const;
+
 public Q_SLOTS:
     D_DECL_DEPRECATED_X("Plase use setPaletteType") void setThemeType(ColorType themeType);
     void setPaletteType(ColorType paletteType);
+    void handleHelpAction();
 
 Q_SIGNALS:
     void themeTypeChanged(ColorType themeType);
