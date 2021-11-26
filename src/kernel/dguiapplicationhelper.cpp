@@ -36,6 +36,17 @@
 #include <QLoggingCategory>
 #include <QDir>
 #include <QLockFile>
+#include <QDirIterator>
+
+#ifdef Q_OS_UNIX
+#include <QDBusError>
+#include <QDBusReply>
+#include <QDBusInterface>
+#include <QDBusPendingCall>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QProcess>
+#endif
 
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformservices.h>
@@ -1248,6 +1259,51 @@ void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
     DGuiApplicationHelperPrivate::waitTime = interval;
 }
 
+/*!
+ * \brief Determine whether it's a user manual for this application.
+ * \return
+ */
+bool DGuiApplicationHelper::hasUserManual() const
+{
+#ifdef Q_OS_LINUX
+    auto loadManualFromLocalFile = [] () -> bool {
+        const QString appName = qApp->applicationName();
+        if (!QFile::exists("/usr/bin/dman"))
+            return false;
+
+        bool dmanDataExists = false;
+        // search all subdirectories
+        QString strManualPath = "/usr/share/deepin-manual";
+        QDirIterator it(strManualPath, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QFileInfo file(it.next());
+            if (file.isDir() && file.fileName().contains(appName, Qt::CaseInsensitive)) {
+                dmanDataExists = true;
+                break;
+            }
+
+            if (file.isDir())
+                continue;
+        }
+        return dmanDataExists;
+    };
+
+    QDBusConnection conn = QDBusConnection::sessionBus();
+    if (conn.interface()->isServiceRegistered("com.deepin.Manual.Search")) {
+        QDBusInterface manualSearch("com.deepin.Manual.Search",
+                                    "/com/deepin/Manual/Search",
+                                    "com.deepin.Manual.Search");
+        if (manualSearch.isValid()) {
+            QDBusReply<bool> reply = manualSearch.call("ManualExists", qApp->applicationName());
+            return reply.value();
+        }
+    }
+    return loadManualFromLocalFile();
+#else
+    return false;
+#endif
+}
+
 void DGuiApplicationHelper::setAttribute(DGuiApplicationHelper::Attribute attribute, bool enable)
 {
     if (attribute < Attribute::ReadOnlyLimit) {
@@ -1323,6 +1379,32 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
         d->notifyAppThemeChanged();
 
     Q_EMIT paletteTypeChanged(paletteType);
+}
+
+/*!
+ * \brief Open manual for this application.
+ */
+void DGuiApplicationHelper::handleHelpAction()
+{
+    if (!hasUserManual()) {
+        return;
+    }
+#ifdef Q_OS_LINUX
+    QString appid = qApp->applicationName();
+
+    // new interface use applicationName as id
+    QDBusInterface manual("com.deepin.Manual.Open",
+                          "/com/deepin/Manual/Open",
+                          "com.deepin.Manual.Open");
+    QDBusReply<void> reply = manual.call("ShowManual", appid);
+    if (reply.isValid())  {
+        return;
+    }
+    // fallback to old interface
+    QProcess::startDetached("dman", QStringList() << appid);
+#else
+    qWarning() << "not support dman now";
+#endif
 }
 
 DGUI_END_NAMESPACE
