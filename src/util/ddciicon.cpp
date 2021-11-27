@@ -228,7 +228,7 @@ static DDciIcon::IconPointer loadIcon(const QSharedPointer<const DDciFile> &file
             continue; // ignore invalid file
         bool ok = false;
         int scale = nameAndScale.last().toInt(&ok);
-        if (scale > icon->datas.capacity())
+        if (!ok || scale > icon->datas.capacity())
             continue; // too big
         DDciIcon::Icon::Data data;
         if (nameAndScale.first() == QLatin1String(FOREGROUND_FILE_NAME)) {
@@ -552,6 +552,11 @@ DDciIcon::IconPointer DDciIcon::findIcon(int iconSize, Theme theme,
 QPixmap DDciIcon::generatePixmap(const DDciIcon::IconPointer &icon, Mode mode, int iconSize, qreal devicePixelRatio, const QBrush &foreground)
 {
     Q_CHECK_PTR(icon);
+    if (!iconSize)
+        iconSize = icon->iconSize;
+
+    Q_ASSERT_X(iconSize, "DDciIcon::generatePixmap", "We must specify the icon size.");
+
     QPixmap pixmap(iconSize, iconSize);
     pixmap.fill(Qt::transparent);
     pixmap.setDevicePixelRatio(devicePixelRatio);
