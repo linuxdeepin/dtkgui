@@ -49,7 +49,9 @@ public:
         FUNC_CLOSE    = (1L << 5),
         FUNC_ALL      = FUNC_RESIZE | FUNC_MOVE | FUNC_MINIMIZE | FUNC_MAXIMIZE | FUNC_CLOSE
     };
+    Q_ENUM(MotifFunction)
     Q_DECLARE_FLAGS(MotifFunctions, MotifFunction)
+    Q_FLAG(MotifFunctions)
 
     enum MotifDecoration {
         DECOR_BORDER   = (1L << 1),
@@ -60,7 +62,9 @@ public:
         DECOR_MAXIMIZE = (1L << 6),
         DECOR_ALL      = DECOR_BORDER | DECOR_RESIZEH | DECOR_TITLE | DECOR_MENU | DECOR_MINIMIZE | DECOR_MAXIMIZE
     };
+    Q_ENUM(MotifDecoration)
     Q_DECLARE_FLAGS(MotifDecorations, MotifDecoration)
+    Q_FLAG(MotifDecorations)
 
     enum WMName {
         OtherWM,
