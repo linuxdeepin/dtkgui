@@ -51,6 +51,7 @@
 #include <QDir>
 #include <QLockFile>
 #include <QDirIterator>
+#include <QDesktopServices>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
