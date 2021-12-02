@@ -28,6 +28,7 @@
 
 DGUI_BEGIN_NAMESPACE
 
+class DDciIcon;
 namespace DIconTheme
 {
     enum Option {
@@ -52,6 +53,11 @@ namespace DIconTheme
 
     Cached *cached();
     QIcon findQIcon(const QString &iconName, Options options = Options());
+
+    DDciIcon findDciIcon(const QString &iconName, const QString &themeName);
+
+    QStringList dciThemeSearchPaths();
+    void setDciThemeSearchPaths(const QStringList &path);
 
     bool isBuiltinIcon(const QIcon &icon);
     bool isXdgIcon(const QIcon &icon);
