@@ -119,6 +119,7 @@ public Q_SLOTS:
     D_DECL_DEPRECATED_X("Plase use setPaletteType") void setThemeType(ColorType themeType);
     void setPaletteType(ColorType paletteType);
     void handleHelpAction();
+    static void openUrl(const QString &url);
 
 Q_SIGNALS:
     void themeTypeChanged(ColorType themeType);
