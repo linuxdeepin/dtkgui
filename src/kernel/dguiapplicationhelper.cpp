@@ -37,6 +37,7 @@
 #include <QDir>
 #include <QLockFile>
 #include <QDirIterator>
+#include <QDesktopServices>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
@@ -55,6 +56,39 @@
 
 #ifdef Q_OS_LINUX
 #include <unistd.h>
+#endif
+
+#ifdef Q_OS_UNIX
+class EnvReplaceGuard
+{
+public:
+    EnvReplaceGuard(const int uid);
+    ~EnvReplaceGuard();
+
+    char *m_backupLogName;
+    char *m_backupHome;
+    bool initialized = false;
+};
+
+EnvReplaceGuard::EnvReplaceGuard(const int uid)
+{
+    if (struct passwd *pwd = getpwuid(static_cast<__uid_t>(uid))) {
+        m_backupLogName = getenv("LOGNAME");
+        m_backupHome = getenv("HOME");
+
+        setenv("LOGNAME", pwd->pw_name, 1);
+        setenv("HOME", pwd->pw_dir, 1);
+        initialized = true;
+    }
+}
+
+EnvReplaceGuard::~EnvReplaceGuard()
+{
+    if (initialized) {
+        setenv("LOGNAME", m_backupLogName, 1);
+        setenv("HOME", m_backupHome, 1);
+    }
+}
 #endif
 
 DGUI_BEGIN_NAMESPACE
@@ -1405,6 +1439,27 @@ void DGuiApplicationHelper::handleHelpAction()
 #else
     qWarning() << "not support dman now";
 #endif
+}
+
+void DGuiApplicationHelper::openUrl(const QString &url)
+{
+#ifdef Q_OS_UNIX
+    // workaround for pkexec apps
+    bool ok = false;
+    const int pkexecUid = qEnvironmentVariableIntValue("PKEXEC_UID", &ok);
+
+    if (ok)
+    {
+        EnvReplaceGuard _env_guard(pkexecUid);
+        Q_UNUSED(_env_guard);
+
+        QDesktopServices::openUrl(url);
+    }
+    else
+#endif
+    {
+        QDesktopServices::openUrl(url);
+    }
 }
 
 DGUI_END_NAMESPACE
