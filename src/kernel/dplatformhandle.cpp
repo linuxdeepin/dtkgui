@@ -626,7 +626,10 @@ public:
  */
 bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable)
 {
-    if (!isDXcbPlatform())
+    auto isDWaylandPlatform = [] {
+        return qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
+    };
+    if (!(isDXcbPlatform() || isDWaylandPlatform()))
         return false;
 
     QFunctionPointer enable_no_titlear = nullptr;
