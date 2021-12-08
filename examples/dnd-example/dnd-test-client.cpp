@@ -34,14 +34,19 @@ public:
         layout()->addWidget(lb);
         layout()->addWidget(le);
         lb->setAlignment(Qt::AlignmentFlag::AlignCenter);
-        le->setPlaceholderText(QString("url for drag source if dropped in %1").arg(s));
+        le->setText("/tmp");
+        le->setPlaceholderText(QString("do not accept drop when edit is empty"));
         setAcceptDrops(true);
     }
 protected:
     void dragEnterEvent(QDragEnterEvent *e)
     {
         if (DFileDragClient::checkMimeData(e->mimeData())) {
-            e->acceptProposedAction();
+            if (le->text().isEmpty())
+                e->ignore(); // or e->setDropAction(Qt::IgnoreAction);
+            else
+                e->acceptProposedAction();
+
             DFileDragClient::setTargetUrl(e->mimeData(), QUrl(le->text()));
         }
     }
@@ -76,7 +81,7 @@ int main(int argc, char **argv)
     lo->addWidget(new DropArea("area 51"));
     lo->addWidget(new DropArea("area 61"));
 
-    QScopedPointer<QProgressBar> pp = new QProgressBar();
+    QScopedPointer<QProgressBar> pp (new QProgressBar());
     p = pp.data();
     p->setMinimum(0);
     p->setMaximum(100);

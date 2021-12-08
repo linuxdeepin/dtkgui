@@ -1,4 +1,3 @@
 TEMPLATE =  subdirs
-#SUBDIRS += dnd-example
-
-SUBDIRS += test-taskbar
+SUBDIRS += dnd-example
+#SUBDIRS += test-taskbar

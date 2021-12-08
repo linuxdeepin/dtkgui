@@ -52,9 +52,14 @@ protected:
         connect(drag, &DFileDrag::targetUrlChanged, [drag] {
             lbr->setText(drag->targetUrl().toString());
         });
-        drag->exec();
 
-        Q_EMIT dragFinished();
+        Qt::DropAction res = drag->exec(Qt::MoveAction);
+        if (res!= Qt::IgnoreAction)
+            Q_EMIT dragFinished();
+        else {
+            s->deleteLater();
+            s = nullptr;
+        }
     }
 
 private:
