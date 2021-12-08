@@ -39,9 +39,9 @@ public:
         TextType = 0,
         ActionType = 1,
         IconType = 2,
-        CurrentType = 3,
 
-        TypeCount
+        TypeCount,
+        CurrentType = 1 << 24,
     };
     enum Mode {
         Normal = 0,
