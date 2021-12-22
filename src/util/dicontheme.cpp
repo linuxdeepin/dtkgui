@@ -19,7 +19,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "dicontheme.h"
-#include "ddciicon.h"
 #include "private/dbuiltiniconengine_p.h"
 #ifndef DTK_DISABLE_LIBXDG
 #include "private/xdgiconproxyengine_p.h"
@@ -44,20 +43,6 @@ static QString joinPath(const QString &basePath, const QString &path)
     return basePath + QDir::separator() + path;
 }
 
-static bool dciIconIsNull(const DDciIcon &dciIcon)
-{
-    // Find all type inside the dci icon, if one type has data,
-    // we judge that the data is not empty.
-    for (int type = 0; type < DDciIcon::TypeCount; ++type) {
-        if (dciIcon.isNull(static_cast<DDciIcon::Type>(type)))
-            continue;
-
-        return false;
-    }
-
-    return true;
-}
-
 static inline QString systemDciThemePath()
 {
     return joinPath(DStandardPaths::path(DStandardPaths::DSG::DataDir), QLatin1String("icons"));
@@ -73,15 +58,15 @@ static inline QString applicationBuiltInIconPath()
     return QLatin1String(":/dsg/built-in-icons");
 }
 
-static DDciIcon findDciIconFromPath(const QString &iconName, const QString &themeName, const QString path)
+static QString findDciIconFromPath(const QString &iconName, const QString &themeName, const QString path)
 {
     if (path.isEmpty())
-        return DDciIcon();
+        return nullptr;
 
     QString themePath = joinPath(path, themeName);
     QFileInfo themeInfo(themePath);
     if (!themeInfo.exists() || !themeInfo.isDir())
-        return DDciIcon();
+        return nullptr;
 
     /*
      *  iconName has two types, like as:
@@ -96,13 +81,13 @@ static DDciIcon findDciIconFromPath(const QString &iconName, const QString &them
     iconNameWithSuffix += QLatin1String(".dci");
     QString iconPath = joinPath(themePath, iconNameWithSuffix);
     if (!QDir::cleanPath(iconPath).startsWith(QDir::cleanPath(themePath)))  // Wrongful
-        return DDciIcon();
+        return nullptr;
 
     QFileInfo iconInfo(iconPath);
     if (iconInfo.exists() && iconInfo.isFile())
-        return DDciIcon(iconPath);
+        return iconPath;
 
-    return DDciIcon();
+    return nullptr;
 }
 
 static inline QIconEngine *createBuiltinIconEngine(const QString &iconName)
@@ -171,6 +156,7 @@ class DIconTheme::CachedData
 {
 public:
     QCache<QString, QIcon> cache;
+    QCache<QString, QString> dciIconPathCache;
 };
 
 DIconTheme::Cached::Cached()
@@ -192,11 +178,13 @@ int DIconTheme::Cached::maxCost() const
 void DIconTheme::Cached::setMaxCost(int cost)
 {
     data->cache.setMaxCost(cost);
+    data->dciIconPathCache.setMaxCost(cost);
 }
 
 void DIconTheme::Cached::clear()
 {
     data->cache.clear();
+    data->dciIconPathCache.clear();
 }
 
 QIcon DIconTheme::Cached::findQIcon(const QString &iconName, Options options, const QIcon &fallback)
@@ -218,6 +206,25 @@ QIcon DIconTheme::Cached::findQIcon(const QString &iconName, Options options, co
     return *newIcon;
 }
 
+QString DIconTheme::Cached::findDciIconFile(const QString &iconName, const QString &themeName, const QString &fallback)
+{
+    const QString cacheKey = themeName + QLatin1Char('/') + iconName;
+    if (data->dciIconPathCache.contains(cacheKey)) {
+        const QString *cachePath = data->dciIconPathCache.object(cacheKey);
+        if (cachePath->isEmpty())
+            return fallback;
+        return *cachePath;
+    }
+
+    QString *path = new QString(DIconTheme::findDciIconFile(iconName, themeName));
+    data->dciIconPathCache.insert(cacheKey, path);
+
+    if (path->isEmpty())
+        return fallback;
+
+    return *path;
+}
+
 Q_GLOBAL_STATIC(DIconTheme::Cached, _globalCache)
 Q_GLOBAL_STATIC_WITH_ARGS(QStringList, _dciThemePath, ({systemDciThemePath(), applicationDciThemePath()}))
 
@@ -234,25 +241,24 @@ DIconTheme::Cached *DIconTheme::cached()
     return _globalCache();
 }
 
-DDciIcon DIconTheme::findDciIcon(const QString &iconName, const QString &themeName)
+QString DIconTheme::findDciIconFile(const QString &iconName, const QString &themeName)
 {
     if (iconName.isEmpty() || themeName.isEmpty())
-        return DDciIcon();
+        return nullptr;
 
     const QString cleanIconName = QDir::cleanPath(iconName);
     if (iconName.startsWith('/') || iconName.endsWith('/')
             || cleanIconName.length() != iconName.length()
             || cleanIconName.startsWith("../"))  // Wrongful
-        return DDciIcon();
+        return nullptr;
 
     for (const QString &themePath : DIconTheme::dciThemeSearchPaths()) {
-        DDciIcon dciIcon = findDciIconFromPath(iconName, themeName, themePath);
-        if (!dciIconIsNull(dciIcon))
-            return dciIcon;
+        QString iconPath = findDciIconFromPath(iconName, themeName, themePath);
+        if (!iconPath.isEmpty())
+            return iconPath;
     }
 
-    DDciIcon icon = findDciIconFromPath(iconName, nullptr, applicationBuiltInIconPath());
-    return icon;
+    return findDciIconFromPath(iconName, nullptr, applicationBuiltInIconPath());
 }
 
 QStringList DIconTheme::dciThemeSearchPaths()
