@@ -552,10 +552,10 @@ DDciIcon::IconPointer DDciIcon::findIcon(int iconSize, Theme theme,
 QPixmap DDciIcon::generatePixmap(const DDciIcon::IconPointer &icon, Mode mode, int iconSize, qreal devicePixelRatio, const QBrush &foreground)
 {
     Q_CHECK_PTR(icon);
-    if (!iconSize)
+    if (iconSize <= 0)
         iconSize = icon->iconSize;
 
-    Q_ASSERT_X(iconSize, "DDciIcon::generatePixmap", "We must specify the icon size.");
+    Q_ASSERT_X((iconSize > 0), "DDciIcon::generatePixmap", "You must specify the icon size.");
 
     QPixmap pixmap(iconSize, iconSize);
     pixmap.fill(Qt::transparent);
