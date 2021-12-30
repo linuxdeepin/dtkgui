@@ -559,7 +559,6 @@ QPixmap DDciIcon::generatePixmap(const DDciIcon::IconPointer &icon, Mode mode, i
 
     QPixmap pixmap(iconSize, iconSize);
     pixmap.fill(Qt::transparent);
-    pixmap.setDevicePixelRatio(devicePixelRatio);
 
     QPainter painter(&pixmap);
     painter.setPen(QPen(foreground, 1));
