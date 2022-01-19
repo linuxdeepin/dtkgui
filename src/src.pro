@@ -44,7 +44,8 @@ includes.files += \
     $$PWD/util/DTaskbarControl \
     $$PWD/util/DThumbnailProvider \
     $$PWD/util/DIconTheme \
-    $$PWD/util/DDciIcon
+    $$PWD/util/DDciIcon \
+    $$PWD/util/DDciIconPalette \
 
 dbus_monitor.files += $$PWD/dbus/com.deepin.api.XEventMonitor.xml
 dbus_monitor.header_flags += -i dbus/arealist.h

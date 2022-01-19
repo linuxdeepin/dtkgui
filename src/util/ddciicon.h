@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 UnionTech Technology Co., Ltd.
+ * Copyright (C) 2021 ~ 2022 UnionTech Technology Co., Ltd.
  *
  * Author:     zccrs <zccrs@live.com>
  *
@@ -19,11 +19,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
+#include "ddciiconpalette.h"
 
 #include <dtkgui_global.h>
-#include <functional>
 
-#include <QBrush>
+#include <QPixmap>
 
 DCORE_BEGIN_NAMESPACE
 class DDciFile;
@@ -35,14 +35,6 @@ class DDciIconPrivate;
 class DDciIcon
 {
 public:
-    enum Type {
-        TextType = 0,
-        ActionType = 1,
-        IconType = 2,
-
-        TypeCount,
-        CurrentType = 1 << 24,
-    };
     enum Mode {
         Normal = 0,
         Disabled = 1,
@@ -53,18 +45,11 @@ public:
         Light = 0,
         Dark = 1
     };
-    enum MatchOption {
-        NoMatchOption = 0,
-        ModeSensitive = 1 << 0,
-        FormatSensitive = 1 << 1,
-        AllMatchOptions = ModeSensitive | FormatSensitive
-    };
-    Q_DECLARE_FLAGS(MatchOptions, MatchOption)
 
-    DDciIcon(Type ct = DDciIcon::TextType);
-    explicit DDciIcon(const DCORE_NAMESPACE::DDciFile *dciFile, DDciIcon::Type ct = DDciIcon::TextType);
-    explicit DDciIcon(const QString &fileName, DDciIcon::Type ct = DDciIcon::TextType);
-    explicit DDciIcon(const QByteArray &data, DDciIcon::Type ct = DDciIcon::TextType);
+    DDciIcon();
+    explicit DDciIcon(const DCORE_NAMESPACE::DDciFile *dciFile);
+    explicit DDciIcon(const QString &fileName);
+    explicit DDciIcon(const QByteArray &data);
     DDciIcon(const DDciIcon &other);
     DDciIcon &operator=(const DDciIcon &other) noexcept;
     ~DDciIcon();
@@ -72,43 +57,18 @@ public:
     DDciIcon &operator=(DDciIcon &&other) noexcept;
     void swap(DDciIcon &other) noexcept { d.swap(other.d); }
 
-    void setCurrentType(Type type);
-    Type currentType() const;
+    bool isNull() const;
+    int actualSize(int size, Theme theme, Mode mode = Normal) const;
+    QList<int> availableSizes(Theme theme, Mode mode = Normal) const;
 
-    bool isNull(DDciIcon::Type type = CurrentType) const;
+    QPixmap pixmap(qreal devicePixelRatio, int iconSize, Theme theme, Mode mode = Normal,
+                   const DDciIconPalette &palette = DDciIconPalette());
+    void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Theme theme, Mode mode = Normal,
+               Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette());
 
-    struct Icon : public QSharedData {
-        int iconSize;
-        Type type;
-        Mode mode;
-        Theme theme;
-        QByteArray format;
-
-        struct Data {
-            int imagePixelRatio;
-            QByteArray foreground;
-            QByteArray background;
-        };
-        QVector<Data> datas;
-    };
-    using IconPointer = QSharedDataPointer<Icon>;
-
-    using IconMatcher = std::function<bool(const IconPointer&)>;
-    IconPointer findIcon(IconMatcher matcher) const;
-    IconPointer findIcon(int iconSize, Theme theme, Mode mode = Normal, Type type = CurrentType,
-                         const QByteArray &requestFormat = QByteArray(),
-                         MatchOptions options = NoMatchOption) const;
-
-    static QPixmap generatePixmap(const IconPointer &icon, Mode mode, int iconSize,
-                                  qreal devicePixelRatio, const QBrush &foreground = QBrush());
-    static void paint(const IconPointer &icon, Mode mode, int iconSize, qreal devicePixelRatio,
-                      QPainter *painter, const QRect &rect, Qt::Alignment alignment = Qt::AlignCenter);
     // TODO: Should be compatible with QIcon
 private:
     QSharedDataPointer<DDciIconPrivate> d;
-    DDciIcon::Type currentIconType;
 };
-
-Q_DECLARE_INCOMPATIBLE_FLAGS(DDciIcon::MatchOptions)
 
 DGUI_END_NAMESPACE
