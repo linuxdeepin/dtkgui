@@ -20,7 +20,8 @@ HEADERS += \
     $$PWD/dthumbnailprovider.h \
     $$PWD/dicontheme.h \
     $$PWD/private/dbuiltiniconengine_p.h \
-    $$PWD/ddciicon.h
+    $$PWD/ddciicon.h \
+    $$PWD/ddciiconpalette.h
 
 SOURCES += \
     $$PWD/dfontmanager.cpp \
@@ -29,6 +30,7 @@ SOURCES += \
     $$PWD/dthumbnailprovider.cpp \
     $$PWD/dicontheme.cpp \
     $$PWD/private/dbuiltiniconengine.cpp \
-    $$PWD/ddciicon.cpp
+    $$PWD/ddciicon.cpp \
+    $$PWD/ddciiconpalette.cpp
 
 RESOURCES += $$PWD/icons/deepin-theme-plugin-icons.qrc

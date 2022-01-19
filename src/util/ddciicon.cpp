@@ -19,23 +19,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #include "ddciicon.h"
+#include "dguiapplicationhelper.h"
 
 #include <DObjectPrivate>
 #include <DDciFile>
 
 #include <private/qguiapplication_p.h>
 
-#include <QDir>
 #include <QPainter>
 #include <QBuffer>
 #include <QImageReader>
 
 DCORE_USE_NAMESPACE
 DGUI_BEGIN_NAMESPACE
-
-#define TYPE_TEXT "text"
-#define TYPE_ACTION "action"
-#define TYPE_ICON "icon"
 
 #define MODE_NORMAL "normal"
 #define MODE_DISABLED "disabled"
@@ -45,14 +41,38 @@ DGUI_BEGIN_NAMESPACE
 #define THEME_LIGHT "light"
 #define THEME_DARK "dark"
 
-#define FOREGROUND_FILE_NAME "foreground"
-#define BACKGROUND_FILE_NAME "background"
+struct DDciIconEntry {
+    struct ScalableLayer {
+        int imagePixelRatio;
+        struct Layer {
+            DDciIconPalette::PaletteRole role = DDciIconPalette::NoPalette;
+            QByteArray format;
+            QByteArray data;
 
-struct IconNode {
+            qint8 hue = 0;
+            qint8 saturation = 0;
+            qint8 lightness = 0;
+            qint8 red = 0;
+            qint8 green = 0;
+            qint8 blue = 0;
+            qint8 alpha = 0;
+        };
+        QVector<Layer> layers;
+    };
+
+
     int iconSize;
-    QVector<DDciIcon::IconPointer> icons;
+    DDciIcon::Mode mode;
+    DDciIcon::Theme theme;
+    QVector<ScalableLayer> scalableLayers;
+    inline bool isNull() const { return scalableLayers.isEmpty(); }
 };
-using IconNodeList = QVector<IconNode>;
+
+struct EntryNode {
+    int iconSize;
+    QVector<DDciIconEntry> entries;
+};
+using EntryNodeList = QVector<EntryNode>;
 
 class DDciIconPrivate : public QSharedData
 {
@@ -66,49 +86,21 @@ public:
         : QSharedData(other)
         , dciFile(other.dciFile)
     {
-        std::copy(other.nodeOfType, other.nodeOfType + DDciIcon::TypeCount, nodeOfType);
     }
 
     ~DDciIconPrivate() { }
 
-    void load();
-    static void paint(const DDciIcon::IconPointer &icon, DDciIcon::Mode mode, int iconSize,
-                      qreal devicePixelRatio, QPainter *painter, const QRect &rect,
-                      Qt::Alignment alignment = Qt::AlignCenter);
+    DDciIconEntry loadIcon(const QString &parentDir, const QString &imageDir);
+    void loadIconList();
+    void ensureLoaded();
 
-    // 每一种类型的数组内的图标按大小排序
-    IconNodeList nodeOfType[DDciIcon::TypeCount];
+    DDciIconEntry tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode) const;
+    void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment,
+               const DDciIconEntry &entry, const DDciIconPalette &palette);
+
     QSharedPointer<const DDciFile> dciFile;
+    EntryNodeList icons;
 };
-
-static inline bool toType(const QStringRef &name, DDciIcon::Type *type) {
-    if (name == QLatin1String(TYPE_TEXT)) {
-        *type = DDciIcon::TextType;
-        return true;
-    }
-
-    if (name == QLatin1String(TYPE_ACTION)) {
-        *type = DDciIcon::ActionType;
-        return true;
-    }
-
-    if (name == QLatin1String(TYPE_ICON)) {
-        *type = DDciIcon::IconType;
-        return true;
-    }
-
-    return false;
-}
-
-static inline QLatin1String toString(const DDciIcon::Type type) {
-    if (type == DDciIcon::TextType)
-        return QLatin1String(TYPE_TEXT);
-    if (type == DDciIcon::ActionType)
-        return QLatin1String(TYPE_ACTION);
-    if (type == DDciIcon::IconType)
-        return QLatin1String(TYPE_ICON);
-    return {};
-}
 
 static inline bool toMode(const QStringRef &name, DDciIcon::Mode *mode) {
     if (name == QLatin1String(MODE_NORMAL)) {
@@ -134,23 +126,6 @@ static inline bool toMode(const QStringRef &name, DDciIcon::Mode *mode) {
     return false;
 }
 
-static inline QLatin1String toString(const DDciIcon::Mode mode) {
-    switch (mode) {
-    case DDciIcon::Normal:
-        return QLatin1String(MODE_NORMAL);
-    case DDciIcon::Disabled:
-        return QLatin1String(MODE_DISABLED);
-    case DDciIcon::Hover:
-        return QLatin1String(MODE_HOVER);
-    case DDciIcon::Pressed:
-        return QLatin1String(MODE_PRESSED);
-    default:
-        break;
-    }
-
-    return {};
-}
-
 static inline bool toTheme(const QStringRef &name, DDciIcon::Theme *theme) {
     if (name == QLatin1String(THEME_LIGHT)) {
         *theme = DDciIcon::Light;
@@ -165,15 +140,6 @@ static inline bool toTheme(const QStringRef &name, DDciIcon::Theme *theme) {
     return false;
 }
 
-static inline QLatin1String toString(const DDciIcon::Theme theme) {
-    if (theme == DDciIcon::Light)
-        return QLatin1String(THEME_LIGHT);
-    if (theme == DDciIcon::Dark)
-        return QLatin1String(THEME_DARK);
-
-    return {};
-}
-
 // DCI 内部目录使用 '/' 作为路径分隔符
 static inline QString joinPath(const QString &s1, const QString &s2) {
     return s1 + QLatin1Char('/') + s2;
@@ -186,124 +152,49 @@ static QImage readImageData(const QByteArray &data, const QByteArray &format, in
 
     QBuffer rawDataBuffer;
     rawDataBuffer.setData(data);
+    rawDataBuffer.open(QBuffer::ReadOnly);
 
     QImageReader reader(&rawDataBuffer);
     if (!format.isEmpty())
         reader.setFormat(format);
 
     QImage image;
-
     if (reader.canRead()) {
-        reader.setScaledSize(reader.size().scaled(iconSize, iconSize, Qt::KeepAspectRatio));
+        bool scaled = false;
+        if (reader.supportsOption(QImageIOHandler::ScaledSize)) {
+            reader.setScaledSize(reader.size().scaled(iconSize, iconSize, Qt::KeepAspectRatio));
+            scaled = true;
+        }
         reader.read(&image);
+        if (image.format() == QImage::Format_Indexed8) {
+            // Not support to render indexed8.
+            QImage tt(image.bits(), image.width(), image.width(), image.bytesPerLine(), QImage::Format_Alpha8);
+            // ###(Chen Bin) Cannot use `image = tt` image will cause some wrong pixels.
+            // for example: image = tt; image.save() will be different from tt.save().
+            if (!scaled)
+                tt = tt.scaled(iconSize, iconSize, Qt::KeepAspectRatio);
+            return tt;
+        }
     }
 
     return image;
 }
 
-static DDciIcon::IconPointer loadIcon(const QSharedPointer<const DDciFile> &file, const QString &parentDir,
-                                      const QString &imageDir)
+static int findIconsByLowerBoundSize(const EntryNodeList &list, const int size)
 {
-    // Mode-Theme-Format
-    const QVector<QStringRef> &imageProps = imageDir.splitRef(QLatin1Char('.'));
-    if (imageProps.count() != 3) // 文件名的格式无效
-        return DDciIcon::IconPointer(nullptr);
-    DDciIcon::IconPointer icon(new DDciIcon::Icon);
+    const auto compFun = [] (const EntryNode &n1, const EntryNode &n2) {
+        return n1.iconSize < n2.iconSize;
+    };
+    EntryNode target;
+    target.iconSize = size;
+    auto neighbor = std::lower_bound(list.cbegin(), list.cend(), target, compFun);
 
-    if (!toMode(imageProps[0], &icon->mode))
-        return DDciIcon::IconPointer(nullptr);
-    if (!toTheme(imageProps[1], &icon->theme))
-        return DDciIcon::IconPointer(nullptr);
-    icon->format = imageProps.last().toLatin1();
-    // 把缩放值当作数组下标使用，所以要限制它的大小
-    // 标准中要求至少要支持3倍缩放
-    icon->datas.reserve(3);
-
-    // 加载此目录下图片文件
-    bool foundForeground = false;
-    const QString &path = joinPath(parentDir, imageDir);
-    for (const QString &image : file->list(path, true)) {
-        const QVector<QStringRef> &nameAndScale = image.splitRef('@');
-        if (nameAndScale.count() != 2)
-            continue; // ignore invalid file
-        bool ok = false;
-        int scale = nameAndScale.last().toInt(&ok);
-        if (!ok || scale > icon->datas.capacity())
-            continue; // too big
-        DDciIcon::Icon::Data data;
-        if (nameAndScale.first() == QLatin1String(FOREGROUND_FILE_NAME)) {
-            foundForeground = true;
-            data.foreground = file->dataRef(joinPath(path, image));
-        } else if (nameAndScale.first() == QLatin1String(BACKGROUND_FILE_NAME)) {
-            data.background = file->dataRef(joinPath(path, image));
-        } else {
-            continue;
-        }
-        data.imagePixelRatio = scale;
-        icon->datas.append(data);
-    }
-
-    if (!foundForeground)
-        return DDciIcon::IconPointer(nullptr);
-
-    // 释放提前预支的内存空间
-    icon->datas.squeeze();
-    return icon;
-}
-
-static IconNodeList loadIconListForType(const QSharedPointer<const DDciFile> &dciFile,
-                                        const QLatin1String &typeName,
-                                        DDciIcon::Type type) {
-    const QString baseDir = joinPath(QString(), typeName);
-    const QStringList &listOfSize = dciFile->list(baseDir, true);
-    IconNodeList list;
-
-    for (const QString &dir : listOfSize) {
-        bool ok = false;
-        int size = dir.toInt(&ok);
-        if (!ok) { // 忽略无法识别大小的目录
-            continue;
-        }
-
-        IconNode node;
-        node.iconSize = size;
-
-        // 处理目录内的图片文件
-        const QString &dirPath = joinPath(baseDir, dir);
-        // 记录已经找到的 background 图片
-        for (const QString &imageDir : dciFile->list(dirPath, true)) {
-            auto icon = loadIcon(dciFile, dirPath, imageDir);
-            if (!icon)
-                continue;
-
-            icon->iconSize = size;
-            icon->type = type;
-            // 根据 DSG 的标准要求，数字文件名是按数字大小排序，因此即便直接把 IconNode
-            // 加到末尾即可保障列表内容是有序的
-            node.icons << icon;
-        }
-
-        list << std::move(node);
-    }
-
-    return list;
-}
-
-void DDciIconPrivate::load()
-{
-    if (!dciFile->isValid())
-        return;
-
-    nodeOfType[DDciIcon::TextType] = loadIconListForType(dciFile, QLatin1String(TYPE_TEXT),
-                                                         DDciIcon::TextType);
-    nodeOfType[DDciIcon::ActionType] = loadIconListForType(dciFile, QLatin1String(TYPE_ACTION),
-                                                           DDciIcon::ActionType);
-    nodeOfType[DDciIcon::IconType] = loadIconListForType(dciFile, QLatin1String(TYPE_ICON),
-                                                         DDciIcon::IconType);
+    if (neighbor != list.cend())
+        return neighbor - list.constBegin();
+    return -1;
 }
 
 static QRect alignedRect(Qt::LayoutDirection direction, Qt::Alignment alignment, const QSize &size, const QRect &rect)
-
 {
     alignment = QGuiApplicationPrivate::visualAlignment(direction, alignment);
     int x = rect.x();
@@ -322,107 +213,247 @@ static QRect alignedRect(Qt::LayoutDirection direction, Qt::Alignment alignment,
     return QRect(x, y, w, h);
 }
 
-void DDciIconPrivate::paint(const DDciIcon::IconPointer &icon, DDciIcon::Mode mode, int iconSize,
-                            qreal devicePixelRatio, QPainter *painter, const QRect &rect, Qt::Alignment alignment)
+DDciIconEntry DDciIconPrivate::loadIcon(const QString &parentDir, const QString &imageDir)
 {
-    // 目前与 DBuildinIconEngine 绘制类似.
+    // Mode-Theme
+    const QVector<QStringRef> &iconProps = imageDir.splitRef(QLatin1Char('.'));
+    if (iconProps.count() != 2) // Error file name.
+        return DDciIconEntry();
+    DDciIconEntry icon;
+
+    if (!toMode(iconProps[0], &icon.mode))
+        return DDciIconEntry();
+    if (!toTheme(iconProps[1], &icon.theme))
+        return DDciIconEntry();
+
+    const QString &stateDir = joinPath(parentDir, imageDir);
+    for (const QString &scaleString : dciFile->list(stateDir, true)) {
+        bool ok = false;
+        int scale = scaleString.toInt(&ok);
+        if (!ok || scale > 3)
+            continue; // too big
+        DDciIconEntry::ScalableLayer scaleIcon;
+        scaleIcon.imagePixelRatio = scale;
+        const QString &path = joinPath(stateDir, scaleString);
+        for (const QString &layerPath : dciFile->list(path, true)) {
+            const QVector<QStringRef> &layerProps = layerPath.splitRef(QLatin1Char('.'));
+            Q_ASSERT(layerProps.size() == 2 || layerProps.size() == 3);
+            int prior = layerProps.first().toInt();
+            if (prior == -1)
+                continue;  // error priority.
+            DDciIconEntry::ScalableLayer::Layer layer;
+            layer.format = layerProps.last().toLatin1();
+            if (layerProps.size() == 3) {
+                // prior.palette.format
+                QStringRef palettePropsString = layerProps.at(1);
+                if (palettePropsString.contains(QLatin1Char('_'))) {
+                    const QVector<QStringRef> paletteProps = palettePropsString.split(QLatin1Char('_'));
+                    Q_ASSERT(paletteProps.length() == 8);
+                    int role = paletteProps.at(0).toInt();
+                    if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
+                        role = DDciIconPalette::NoPalette;
+
+                    layer.role = DDciIconPalette::PaletteRole(role);
+                    layer.hue = paletteProps.at(1).toShort();
+                    layer.saturation = paletteProps.at(2).toShort();
+                    layer.lightness = paletteProps.at(3).toShort();
+                    layer.red = paletteProps.at(4).toShort();
+                    layer.green = paletteProps.at(5).toShort();
+                    layer.blue = paletteProps.at(6).toShort();
+                    layer.alpha = paletteProps.at(7).toShort();
+                } else {
+                    // Only palette role.
+                    int role = palettePropsString.toInt();
+                    if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
+                        role = DDciIconPalette::NoPalette;
+                    layer.role = DDciIconPalette::PaletteRole(role);
+                }
+            }
+            layer.data = dciFile->dataRef(joinPath(path, layerPath));
+            // The sequence number starts with 1, convert it into index.
+            scaleIcon.layers.insert(prior - 1, layer);
+        }
+        icon.scalableLayers.append(scaleIcon);
+    }
+
+    return icon;
+}
+
+void DDciIconPrivate::loadIconList()
+{
+    const QStringList &listOfSize = dciFile->list(QLatin1String("/"), true);
+    for (const QString &dir : listOfSize) {
+        bool ok = false;
+        int size = dir.toInt(&ok);
+        if (!ok)
+            continue;
+
+        EntryNode node;
+        node.iconSize = size;
+        const QString &dirPath = joinPath(QLatin1String(), dir);
+        for (const QString &imageDir : dciFile->list(dirPath, true)) {
+            auto icon = loadIcon(dirPath, imageDir);
+            if (icon.isNull())
+                continue;
+            icon.iconSize = size;
+            node.entries << icon;
+        }
+        icons << std::move(node);
+    }
+}
+
+void DDciIconPrivate::ensureLoaded()
+{
+    // TODO: Modified to resemble the addFile function in QIcon.
+    if (!dciFile->isValid())
+        return;
+    loadIconList();
+}
+
+DDciIconEntry DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode) const
+{
+    if (icons.isEmpty())
+        return DDciIconEntry();
+
+    auto neighborIndex = findIconsByLowerBoundSize(icons, iconSize);
+    if (neighborIndex < 0) {
+        neighborIndex = icons.size() - 1;
+    }
+
+    const auto &listOfSize = icons.at(neighborIndex);
+    QVector<qint8> iconWeight;
+    iconWeight.resize(listOfSize.entries.size());
+
+    for (int i = 0; i < listOfSize.entries.size(); ++i) {
+        qint8 weight = 0;
+        const DDciIconEntry &icon = listOfSize.entries.at(i);
+
+        if (icon.mode == mode) {
+            weight += 2;
+        } else if (icon.mode != DDciIcon::Normal) {
+            weight = -1;
+            continue;
+        }
+        if (icon.theme == theme) {
+            weight += 1;
+        } else {
+            weight = -1;
+            continue;
+        }
+
+        iconWeight.insert(i, weight);
+    }
+
+    const auto targetIcon = std::max_element(iconWeight.constBegin(), iconWeight.constEnd());
+    if (*targetIcon > 0)
+        return listOfSize.entries.at(targetIcon - iconWeight.constBegin());
+    return DDciIconEntry();
+}
+
+void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment, const DDciIconEntry &entry, const DDciIconPalette &palette)
+{
     qreal pixelRatio = devicePixelRatio;
     if (pixelRatio <= 0 && painter->device())
-        pixelRatio = painter->device()->devicePixelRatioF();
+        pixelRatio = painter->device()->devicePixelRatio();
 
-    typedef DDciIcon::Icon::Data DDciIconRawData;
-    auto pixelRatioCompare =  [](const DDciIconRawData &d1, const DDciIconRawData &d2) {
+    typedef DDciIconEntry::ScalableLayer IconScalableData;
+    auto pixelRatioCompare =  [](const IconScalableData &d1, const IconScalableData &d2) {
         return d1.imagePixelRatio < d2.imagePixelRatio;
     };
 
-    DDciIconRawData targetData;
+    IconScalableData targetData;
     targetData.imagePixelRatio = qRound(pixelRatio);
 
-    auto closestData = std::lower_bound(icon->datas.begin(), icon->datas.end(),
+    auto closestData = std::lower_bound(entry.scalableLayers.begin(), entry.scalableLayers.end(),
                                         targetData, pixelRatioCompare);
 
-    // 当前设备像素比超过数据的最大像素比，则选用最大的那个像素比元素
-    if (closestData == icon->datas.end())
-        closestData = std::max_element(icon->datas.begin(), icon->datas.end(), pixelRatioCompare);
+    if (closestData == entry.scalableLayers.end())
+        closestData = std::max_element(entry.scalableLayers.begin(), entry.scalableLayers.end(), pixelRatioCompare);
 
-    // 数据为空则数据失效
-    Q_ASSERT(closestData != icon->datas.end());
+    Q_ASSERT(closestData != entry.scalableLayers.end());
     targetData = *closestData;
 
-    const QRect iconRect = alignedRect(painter->layoutDirection(), alignment, QSize(iconSize, iconSize), rect);
+    const QRect iconRect = alignedRect(painter->layoutDirection(), alignment, rect.size(), rect);
+    for (auto layerIter = targetData.layers.begin(); layerIter != targetData.layers.end(); ++layerIter) {
+        if (layerIter->data.isEmpty())
+            continue;
+        auto layer = readImageData(layerIter->data, layerIter->format, qMax(iconRect.width(), iconRect.height()));
+        QColor fillColor;
+        switch (layerIter->role) {
+        case DDciIconPalette::Foreground:
+            fillColor = palette.foreground();
+            break;
+        case DDciIconPalette::Background:
+            fillColor = palette.background();
+            break;
+        case DDciIconPalette::HighlightForeground:
+            fillColor = palette.highlightForeground();
+            break;
+        case DDciIconPalette::Highlight:
+            fillColor = palette.highlight();
+            break;
+        default:
+            break;
+        }
 
-    const QImage &background = readImageData(targetData.background, icon->format, iconSize);
-    QImage foreground = readImageData(targetData.foreground, icon->format, iconSize);
+        // ###(Chen Bin) Can't compose image when this image's format is Format_Alpha8.
+        QImage tmp(layer.width(), layer.height(), QImage::Format_ARGB32_Premultiplied);
+        tmp.fill(Qt::transparent);
+        QPainter render;
+        render.begin(&tmp);
+        render.drawImage(tmp.rect(), layer);
 
-    painter->save();
-    painter->setRenderHint(QPainter::Antialiasing);
-
-    if (!background.isNull())
-        painter->drawImage(iconRect, background);
-
-    if (icon->type == DDciIcon::TextType || (icon->type == DDciIcon::ActionType && mode != DDciIcon::Normal)) {
-        QPainter tmpPainter(&foreground);
-        tmpPainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        tmpPainter.fillRect(foreground.rect(), painter->pen().brush());
+        if (fillColor.isValid()) {
+            fillColor = DGuiApplicationHelper::adjustColor(fillColor, layerIter->hue, layerIter->saturation,
+                                                           layerIter->lightness, layerIter->red, layerIter->green,
+                                                           layerIter->blue, layerIter->alpha);
+            render.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            render.fillRect(layer.rect(), fillColor);
+        } else if (layerIter->role != -1) {
+            qWarning("DDciIcon::paint: The icon layer need a palette, but the palette color is invalid.");
+        }
+        render.end();
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->drawImage(iconRect, tmp);
+        painter->restore();
     }
-
-    // TODO: Handle the target mode is different from the icon mode.
-    painter->drawImage(iconRect, foreground);
-    painter->restore();
 }
 
-static int findIconNodeByLowerBoundSize(const IconNodeList &list, const int size)
-{
-    const auto compFun = [] (const IconNode &n1, const IconNode &n2) {
-        return n1.iconSize < n2.iconSize;
-    };
-    IconNode forTarget;
-    forTarget.iconSize = size;
-    auto neighbor = std::lower_bound(list.cbegin(), list.cend(), forTarget, compFun);
-
-    if (neighbor != list.cend())
-        return neighbor - list.constBegin();
-
-    return -1;
-}
-
-DDciIcon::DDciIcon(Type ct)
+DDciIcon::DDciIcon()
     : d(new DDciIconPrivate())
-    , currentIconType(ct)
 {
 
 }
 
-DDciIcon::DDciIcon(const DDciFile *dciFile, Type ct)
-    : DDciIcon(ct)
+DDciIcon::DDciIcon(const DDciFile *dciFile)
+    : DDciIcon()
 {
     d->dciFile.reset(dciFile);
-    d->load();
+    d->ensureLoaded();
 }
 
-DDciIcon::DDciIcon(const QString &fileName, Type ct)
-    : DDciIcon(ct)
+DDciIcon::DDciIcon(const QString &fileName)
+    : DDciIcon()
 {
     d->dciFile.reset(new DDciFile(fileName));
-    d->load();
+    d->ensureLoaded();
 }
 
-DDciIcon::DDciIcon(const QByteArray &data, Type ct)
-    : DDciIcon(ct)
+DDciIcon::DDciIcon(const QByteArray &data)
+    : DDciIcon()
 {
     d->dciFile.reset(new DDciFile(data));
-    d->load();
+    d->ensureLoaded();
 }
 
 DDciIcon::DDciIcon(const DDciIcon &other)
     : d(other.d)
-    , currentIconType(other.currentIconType)
 { }
 
 DDciIcon &DDciIcon::operator=(const DDciIcon &other) noexcept
 {
     d = other.d;
-    currentIconType = other.currentIconType;
     return *this;
 }
 
@@ -430,150 +461,67 @@ DDciIcon::~DDciIcon() {}
 
 DDciIcon::DDciIcon(DDciIcon &&other) noexcept
     : d(other.d)
-    , currentIconType(other.currentIconType)
 { other.d = nullptr; }
 
 DDciIcon &DDciIcon::operator=(DDciIcon &&other) noexcept
 { swap(other); return *this; }
 
-void DDciIcon::setCurrentType(DDciIcon::Type type)
+bool DDciIcon::isNull() const
 {
-    currentIconType = type;
+    return d->icons.isEmpty();
 }
 
-DDciIcon::Type DDciIcon::currentType() const
+int DDciIcon::actualSize(int size, DDciIcon::Theme theme, DDciIcon::Mode mode) const
 {
-    return currentIconType;
+    auto entry = d->tryMatchIcon(size, theme, mode);
+    if (!entry.isNull())
+        return entry.iconSize;
+    return -1;
 }
 
-bool DDciIcon::isNull(DDciIcon::Type type) const
+QList<int> DDciIcon::availableSizes(DDciIcon::Theme theme, DDciIcon::Mode mode) const
 {
-    if (type == DDciIcon::CurrentType)
-        type = this->currentIconType;
-
-    IconMatcher matcher = [type](const IconPointer &icon) -> bool {
-        return (icon->type == type)
-                && (icon->mode == DDciIcon::Normal)
-                && (!icon->datas.isEmpty());
-    };
-
-    // 如果能找到一个normal状态下的图标，则表示该图标非空
-    return !findIcon(matcher);
+    if (d->icons.isEmpty())
+        return {};
+    QList<int> sizes;
+    std::for_each(d->icons.begin(), d->icons.end(), [theme, mode, &sizes](const EntryNode &node) {
+        auto it = std::find_if(node.entries.begin(), node.entries.end(), [theme, mode](const DDciIconEntry &entry) {
+            if (entry.mode == mode && entry.theme == theme)
+                return true;
+            return false;
+        });
+        if (it != node.entries.end())
+            sizes.append(it->iconSize);
+    });
+    return sizes;
 }
 
-DDciIcon::IconPointer DDciIcon::findIcon(DDciIcon::IconMatcher matcher) const
+QPixmap DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode, const DDciIconPalette &palette)
 {
-    for (int i = 0; i < TypeCount; ++i) {
-        const auto &iconList = d->nodeOfType[i];
-        for (const auto &node : iconList) {
-            for (const auto &icon : node.icons) {
-                if (matcher(icon))
-                    return icon;
-            }
-        }
-    }
-
-    return IconPointer(nullptr);
-}
-
-DDciIcon::IconPointer DDciIcon::findIcon(int iconSize, Theme theme,
-                                         Mode mode, Type type, const QByteArray &requestFormat,
-                                         MatchOptions options) const
-{
-    // 图标类型必须要匹配
-    if (type >= TypeCount)
-        return IconPointer(nullptr);
-
-    if (type == CurrentType)
-        type = currentIconType;
-
-    const IconNodeList &listOfType = d->nodeOfType[type];
-    if (listOfType.isEmpty())
-        return IconPointer(nullptr);
-
-    // 优先找到第一个比自己大的图标
-    auto neighborIndex = findIconNodeByLowerBoundSize(listOfType, iconSize);
-
-    if (neighborIndex < 0) { // 找不到则 fallback 最大的图标
-        neighborIndex = listOfType.size() - 1;
-    }
-
-    const auto &listOfSize = listOfType.at(neighborIndex);
-    // 用于记录列表中的 icon 在本次查找的条件下的权重
-    QVector<qint8> iconWeight;
-    iconWeight.resize(listOfSize.icons.size());
-    // 优先全匹配所有的条件
-    for (int i = 0; i < listOfSize.icons.size(); ++i) {
-        qint8 weight = 0; // 初始化权重
-        const IconPointer &icon = listOfSize.icons.at(i);
-
-        /*
-         * 当满足不同的匹配结果时，加权值根据此项匹配条件的优先级而定：
-         * requestMode: 3
-         * theme: 2
-         * requestFormat: 1
-         * 所有的 fallback 匹配：0
-         * 不可接受的匹配：赋值 -1
-         */
-
-        if (icon->mode == mode) {
-            weight += 3; // 确保 Mode 的匹配最优先
-        } else if ((options & DDciIcon::ModeSensitive)
-                   || icon->mode != Normal) {
-            weight = -1;
-            // 不可接受
-            continue;
-        }
-
-        if (icon->theme == theme) {
-            weight += 2;
-        } else {
-            weight = -1;
-            // 不可接受
-            continue;
-        }
-
-        if (icon->format == requestFormat) {
-            weight += 1;
-        } else if (options & FormatSensitive) {
-            weight = -1;
-            // 不可接受
-            continue;
-        }
-        iconWeight.insert(i, weight);
-    }
-
-    const auto targetIcon = std::max_element(iconWeight.constBegin(), iconWeight.constEnd());
-    Q_ASSERT(targetIcon);
-
-    return listOfSize.icons.at(targetIcon - iconWeight.constBegin());
-}
-
-QPixmap DDciIcon::generatePixmap(const DDciIcon::IconPointer &icon, Mode mode, int iconSize, qreal devicePixelRatio, const QBrush &foreground)
-{
-    Q_CHECK_PTR(icon);
+    auto entry = d->tryMatchIcon(iconSize, theme, mode);
+    if (entry.isNull())
+        return QPixmap();
     if (iconSize <= 0)
-        iconSize = icon->iconSize;
-
+        iconSize = entry.iconSize;
     Q_ASSERT_X((iconSize > 0), "DDciIcon::generatePixmap", "You must specify the icon size.");
 
     QPixmap pixmap(iconSize, iconSize);
     pixmap.fill(Qt::transparent);
-
     QPainter painter(&pixmap);
-    painter.setPen(QPen(foreground, 1));
+    painter.setPen(Qt::NoPen);
     painter.setBrush(Qt::NoBrush);
-
-    DDciIcon::paint(icon, mode, iconSize, devicePixelRatio, &painter, pixmap.rect(), Qt::AlignCenter);
+    d->paint(&painter, pixmap.rect(), devicePixelRatio, Qt::AlignCenter, entry, palette);
+    painter.end();
     return pixmap;
 }
 
-void DDciIcon::paint(const IconPointer &icon, Mode mode, int iconSize, qreal devicePixelRatio, QPainter *painter,
-                     const QRect &rect, Qt::Alignment alignment)
+void DDciIcon::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, DDciIcon::Theme theme, DDciIcon::Mode mode,
+                     Qt::Alignment alignment, const DDciIconPalette &palette)
 {
-    Q_CHECK_PTR(icon);
-    DDciIconPrivate::paint(icon, mode, iconSize, devicePixelRatio,
-                           painter, rect, alignment);
+    auto entry = d->tryMatchIcon(qMax(rect.width(), rect.height()), theme, mode);
+    if (entry.isNull())
+        return;
+    d->paint(painter, rect, devicePixelRatio, alignment, entry, palette);
 }
 
 DGUI_END_NAMESPACE
