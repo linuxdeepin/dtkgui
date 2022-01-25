@@ -96,7 +96,7 @@ static QString _d_dciIconPaletteHost()
     return QLatin1String("dtk.dci.palette");
 }
 
-QUrl DDciIconPalette::convertToUrl(const DDciIconPalette &palette)
+QString DDciIconPalette::convertToString(const DDciIconPalette &palette)
 {
     QUrl url;
     url.setHost(_d_dciIconPaletteHost());
@@ -111,11 +111,12 @@ QUrl DDciIconPalette::convertToUrl(const DDciIconPalette &palette)
         query.addQueryItem(QLatin1String("highlightForeground"), palette.highlightForeground().name(QColor::HexArgb));
 
     url.setQuery(query);
-    return url;
+    return url.toString();
 }
 
-DDciIconPalette DDciIconPalette::convertFromUrl(const QUrl &url)
+DDciIconPalette DDciIconPalette::convertFromString(const QString &data)
 {
+    QUrl url(data);
     if (url.host() != _d_dciIconPaletteHost())
         return DDciIconPalette();
 
