@@ -27,7 +27,6 @@
 
 #include <QColor>
 #include <QVector>
-#include <QUrl>
 
 DGUI_BEGIN_NAMESPACE
 
@@ -66,8 +65,8 @@ public:
     QColor highlight() const;
     void setHighlight(const QColor &highlight);
 
-    static QUrl convertToUrl(const DDciIconPalette &palette);
-    static DDciIconPalette convertFromUrl(const QUrl &url);
+    static QString convertToString(const DDciIconPalette &palette);
+    static DDciIconPalette convertFromString(const QString &data);
 private:
     QVector<QColor> colors;
 };
