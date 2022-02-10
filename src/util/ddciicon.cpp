@@ -29,6 +29,7 @@
 #include <QPainter>
 #include <QBuffer>
 #include <QImageReader>
+#include <QtMath>
 
 DCORE_USE_NAMESPACE
 DGUI_BEGIN_NAMESPACE
@@ -56,6 +57,7 @@ struct DDciIconEntry {
             qint8 green = 0;
             qint8 blue = 0;
             qint8 alpha = 0;
+            qint16 padding = 0;
         };
         QVector<Layer> layers;
     };
@@ -96,7 +98,7 @@ public:
 
     DDciIconEntry tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode) const;
     void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment,
-               const DDciIconEntry &entry, const DDciIconPalette &palette);
+               const DDciIconEntry &entry, const DDciIconPalette &palette, qreal pixmapScale);
 
     QSharedPointer<const DDciFile> dciFile;
     EntryNodeList icons;
@@ -145,7 +147,7 @@ static inline QString joinPath(const QString &s1, const QString &s2) {
     return s1 + QLatin1Char('/') + s2;
 }
 
-static QImage readImageData(const QByteArray &data, const QByteArray &format, int iconSize)
+static QImage readImageData(const QByteArray &data, const QByteArray &format, qreal pixmapScale)
 {
     if (data.isEmpty())
         return QImage();
@@ -161,8 +163,11 @@ static QImage readImageData(const QByteArray &data, const QByteArray &format, in
     QImage image;
     if (reader.canRead()) {
         bool scaled = false;
+        int imageSize = qMax(reader.size().width(), reader.size().height());
+        int scaledSize = qRound(pixmapScale * imageSize);
+
         if (reader.supportsOption(QImageIOHandler::ScaledSize)) {
-            reader.setScaledSize(reader.size().scaled(iconSize, iconSize, Qt::KeepAspectRatio));
+            reader.setScaledSize(reader.size().scaled(scaledSize, scaledSize, Qt::KeepAspectRatio));
             scaled = true;
         }
         reader.read(&image);
@@ -172,7 +177,7 @@ static QImage readImageData(const QByteArray &data, const QByteArray &format, in
             // ###(Chen Bin) Cannot use `image = tt` image will cause some wrong pixels.
             // for example: image = tt; image.save() will be different from tt.save().
             if (!scaled)
-                tt = tt.scaled(iconSize, iconSize, Qt::KeepAspectRatio);
+                tt = tt.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio);
             return tt;
         }
     }
@@ -192,6 +197,21 @@ static int findIconsByLowerBoundSize(const EntryNodeList &list, const int size)
     if (neighbor != list.cend())
         return neighbor - list.constBegin();
     return -1;
+}
+
+static int findMaxEntryPadding(const DDciIconEntry &entry)
+{
+    if (entry.scalableLayers.isEmpty())
+        return 0;
+
+    // Only take the first padding, because it has the same padding.
+    auto scalables = entry.scalableLayers.first();
+    auto iter = std::max_element(scalables.layers.cbegin(), scalables.layers.cend(), [](const DDciIconEntry::ScalableLayer::Layer &n1,
+                     const DDciIconEntry::ScalableLayer::Layer &n2) {
+        return n1.padding < n2.padding;
+    });
+
+    return iter->padding;
 }
 
 static QRect alignedRect(Qt::LayoutDirection direction, Qt::Alignment alignment, const QSize &size, const QRect &rect)
@@ -230,24 +250,35 @@ DDciIconEntry DDciIconPrivate::loadIcon(const QString &parentDir, const QString 
     for (const QString &scaleString : dciFile->list(stateDir, true)) {
         bool ok = false;
         int scale = scaleString.toInt(&ok);
-        if (!ok || scale > 3)
-            continue; // too big
+        // No restrictions on icons with scale ratio greater than 3.
+        if (!ok)
+            continue;
         DDciIconEntry::ScalableLayer scaleIcon;
         scaleIcon.imagePixelRatio = scale;
         const QString &path = joinPath(stateDir, scaleString);
         for (const QString &layerPath : dciFile->list(path, true)) {
             const QVector<QStringRef> &layerProps = layerPath.splitRef(QLatin1Char('.'));
-            Q_ASSERT(layerProps.size() == 2 || layerProps.size() == 3);
             int prior = layerProps.first().toInt();
             if (prior == -1)
                 continue;  // error priority.
             DDciIconEntry::ScalableLayer::Layer layer;
             layer.format = layerProps.last().toLatin1();
-            if (layerProps.size() == 3) {
-                // prior.palette.format
-                QStringRef palettePropsString = layerProps.at(1);
-                if (palettePropsString.contains(QLatin1Char('_'))) {
-                    const QVector<QStringRef> paletteProps = palettePropsString.split(QLatin1Char('_'));
+            if (layerProps.length() > 2) {
+                // prior.palette.format || prior.padding.palette.format
+                QStringRef paletteString;
+                QStringRef paletteOrPaddingString = layerProps.at(1);
+                if (layerProps.length() == 4)
+                    paletteString = layerProps.at(2);
+
+                if (paletteOrPaddingString.endsWith(QLatin1Char('p'))) {
+                    // padding
+                    layer.padding = paletteOrPaddingString.left(paletteOrPaddingString.length() - 1).toShort();
+                } else {
+                    paletteString = paletteOrPaddingString;
+                }
+
+                if (paletteString.contains(QLatin1Char('_'))) {
+                    const QVector<QStringRef> paletteProps = paletteString.split(QLatin1Char('_'));
                     Q_ASSERT(paletteProps.length() == 8);
                     int role = paletteProps.at(0).toInt();
                     if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
@@ -263,7 +294,7 @@ DDciIconEntry DDciIconPrivate::loadIcon(const QString &parentDir, const QString 
                     layer.alpha = paletteProps.at(7).toShort();
                 } else {
                     // Only palette role.
-                    int role = palettePropsString.toInt();
+                    int role = paletteString.toInt();
                     if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
                         role = DDciIconPalette::NoPalette;
                     layer.role = DDciIconPalette::PaletteRole(role);
@@ -350,7 +381,8 @@ DDciIconEntry DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme,
     return DDciIconEntry();
 }
 
-void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment, const DDciIconEntry &entry, const DDciIconPalette &palette)
+void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment,
+                            const DDciIconEntry &entry, const DDciIconPalette &palette, qreal pixmapScale)
 {
     qreal pixelRatio = devicePixelRatio;
     if (pixelRatio <= 0 && painter->device())
@@ -362,7 +394,7 @@ void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePi
     };
 
     IconScalableData targetData;
-    targetData.imagePixelRatio = qRound(pixelRatio);
+    targetData.imagePixelRatio = qCeil(pixelRatio);
 
     auto closestData = std::lower_bound(entry.scalableLayers.begin(), entry.scalableLayers.end(),
                                         targetData, pixelRatioCompare);
@@ -372,12 +404,11 @@ void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePi
 
     Q_ASSERT(closestData != entry.scalableLayers.end());
     targetData = *closestData;
-
     const QRect iconRect = alignedRect(painter->layoutDirection(), alignment, rect.size(), rect);
     for (auto layerIter = targetData.layers.begin(); layerIter != targetData.layers.end(); ++layerIter) {
         if (layerIter->data.isEmpty())
             continue;
-        auto layer = readImageData(layerIter->data, layerIter->format, qMax(iconRect.width(), iconRect.height()));
+        auto layer = readImageData(layerIter->data, layerIter->format, pixmapScale * pixelRatio / targetData.imagePixelRatio);
         QColor fillColor;
         switch (layerIter->role) {
         case DDciIconPalette::Foreground:
@@ -409,13 +440,14 @@ void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePi
                                                            layerIter->blue, layerIter->alpha);
             render.setCompositionMode(QPainter::CompositionMode_SourceIn);
             render.fillRect(layer.rect(), fillColor);
-        } else if (layerIter->role != -1) {
-            qWarning("DDciIcon::paint: The icon layer need a palette, but the palette color is invalid.");
         }
+
         render.end();
         painter->save();
         painter->setRenderHint(QPainter::Antialiasing);
-        painter->drawImage(iconRect, tmp);
+        QRect sourceRect(0, 0, layer.width(), layer.height());
+        sourceRect.moveCenter(iconRect.center());
+        painter->drawImage(sourceRect, tmp);
         painter->restore();
     }
 }
@@ -501,27 +533,33 @@ QPixmap DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, DDciIcon::Theme t
     auto entry = d->tryMatchIcon(iconSize, theme, mode);
     if (entry.isNull())
         return QPixmap();
+
     if (iconSize <= 0)
         iconSize = entry.iconSize;
     Q_ASSERT_X((iconSize > 0), "DDciIcon::generatePixmap", "You must specify the icon size.");
+    const qreal pixmapScale = iconSize * 1.0 / entry.iconSize;
+    const int pixmapSize = qRound((findMaxEntryPadding(entry) * 2 + entry.iconSize) * pixmapScale * devicePixelRatio);
 
-    QPixmap pixmap(iconSize, iconSize);
+    QPixmap pixmap(pixmapSize, pixmapSize);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setPen(Qt::NoPen);
     painter.setBrush(Qt::NoBrush);
-    d->paint(&painter, pixmap.rect(), devicePixelRatio, Qt::AlignCenter, entry, palette);
+    d->paint(&painter, pixmap.rect(), devicePixelRatio, Qt::AlignCenter, entry, palette, pixmapScale);
     painter.end();
+    pixmap.setDevicePixelRatio(devicePixelRatio);
     return pixmap;
 }
 
 void DDciIcon::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, DDciIcon::Theme theme, DDciIcon::Mode mode,
                      Qt::Alignment alignment, const DDciIconPalette &palette)
 {
-    auto entry = d->tryMatchIcon(qMax(rect.width(), rect.height()), theme, mode);
+    int iconSize = qMax(rect.width(), rect.height());
+    auto entry = d->tryMatchIcon(iconSize, theme, mode);
     if (entry.isNull())
         return;
-    d->paint(painter, rect, devicePixelRatio, alignment, entry, palette);
+    const qreal pixmapScale = iconSize * 1.0 / (entry.iconSize + findMaxEntryPadding(entry) * 2);
+    d->paint(painter, rect, devicePixelRatio, alignment, entry, palette, pixmapScale);
 }
 
 DGUI_END_NAMESPACE
