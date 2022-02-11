@@ -234,6 +234,9 @@ void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
     }
 
     QPixmap pm = entry->pixmap(pixmapSize, mode, state);
+    if (pm.isNull())
+        return;
+
     ImageEntry::Type type = static_cast<ImageEntry *>(entry)->type;
     if (type == ImageEntry::TextType || (type == ImageEntry::ActionType && mode != QIcon::Normal)) {
         QPainter pa(&pm);
