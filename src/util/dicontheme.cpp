@@ -243,8 +243,11 @@ DIconTheme::Cached *DIconTheme::cached()
 
 QString DIconTheme::findDciIconFile(const QString &iconName, const QString &themeName)
 {
-    if (iconName.isEmpty() || themeName.isEmpty())
+    if (iconName.isEmpty())
         return nullptr;
+
+    if (themeName.isEmpty())
+        return findDciIconFromPath(iconName, nullptr, applicationBuiltInIconPath());
 
     const QString cleanIconName = QDir::cleanPath(iconName);
     if (iconName.startsWith('/') || iconName.endsWith('/')
