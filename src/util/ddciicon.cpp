@@ -41,6 +41,7 @@ DGUI_BEGIN_NAMESPACE
 
 #define THEME_LIGHT "light"
 #define THEME_DARK "dark"
+#define ALPHA8STRING "alpha8"
 
 struct DDciIconEntry {
     struct ScalableLayer {
@@ -49,6 +50,7 @@ struct DDciIconEntry {
             DDciIconPalette::PaletteRole role = DDciIconPalette::NoPalette;
             QByteArray format;
             QByteArray data;
+            bool isAlpha8Format = false;
 
             qint8 hue = 0;
             qint8 saturation = 0;
@@ -147,7 +149,11 @@ static inline QString joinPath(const QString &s1, const QString &s2) {
     return s1 + QLatin1Char('/') + s2;
 }
 
-static QImage readImageData(const QByteArray &data, const QByteArray &format, qreal pixmapScale)
+void alpha8ImageDeleter(void *image) {
+    delete (QImage *)image;
+}
+
+static QImage readImageData(const QByteArray &data, const QByteArray &format, qreal pixmapScale, bool isAlpha8Format)
 {
     if (data.isEmpty())
         return QImage();
@@ -161,25 +167,28 @@ static QImage readImageData(const QByteArray &data, const QByteArray &format, qr
         reader.setFormat(format);
 
     QImage image;
+    QImage *imagePtr = &image;
+    if (isAlpha8Format)
+        imagePtr = new QImage();
+
     if (reader.canRead()) {
         bool scaled = false;
         int imageSize = qMax(reader.size().width(), reader.size().height());
         int scaledSize = qRound(pixmapScale * imageSize);
-
-        if (reader.supportsOption(QImageIOHandler::ScaledSize)) {
+        if (!isAlpha8Format && reader.supportsOption(QImageIOHandler::ScaledSize)) {
             reader.setScaledSize(reader.size().scaled(scaledSize, scaledSize, Qt::KeepAspectRatio));
             scaled = true;
         }
-        reader.read(&image);
-        if (image.format() == QImage::Format_Indexed8) {
-            // Not support to render indexed8.
-            QImage tt(image.bits(), image.width(), image.width(), image.bytesPerLine(), QImage::Format_Alpha8);
-            // ###(Chen Bin) Cannot use `image = tt` image will cause some wrong pixels.
-            // for example: image = tt; image.save() will be different from tt.save().
-            if (!scaled)
-                tt = tt.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio);
-            return tt;
+
+        reader.read(imagePtr);
+        if (isAlpha8Format) {
+            QImage tt(imagePtr->bits(), imagePtr->width(), imagePtr->width(), imagePtr->bytesPerLine(),
+                      QImage::Format_Alpha8, alpha8ImageDeleter, (void *)imagePtr);
+            return tt.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio);
         }
+
+        if (!scaled)
+            image = image.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio);
     }
 
     return image;
@@ -257,12 +266,20 @@ DDciIconEntry DDciIconPrivate::loadIcon(const QString &parentDir, const QString 
         scaleIcon.imagePixelRatio = scale;
         const QString &path = joinPath(stateDir, scaleString);
         for (const QString &layerPath : dciFile->list(path, true)) {
-            const QVector<QStringRef> &layerProps = layerPath.splitRef(QLatin1Char('.'));
+            QVector<QStringRef> layerProps = layerPath.splitRef(QLatin1Char('.'));
             int prior = layerProps.first().toInt();
             if (prior == -1)
                 continue;  // error priority.
             DDciIconEntry::ScalableLayer::Layer layer;
-            layer.format = layerProps.last().toLatin1();
+            const QString alpha8OrFormat = layerProps.last().toLatin1();
+            if (alpha8OrFormat.compare(ALPHA8STRING, Qt::CaseInsensitive) == 0) {
+                layer.isAlpha8Format = true;
+                layer.format = layerProps.at(layerProps.length() - 2).toLatin1();
+                layerProps.removeLast();
+            } else {
+                layer.format = alpha8OrFormat.toLatin1();
+            }
+
             if (layerProps.length() > 2) {
                 // prior.palette.format || prior.padding.palette.format
                 QStringRef paletteString;
@@ -408,7 +425,9 @@ void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePi
     for (auto layerIter = targetData.layers.begin(); layerIter != targetData.layers.end(); ++layerIter) {
         if (layerIter->data.isEmpty())
             continue;
-        auto layer = readImageData(layerIter->data, layerIter->format, pixmapScale * pixelRatio / targetData.imagePixelRatio);
+        const QImage &layer = readImageData(layerIter->data, layerIter->format, pixmapScale * pixelRatio / targetData.imagePixelRatio, layerIter->isAlpha8Format);
+        if (layer.isNull())
+            continue;
         QColor fillColor;
         switch (layerIter->role) {
         case DDciIconPalette::Foreground:
