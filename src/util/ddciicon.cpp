@@ -100,7 +100,7 @@ public:
 
     DDciIconEntry tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode) const;
     void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment,
-               const DDciIconEntry &entry, const DDciIconPalette &palette, qreal pixmapScale);
+               const DDciIconEntry &entry, const DDciIconPalette &palette, qreal pixmapScale) const;
 
     QSharedPointer<const DDciFile> dciFile;
     EntryNodeList icons;
@@ -399,7 +399,7 @@ DDciIconEntry DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme,
 }
 
 void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment,
-                            const DDciIconEntry &entry, const DDciIconPalette &palette, qreal pixmapScale)
+                            const DDciIconEntry &entry, const DDciIconPalette &palette, qreal pixmapScale) const
 {
     qreal pixelRatio = devicePixelRatio;
     if (pixelRatio <= 0 && painter->device())
@@ -547,7 +547,7 @@ QList<int> DDciIcon::availableSizes(DDciIcon::Theme theme, DDciIcon::Mode mode) 
     return sizes;
 }
 
-QPixmap DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode, const DDciIconPalette &palette)
+QPixmap DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode, const DDciIconPalette &palette) const
 {
     auto entry = d->tryMatchIcon(iconSize, theme, mode);
     if (entry.isNull())
@@ -571,7 +571,7 @@ QPixmap DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, DDciIcon::Theme t
 }
 
 void DDciIcon::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, DDciIcon::Theme theme, DDciIcon::Mode mode,
-                     Qt::Alignment alignment, const DDciIconPalette &palette)
+                     Qt::Alignment alignment, const DDciIconPalette &palette) const
 {
     int iconSize = qMax(rect.width(), rect.height());
     auto entry = d->tryMatchIcon(iconSize, theme, mode);
