@@ -62,9 +62,9 @@ public:
     QList<int> availableSizes(Theme theme, Mode mode = Normal) const;
 
     QPixmap pixmap(qreal devicePixelRatio, int iconSize, Theme theme, Mode mode = Normal,
-                   const DDciIconPalette &palette = DDciIconPalette());
+                   const DDciIconPalette &palette = DDciIconPalette()) const;
     void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Theme theme, Mode mode = Normal,
-               Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette());
+               Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const;
 
     // TODO: Should be compatible with QIcon
 private:
