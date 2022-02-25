@@ -184,11 +184,11 @@ static QImage readImageData(const QByteArray &data, const QByteArray &format, qr
         if (isAlpha8Format) {
             QImage tt(imagePtr->bits(), imagePtr->width(), imagePtr->width(), imagePtr->bytesPerLine(),
                       QImage::Format_Alpha8, alpha8ImageDeleter, (void *)imagePtr);
-            return tt.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio);
+            return tt.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
         }
 
         if (!scaled)
-            image = image.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio);
+            image = image.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     }
 
     return image;
