@@ -35,7 +35,7 @@
 DGUI_BEGIN_NAMESPACE
 DCORE_USE_NAMESPACE
 
-static QString joinPath(const QString &basePath, const QString &path)
+static inline QString joinPath(const QString &basePath, const QString &path)
 {
     if (path.isEmpty())
         return basePath;
@@ -43,9 +43,17 @@ static QString joinPath(const QString &basePath, const QString &path)
     return basePath + QDir::separator() + path;
 }
 
-static inline QString systemDciThemePath()
+static inline QStringList systemDciThemePaths()
 {
-    return joinPath(DStandardPaths::path(DStandardPaths::DSG::DataDir), QLatin1String("icons"));
+    QStringList paths;
+    const auto dataPaths = DStandardPaths::paths(DStandardPaths::DSG::DataDir);
+    paths.reserve(dataPaths.size());
+
+    for (const auto &dataPath : dataPaths) {
+        paths.push_back(joinPath(dataPath, QLatin1String("icons")));
+    }
+
+    return paths;
 }
 
 static inline QString applicationDciThemePath()
@@ -225,8 +233,14 @@ QString DIconTheme::Cached::findDciIconFile(const QString &iconName, const QStri
     return *path;
 }
 
+static inline QStringList getDciThemePaths() {
+    QStringList paths = systemDciThemePaths();
+    paths.push_back(applicationDciThemePath());
+    return paths;
+}
+
 Q_GLOBAL_STATIC(DIconTheme::Cached, _globalCache)
-Q_GLOBAL_STATIC_WITH_ARGS(QStringList, _dciThemePath, ({systemDciThemePath(), applicationDciThemePath()}))
+Q_GLOBAL_STATIC_WITH_ARGS(QStringList, _dciThemePath, (getDciThemePaths()))
 
 static void cleanGlobalCache() {
     if (_globalCache.exists())
@@ -257,6 +271,13 @@ QString DIconTheme::findDciIconFile(const QString &iconName, const QString &them
 
     for (const QString &themePath : DIconTheme::dciThemeSearchPaths()) {
         QString iconPath = findDciIconFromPath(iconName, themeName, themePath);
+        if (!iconPath.isEmpty())
+            return iconPath;
+    }
+
+    // fallback to without theme directory
+    for (const QString &themePath : DIconTheme::dciThemeSearchPaths()) {
+        QString iconPath = findDciIconFromPath(iconName, nullptr, themePath);
         if (!iconPath.isEmpty())
             return iconPath;
     }
