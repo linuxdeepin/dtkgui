@@ -68,7 +68,7 @@ static inline QString applicationBuiltInIconPath()
 
 static QString findDciIconFromPath(const QString &iconName, const QString &themeName, const QString path)
 {
-    if (path.isEmpty())
+    if (path.isEmpty() || iconName.isEmpty())
         return nullptr;
 
     QString themePath = joinPath(path, themeName);
@@ -260,29 +260,53 @@ QString DIconTheme::findDciIconFile(const QString &iconName, const QString &them
     if (iconName.isEmpty())
         return nullptr;
 
-    if (themeName.isEmpty())
-        return findDciIconFromPath(iconName, nullptr, applicationBuiltInIconPath());
-
     const QString cleanIconName = QDir::cleanPath(iconName);
     if (iconName.startsWith('/') || iconName.endsWith('/')
             || cleanIconName.length() != iconName.length()
             || cleanIconName.startsWith("../"))  // Wrongful
         return nullptr;
 
-    for (const QString &themePath : DIconTheme::dciThemeSearchPaths()) {
-        QString iconPath = findDciIconFromPath(iconName, themeName, themePath);
+    const int splitCharPos = iconName.lastIndexOf('/');
+    QString effectiveIconName = iconName;
+    // If the icon name syntax is "AAA/BBB", then the "AAA" is the icon group name, the "BBB" is the actual icon
+    // name. eg: "org.deepin.app/accounts", hypothesis the icon search path is "/usr/share/dsg/icons" and
+    // icon theme name is "theme_name", then the icon files list for find is:
+    // "/usr/share/dsg/icons/theme_name/org.deepin.app/accounts.dci"
+    // "qrc:/dsg/icons/theme_name/org.deepin.app/accounts.dci" // fallback to the qrc directory
+
+    // "/usr/share/dsg/icons/theme_name/accounts.dci" // ignore the icon group name
+    // "qrc:/dsg/icons/theme_name/accounts.dci" // ignore the icon group name
+
+    // "/usr/share/dsg/icons/accounts.dci" // ignore the icon theme
+    // "qrc:/dsg/icons/accounts.dci" // ignore the icon theme
+
+    // "qrc:/dsg/built-in-icons/accounts.dci" // fallback to built-in icons
+
+    const auto &searchPaths = DIconTheme::dciThemeSearchPaths();
+    for (const QString &themePath : searchPaths) {
+        QString iconPath = findDciIconFromPath(effectiveIconName, themeName, themePath);
         if (!iconPath.isEmpty())
             return iconPath;
+    }
+
+    if (splitCharPos > 0) {
+        effectiveIconName = iconName.mid(splitCharPos);
+        Q_ASSERT(!effectiveIconName.isEmpty());
+        for (const QString &themePath : searchPaths) {
+            QString iconPath = findDciIconFromPath(effectiveIconName, themeName, themePath);
+            if (!iconPath.isEmpty())
+                return iconPath;
+        }
     }
 
     // fallback to without theme directory
-    for (const QString &themePath : DIconTheme::dciThemeSearchPaths()) {
-        QString iconPath = findDciIconFromPath(iconName, nullptr, themePath);
+    for (const QString &themePath : searchPaths) {
+        QString iconPath = findDciIconFromPath(effectiveIconName, nullptr, themePath);
         if (!iconPath.isEmpty())
             return iconPath;
     }
 
-    return findDciIconFromPath(iconName, nullptr, applicationBuiltInIconPath());
+    return findDciIconFromPath(effectiveIconName, nullptr, applicationBuiltInIconPath());
 }
 
 QStringList DIconTheme::dciThemeSearchPaths()
