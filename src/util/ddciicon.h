@@ -66,6 +66,9 @@ public:
     void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Theme theme, Mode mode = Normal,
                Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const;
 
+    static DDciIcon fromTheme(const QString &name);
+    static DDciIcon fromTheme(const QString &name, const DDciIcon &fallback);
+
     // TODO: Should be compatible with QIcon
 private:
     QSharedDataPointer<DDciIconPrivate> d;
