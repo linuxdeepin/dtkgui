@@ -20,10 +20,12 @@
  */
 #include "ddciicon.h"
 #include "dguiapplicationhelper.h"
+#include "dicontheme.h"
 
 #include <DObjectPrivate>
 #include <DDciFile>
-
+#include <DPlatformTheme>
+#include <DSGApplication>
 #include <private/qguiapplication_p.h>
 
 #include <QPainter>
@@ -579,6 +581,40 @@ void DDciIcon::paint(QPainter *painter, const QRect &rect, qreal devicePixelRati
         return;
     const qreal pixmapScale = iconSize * 1.0 / (entry.iconSize + findMaxEntryPadding(entry) * 2);
     d->paint(painter, rect, devicePixelRatio, alignment, entry, palette, pixmapScale);
+}
+
+DDciIcon DDciIcon::fromTheme(const QString &name)
+{
+    DDciIcon icon;
+
+    QString iconName = name;
+    if (!DSGApplication::id().isEmpty()) {
+        // allow the icon theme to override the icon for a given application
+        iconName.prepend(DSGApplication::id() + "/");
+    }
+
+    QString iconPath;
+    QString iconThemeName =DGuiApplicationHelper::instance()->applicationTheme()->iconThemeName();
+    if (auto cached = DIconTheme::cached()) {
+        iconPath = cached->findDciIconFile(iconName, iconThemeName);
+    } else {
+        iconPath = DIconTheme::findDciIconFile(iconName, iconThemeName);
+    }
+
+    if (!iconPath.isEmpty())
+        icon = DDciIcon(iconPath);
+
+    return icon;
+}
+
+DDciIcon DDciIcon::fromTheme(const QString &name, const DDciIcon &fallback)
+{
+    DDciIcon icon = fromTheme(name);
+
+    if (icon.isNull() || icon.availableSizes(Light).isEmpty() || icon.availableSizes(Dark).isEmpty())
+        return fallback;
+
+    return icon;
 }
 
 DGUI_END_NAMESPACE
