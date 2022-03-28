@@ -49,6 +49,7 @@ struct DDciIconEntry {
     struct ScalableLayer {
         int imagePixelRatio;
         struct Layer {
+            int prior = 0;
             DDciIconPalette::PaletteRole role = DDciIconPalette::NoPalette;
             QByteArray format;
             QByteArray data;
@@ -79,6 +80,142 @@ struct EntryNode {
     QVector<DDciIconEntry> entries;
 };
 using EntryNodeList = QVector<EntryNode>;
+
+class EntryPropertyParser
+{
+public:
+    static void registerSteps();
+    static void doParse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties);
+private:
+    static struct Step {
+        virtual ~Step() {}
+        Step *nextStep = nullptr;
+        virtual QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) = 0;
+    } *root;
+
+    struct PriorStep : public Step {
+        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+    };
+
+    struct FormatAndAlpha8Step : public Step {
+        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+    };
+
+    struct PaddingStep : public Step {
+        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+    };
+
+    struct PaletteStep : public Step {
+        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+    };
+};
+
+EntryPropertyParser::Step *EntryPropertyParser::root = nullptr;
+
+void EntryPropertyParser::registerSteps()
+{
+    static PriorStep priorSt;
+    static FormatAndAlpha8Step formatSt;
+    static PaddingStep paddingSt;
+    static PaletteStep paletteSt;
+
+    priorSt.nextStep = &formatSt;
+    formatSt.nextStep = &paddingSt;
+    paddingSt.nextStep = &paletteSt;
+    paletteSt.nextStep = nullptr;
+    root = &priorSt;
+}
+
+void EntryPropertyParser::doParse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+{
+    Q_ASSERT(layer);
+    if (!root)
+        registerSteps();
+    EntryPropertyParser::Step *step = root;
+    QVector<QStringRef> ps = properties;
+    while (step) {
+        // If the input information flow is empty, it means that the next steps do not need to be continued
+        if (ps.isEmpty())
+            break;
+        ps = step->parse(layer, ps);
+        step = step->nextStep;
+    }
+}
+
+QVector<QStringRef> EntryPropertyParser::PriorStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+{
+    bool ok = false;
+    QVector<QStringRef> ps = properties;
+    layer->prior = ps.takeFirst().toInt(&ok);
+    if (!ok)
+        return {};  // error priority.
+    return ps;
+}
+
+QVector<QStringRef> EntryPropertyParser::FormatAndAlpha8Step::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+{
+    QVector<QStringRef> ps = properties;
+    const QString alpha8OrFormat = ps.takeLast().toString();
+    if (alpha8OrFormat.compare(ALPHA8STRING, Qt::CaseInsensitive) == 0) {
+        // Alpha8 format
+        layer->isAlpha8Format = true;
+        layer->format = ps.takeLast().toLatin1();
+    } else {
+        // normal format
+        layer->format = alpha8OrFormat.toLatin1();
+    }
+
+    return ps;
+}
+
+QVector<QStringRef> EntryPropertyParser::PaddingStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+{
+    QVector<QStringRef> ps = properties;
+    // Take the padding property
+    auto it = std::find_if(ps.cbegin(), ps.cend(), [](const QStringRef &p) {
+        return p.endsWith(QLatin1Char('p'));
+    });
+
+    if (it != ps.cend()) {
+        layer->padding = it->left(it->length() - 1).toShort();
+        ps.removeOne(*it);
+    }
+
+    return ps;
+}
+
+QVector<QStringRef> EntryPropertyParser::PaletteStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+{
+    QVector<QStringRef> ps = properties;
+    QStringRef palettes = ps.takeFirst();
+    // `role_hue_saturation_lightness_red_green_blue_alpha` or `role`
+    if (palettes.contains(QLatin1Char('_'))) {
+        const QVector<QStringRef> paletteProps = palettes.split(QLatin1Char('_'));
+        if (paletteProps.length() != 8)
+            return ps;
+
+        int role = paletteProps.at(0).toInt();
+        if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
+            role = DDciIconPalette::NoPalette;
+
+        layer->role = DDciIconPalette::PaletteRole(role);
+        layer->hue = static_cast<qint8>(paletteProps.at(1).toShort());
+        layer->saturation = static_cast<qint8>(paletteProps.at(2).toShort());
+        layer->lightness = static_cast<qint8>(paletteProps.at(3).toShort());
+        layer->red = static_cast<qint8>(paletteProps.at(4).toShort());
+        layer->green = static_cast<qint8>(paletteProps.at(5).toShort());
+        layer->blue = static_cast<qint8>(paletteProps.at(6).toShort());
+        layer->alpha = static_cast<qint8>(paletteProps.at(7).toShort());
+    } else {
+        // only palette
+        int role = palettes.toInt();
+        if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
+            role = DDciIconPalette::NoPalette;
+        layer->role = DDciIconPalette::PaletteRole(role);
+    }
+
+    return ps;
+}
 
 class DDciIconPrivate : public QSharedData
 {
@@ -269,59 +406,11 @@ DDciIconEntry DDciIconPrivate::loadIcon(const QString &parentDir, const QString 
         const QString &path = joinPath(stateDir, scaleString);
         for (const QString &layerPath : dciFile->list(path, true)) {
             QVector<QStringRef> layerProps = layerPath.splitRef(QLatin1Char('.'));
-            int prior = layerProps.first().toInt();
-            if (prior == -1)
-                continue;  // error priority.
             DDciIconEntry::ScalableLayer::Layer layer;
-            const QString alpha8OrFormat = layerProps.last().toLatin1();
-            if (alpha8OrFormat.compare(ALPHA8STRING, Qt::CaseInsensitive) == 0) {
-                layer.isAlpha8Format = true;
-                layer.format = layerProps.at(layerProps.length() - 2).toLatin1();
-                layerProps.removeLast();
-            } else {
-                layer.format = alpha8OrFormat.toLatin1();
-            }
-
-            if (layerProps.length() > 2) {
-                // prior.palette.format || prior.padding.palette.format
-                QStringRef paletteString;
-                QStringRef paletteOrPaddingString = layerProps.at(1);
-                if (layerProps.length() == 4)
-                    paletteString = layerProps.at(2);
-
-                if (paletteOrPaddingString.endsWith(QLatin1Char('p'))) {
-                    // padding
-                    layer.padding = paletteOrPaddingString.left(paletteOrPaddingString.length() - 1).toShort();
-                } else {
-                    paletteString = paletteOrPaddingString;
-                }
-
-                if (paletteString.contains(QLatin1Char('_'))) {
-                    const QVector<QStringRef> paletteProps = paletteString.split(QLatin1Char('_'));
-                    Q_ASSERT(paletteProps.length() == 8);
-                    int role = paletteProps.at(0).toInt();
-                    if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
-                        role = DDciIconPalette::NoPalette;
-
-                    layer.role = DDciIconPalette::PaletteRole(role);
-                    layer.hue = paletteProps.at(1).toShort();
-                    layer.saturation = paletteProps.at(2).toShort();
-                    layer.lightness = paletteProps.at(3).toShort();
-                    layer.red = paletteProps.at(4).toShort();
-                    layer.green = paletteProps.at(5).toShort();
-                    layer.blue = paletteProps.at(6).toShort();
-                    layer.alpha = paletteProps.at(7).toShort();
-                } else {
-                    // Only palette role.
-                    int role = paletteString.toInt();
-                    if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
-                        role = DDciIconPalette::NoPalette;
-                    layer.role = DDciIconPalette::PaletteRole(role);
-                }
-            }
+            EntryPropertyParser::doParse(&layer, layerProps);
             layer.data = dciFile->dataRef(joinPath(path, layerPath));
             // The sequence number starts with 1, convert it into index.
-            scaleIcon.layers.insert(prior - 1, layer);
+            scaleIcon.layers.insert(layer.prior - 1, layer);
         }
         icon.scalableLayers.append(scaleIcon);
     }
