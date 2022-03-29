@@ -48,6 +48,8 @@
 #include <QDBusConnectionInterface>
 #include <QProcess>
 #endif
+#include <QDir>
+#include <QLockFile>
 
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformservices.h>
@@ -1237,6 +1239,7 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     }
 
     if (new_server) {
+        qCDebug(dgAppHelper) << "===> new server <===" << _d_singleServer->serverName() << getpid();
         QObject::connect(_d_singleServer, &QLocalServer::newConnection, qApp, [] {
             QLocalSocket *instance = _d_singleServer->nextPendingConnection();
             // 先发送数据告诉新的实例自己收到了它的请求
