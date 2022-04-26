@@ -290,7 +290,7 @@ QString DIconTheme::findDciIconFile(const QString &iconName, const QString &them
     }
 
     if (splitCharPos > 0) {
-        effectiveIconName = iconName.mid(splitCharPos);
+        effectiveIconName = iconName.mid(splitCharPos + 1);
         Q_ASSERT(!effectiveIconName.isEmpty());
         for (const QString &themePath : searchPaths) {
             QString iconPath = findDciIconFromPath(effectiveIconName, themeName, themePath);
