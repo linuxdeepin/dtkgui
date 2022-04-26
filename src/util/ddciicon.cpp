@@ -47,7 +47,7 @@ DGUI_BEGIN_NAMESPACE
 
 struct DDciIconEntry {
     struct ScalableLayer {
-        int imagePixelRatio;
+        int imagePixelRatio = 0;
         struct Layer {
             int prior = 0;
             DDciIconPalette::PaletteRole role = DDciIconPalette::NoPalette;
@@ -68,9 +68,9 @@ struct DDciIconEntry {
     };
 
 
-    int iconSize;
-    DDciIcon::Mode mode;
-    DDciIcon::Theme theme;
+    int iconSize = 0;
+    DDciIcon::Mode mode = DDciIcon::Normal;
+    DDciIcon::Theme theme = DDciIcon::Light;
     QVector<ScalableLayer> scalableLayers;
     inline bool isNull() const { return scalableLayers.isEmpty(); }
 };
@@ -354,6 +354,9 @@ static int findMaxEntryPadding(const DDciIconEntry &entry)
 
     // Only take the first padding, because it has the same padding.
     auto scalables = entry.scalableLayers.first();
+    if (scalables.layers.isEmpty())
+        return 0;
+
     auto iter = std::max_element(scalables.layers.cbegin(), scalables.layers.cend(), [](const DDciIconEntry::ScalableLayer::Layer &n1,
                      const DDciIconEntry::ScalableLayer::Layer &n2) {
         return n1.padding < n2.padding;
