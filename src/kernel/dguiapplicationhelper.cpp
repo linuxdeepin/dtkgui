@@ -478,7 +478,7 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor(255, 255, 255, 255 * 0.05),  //ItemBackground
     QColor("#C0C6D4"),                  //TextTitle
     QColor("#6D7C88"),                  //TextTips
-    QColor("#9a2f2f"),                  //TextWarning
+    QColor("#E43F2E"),                  //TextWarning
     Qt::white,                          //TextLively
     QColor("#0059d2"),                  //LightLively
     QColor("#0059d2"),                  //DarkLively
