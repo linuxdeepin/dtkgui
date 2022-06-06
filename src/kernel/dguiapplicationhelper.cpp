@@ -1147,9 +1147,18 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
         lockfile += QLatin1Char('/') + socket_key;
     }
     lockfile += QStringLiteral(".lock");
-    static QLockFile lock(lockfile);
+    static QScopedPointer <QLockFile> lock(new QLockFile(lockfile));
+    // 同一个进程多次调用本接口使用最后一次设置的 key
+    // FIX dcc 使用不同的 key 两次调用 setSingleInstance 后无法启动的问题
+    qint64 pid = -1;
+    QString hostname, appname;
+    if (lock->isLocked() && lock->getLockInfo(&pid, &hostname, &appname) && pid == getpid()) {
+        qCWarning(dgAppHelper) << "call setSingleInstance again within the same process";
+        lock->unlock();
+        lock.reset(new QLockFile(lockfile));
+    }
 
-    if (!lock.tryLock()) {
+    if (!lock->tryLock()) {
         qCDebug(dgAppHelper) <<  "===> new client <===" << getpid();
         // 通知别的实例
         QLocalSocket socket;
@@ -1178,10 +1187,11 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     if (!_d_singleServer->listen(socket_key)) {
         qCWarning(dgAppHelper) << "listen failed:" <<  _d_singleServer->errorString();
         return false;
+    } else {
+        qCDebug(dgAppHelper) << "===> listen <===" << _d_singleServer->serverName() << getpid();
     }
 
     if (new_server) {
-        qCDebug(dgAppHelper) << "===> new server <===" << _d_singleServer->serverName() << getpid();
         QObject::connect(_d_singleServer, &QLocalServer::newConnection, qApp, [] {
             QLocalSocket *instance = _d_singleServer->nextPendingConnection();
             // 先发送数据告诉新的实例自己收到了它的请求
