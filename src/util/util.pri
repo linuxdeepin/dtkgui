@@ -1,6 +1,6 @@
 isEmpty(DTK_DISABLE_LIBXDG):linux {
     CONFIG += link_pkgconfig
-    PKGCONFIG += Qt5Xdg
+    PKGCONFIG += Qt5XdgIconLoader
     PKG_CONFIG = $$pkgConfigExecutable()
     XDG_ICON_VERSION = $$system($$PKG_CONFIG --modversion Qt5XdgIconLoader)
     XDG_ICON_VERSION_LIST = $$split(XDG_ICON_VERSION, .)
