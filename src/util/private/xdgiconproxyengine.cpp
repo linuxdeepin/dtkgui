@@ -32,7 +32,6 @@
 #include <cxxabi.h>
 #include <qmath.h>
 
-#include <XdgIcon>
 #if XDG_ICON_VERSION_MAR >= 3
 #define private public
 #include <private/xdgiconloader/xdgiconloader_p.h>
@@ -42,6 +41,12 @@
 //只能通过此方式提供创建XdgIconLoaderEngine对象的接口
 #include "xdgiconenginecreator.h"
 #endif
+
+static bool XdgIconFollowColorScheme()
+{
+    // XdgIcon::followColorScheme()
+    XdgIconLoader::instance()->followColorScheme();
+}
 
 #if XDG_ICON_VERSION_MAR >= 3
 namespace DEEPIN_QT_THEME {
@@ -168,7 +173,7 @@ QPixmap XdgIconProxyEngine::followColorPixmap(ScalableEntry *color_entry, const 
 
 QPixmap XdgIconProxyEngine::pixmapByEntry(QIconLoaderEngineEntry *entry, const QSize &size, QIcon::Mode mode, QIcon::State state)
 {
-    if (!XdgIcon::followColorScheme()) {
+    if (!XdgIconFollowColorScheme()) {
         DEEPIN_QT_THEME::colorScheme.setLocalData(QString());
 
         return entry->pixmap(size, mode, state);
@@ -197,7 +202,7 @@ QPixmap XdgIconProxyEngine::pixmapByEntry(QIconLoaderEngineEntry *entry, const Q
 void XdgIconProxyEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State state)
 {
     if (painter->device()->devType() == QInternal::Widget
-        && XdgIcon::followColorScheme()
+        && XdgIconFollowColorScheme()
         && DEEPIN_QT_THEME::colorScheme.localData().isEmpty()) {
         const QPalette &pal = qvariant_cast<QPalette>(dynamic_cast<QObject *>(painter->device())->property("palette"));
         DEEPIN_QT_THEME::colorScheme.setLocalData(mode == QIcon::Selected ? pal.highlightedText().color().name() : pal.windowText().color().name());
