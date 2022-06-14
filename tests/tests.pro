@@ -65,6 +65,5 @@ SOURCES += \
     src/ut_dicontheme.cpp
 
 RESOURCES += \
-    res.qrc \
-    $$PWD/../src/util/icons/deepin-theme-plugin-icons.qrc
+    res.qrc
 
