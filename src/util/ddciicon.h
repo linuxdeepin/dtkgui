@@ -31,6 +31,8 @@ DCORE_END_NAMESPACE
 
 DGUI_BEGIN_NAMESPACE
 
+typedef void* DDciIconMatchResult;
+
 class DDciIconPrivate;
 class DDciIcon
 {
@@ -45,6 +47,9 @@ public:
         Light = 0,
         Dark = 1
     };
+    enum IconAttibute {
+        HasPalette = 0x001
+    };
 
     DDciIcon();
     explicit DDciIcon(const DCORE_NAMESPACE::DDciFile *dciFile);
@@ -58,12 +63,22 @@ public:
     void swap(DDciIcon &other) noexcept { d.swap(other.d); }
 
     bool isNull() const;
+    DDciIconMatchResult matchIcon(int size, Theme theme, Mode mode) const;
+
+    int actualSize(DDciIconMatchResult result) const;
     int actualSize(int size, Theme theme, Mode mode = Normal) const;
+
     QList<int> availableSizes(Theme theme, Mode mode = Normal) const;
+    bool isSupportedAttribute(DDciIconMatchResult result, IconAttibute attr) const;
 
     QPixmap pixmap(qreal devicePixelRatio, int iconSize, Theme theme, Mode mode = Normal,
                    const DDciIconPalette &palette = DDciIconPalette()) const;
+    QPixmap pixmap(qreal devicePixelRatio, int iconSize, DDciIconMatchResult result,
+                   const DDciIconPalette &palette = DDciIconPalette()) const;
+
     void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Theme theme, Mode mode = Normal,
+               Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const;
+    void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, DDciIconMatchResult result,
                Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const;
 
     static DDciIcon fromTheme(const QString &name);
