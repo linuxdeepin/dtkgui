@@ -448,6 +448,45 @@ QColor DGuiApplicationHelper::adjustColor(const QColor &base,
 }
 
 /*!
+  \brief 调整图片整体像素颜色.
+
+  \note 取值范围均为 -100 ~ 100 ,当三原色参数为-100时，颜色为黑色，参数为100时，颜色为白色.
+  以透明度( alphaFloat )为例,当参数为负数时基础色的 alphaFloat 值减少，现象偏向透明, 参数为正数alphaFloat 值增加，现象偏不透明
+  \a base 基础色
+  \a hueFloat 色调
+  \a saturationFloat 饱和度
+  \a lightnessFloat 亮度
+  \a redFloat 红色
+  \a greenFloat 绿色
+  \a blueFloat 蓝色
+  \a alphaFloat Alpha通道(透明度)
+  \return 经过调整的图片
+ */
+QImage DGuiApplicationHelper::adjustColor(const QImage &base, qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat, qint8 redFloat, qint8 greenFloat, qint8 blueFloat, qint8 alphaFloat)
+{
+    if (base.isNull())
+        return base;
+
+    if (!hueFloat && !saturationFloat && !lightnessFloat && !redFloat
+            && !greenFloat && !blueFloat && !alphaFloat)
+        return base;
+
+    QImage dest = base;
+    for (int y = 0; y < dest.height(); ++y) {
+        const QRgb *rgb = reinterpret_cast<const QRgb *>(base.scanLine(y));
+        for (int x = 0; x < dest.width(); ++x) {
+            QColor base = QColor::fromRgba(rgb[x]);
+            if (base.alpha() == 0)
+                continue;
+            QColor color = adjustColor(base, hueFloat, saturationFloat, lightnessFloat,
+                                       redFloat, greenFloat, blueFloat, alphaFloat);
+            dest.setPixel(x, y, color.rgba());
+        }
+    }
+    return dest;
+}
+
+/*!
   \brief 将两种颜色混合，合成新的颜色.
 
   \a substrate 底层颜色
