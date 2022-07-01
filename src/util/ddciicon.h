@@ -50,6 +50,12 @@ public:
     enum IconAttibute {
         HasPalette = 0x001
     };
+    enum IconMatchedFlag {
+        None = 0,
+        DontFallback = 0x01
+    };
+    Q_DECLARE_FLAGS(IconMatchedFlags, IconMatchedFlag)
+    Q_FLAGS(IconMatchedFlags);
 
     DDciIcon();
     explicit DDciIcon(const DCORE_NAMESPACE::DDciFile *dciFile);
@@ -63,7 +69,7 @@ public:
     void swap(DDciIcon &other) noexcept { d.swap(other.d); }
 
     bool isNull() const;
-    DDciIconMatchResult matchIcon(int size, Theme theme, Mode mode) const;
+    DDciIconMatchResult matchIcon(int size, Theme theme, Mode mode, IconMatchedFlags flags = None) const;
 
     int actualSize(DDciIconMatchResult result) const;
     int actualSize(int size, Theme theme, Mode mode = Normal) const;
