@@ -237,7 +237,7 @@ public:
     void loadIconList();
     void ensureLoaded();
 
-    DDciIconEntry *tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode) const;
+    DDciIconEntry *tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode, DDciIcon::IconMatchedFlags flags = DDciIcon::None) const;
     void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment,
                const DDciIconEntry *entry, const DDciIconPalette &palette, qreal pixmapScale) const;
     bool hasPalette(DDciIconMatchResult result) const;
@@ -466,7 +466,7 @@ void DDciIconPrivate::ensureLoaded()
     loadIconList();
 }
 
-DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode) const
+DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode, DDciIcon::IconMatchedFlags flags) const
 {
     if (icons.isEmpty())
         return nullptr;
@@ -477,9 +477,22 @@ DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme
     }
 
     const auto &listOfSize = icons.at(neighborIndex);
+
+    if (flags.testFlag(DDciIcon::DontFallback)) {
+        auto it = std::find_if(listOfSize.entries.cbegin(), listOfSize.entries.cend(),
+                               [mode, theme](const DDciIconEntry *entry) {
+            if (entry->mode == mode && entry->theme == theme)
+                return true;
+            return false;
+        });
+
+        if (it == listOfSize.entries.cend())
+            return nullptr;
+        return (*it);
+    }
+
     QVector<qint8> iconWeight;
     iconWeight.resize(listOfSize.entries.size());
-
     for (int i = 0; i < listOfSize.entries.size(); ++i) {
         qint8 weight = 0;
         const DDciIconEntry *icon = listOfSize.entries.at(i);
@@ -497,7 +510,7 @@ DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme
             continue;
         }
 
-        iconWeight.insert(i, weight);
+        iconWeight[i] = weight;
     }
 
     const auto targetIcon = std::max_element(iconWeight.constBegin(), iconWeight.constEnd());
@@ -645,9 +658,9 @@ bool DDciIcon::isNull() const
     return d->icons.isEmpty();
 }
 
-DDciIconMatchResult DDciIcon::matchIcon(int size, Theme theme, Mode mode) const
+DDciIconMatchResult DDciIcon::matchIcon(int size, Theme theme, Mode mode, IconMatchedFlags flags) const
 {
-    return d->tryMatchIcon(size, theme, mode);
+    return d->tryMatchIcon(size, theme, mode, flags);
 }
 
 int DDciIcon::actualSize(DDciIconMatchResult result) const
