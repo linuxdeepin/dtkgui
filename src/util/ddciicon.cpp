@@ -478,19 +478,6 @@ DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme
 
     const auto &listOfSize = icons.at(neighborIndex);
 
-    if (flags.testFlag(DDciIcon::DontFallback)) {
-        auto it = std::find_if(listOfSize.entries.cbegin(), listOfSize.entries.cend(),
-                               [mode, theme](const DDciIconEntry *entry) {
-            if (entry->mode == mode && entry->theme == theme)
-                return true;
-            return false;
-        });
-
-        if (it == listOfSize.entries.cend())
-            return nullptr;
-        return (*it);
-    }
-
     QVector<qint8> iconWeight;
     iconWeight.resize(listOfSize.entries.size());
     for (int i = 0; i < listOfSize.entries.size(); ++i) {
@@ -499,7 +486,8 @@ DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme
 
         if (icon->mode == mode) {
             weight += 2;
-        } else if (icon->mode != DDciIcon::Normal) {
+        } else if (flags.testFlag(DDciIcon::DontFallbackMode)
+                   || icon->mode != DDciIcon::Normal) {
             weight = -1;
             continue;
         }
