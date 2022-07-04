@@ -52,7 +52,7 @@ public:
     };
     enum IconMatchedFlag {
         None = 0,
-        DontFallback = 0x01
+        DontFallbackMode = 0x01
     };
     Q_DECLARE_FLAGS(IconMatchedFlags, IconMatchedFlag)
     Q_FLAGS(IconMatchedFlags);
