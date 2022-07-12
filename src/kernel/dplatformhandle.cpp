@@ -57,6 +57,13 @@ DEFINE_CONST_CHAR(windowBlurPaths);
 DEFINE_CONST_CHAR(windowWallpaperParas);
 DEFINE_CONST_CHAR(autoInputMaskByClipPath);
 
+DEFINE_CONST_CHAR(resolve_mask);
+enum PropRole {
+    WindowRadius,
+
+    // TO BE CONTINUE
+};
+
 // functions
 DEFINE_CONST_CHAR(setWmBlurWindowBackgroundArea);
 DEFINE_CONST_CHAR(setWmBlurWindowBackgroundPathList);
@@ -70,6 +77,18 @@ DEFINE_CONST_CHAR(isEnableDxcb);
 DEFINE_CONST_CHAR(setEnableNoTitlebar);
 DEFINE_CONST_CHAR(isEnableNoTitlebar);
 DEFINE_CONST_CHAR(clientLeader);
+
+static void resolve(QObject *obj, PropRole role)
+{
+    int mask = obj->property(_resolve_mask).toInt();
+    obj->setProperty(_resolve_mask, (mask |= 1 << role));
+}
+
+static bool resolved(QObject *obj, PropRole role)
+{
+    int mask = obj->property(_resolve_mask).toInt();
+    return mask & (1 << role);
+}
 
 static void setWindowProperty(QWindow *window, const char *name, const QVariant &value)
 {
@@ -590,7 +609,8 @@ static void initWindowRadius(QWindow *window)
 
     setWindowProperty(window, _windowRadius, radius);
     window->connect(theme, &DPlatformTheme::windowRadiusChanged, window, [=] (int radius) {
-        setWindowProperty(window, _windowRadius, radius);
+        if (!resolved(window, PropRole::WindowRadius))
+            setWindowProperty(window, _windowRadius, radius);
     }, Qt::UniqueConnection);
 }
 
@@ -1136,6 +1156,7 @@ WId DPlatformHandle::windowLeader()
 void DPlatformHandle::setWindowRadius(int windowRadius)
 {
     setWindowProperty(m_window, _windowRadius, windowRadius);
+    resolve(m_window, PropRole::WindowRadius);
 }
 
 void DPlatformHandle::setBorderWidth(int borderWidth)
