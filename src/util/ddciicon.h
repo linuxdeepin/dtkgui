@@ -93,6 +93,16 @@ public:
     // TODO: Should be compatible with QIcon
 private:
     QSharedDataPointer<DDciIconPrivate> d;
+#ifndef QT_NO_DATASTREAM
+    friend QDataStream &operator<<(QDataStream &, const DDciIcon &);
+    friend QDataStream &operator>>(QDataStream &, DDciIcon &);
+#endif
 };
 
+#ifndef QT_NO_DATASTREAM
+QDataStream &operator<<(QDataStream &, const DDciIcon &);
+QDataStream &operator>>(QDataStream &, DDciIcon &);
+#endif
+
 DGUI_END_NAMESPACE
+Q_DECLARE_METATYPE(DTK_GUI_NAMESPACE::DDciIcon);
