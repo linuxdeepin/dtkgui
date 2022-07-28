@@ -776,4 +776,24 @@ DDciIcon DDciIcon::fromTheme(const QString &name, const DDciIcon &fallback)
     return icon;
 }
 
+#ifndef QT_NO_DATASTREAM
+QDataStream &operator<<(QDataStream &s, const DDciIcon &icon)
+{
+    if (icon.isNull())
+        return s << QByteArray();
+    auto dciFile = icon.d->dciFile;
+    const QByteArray &data = dciFile->toData();
+    s << data;
+    return s;
+}
+
+QDataStream &operator>>(QDataStream &s, DDciIcon &icon)
+{
+    QByteArray data;
+    s >> data;
+    icon = DDciIcon(data);
+    return s;
+}
+#endif
+
 DGUI_END_NAMESPACE
