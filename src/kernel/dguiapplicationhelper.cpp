@@ -150,6 +150,43 @@ public:
     static DGuiApplicationHelper::HelperCreator creator;
 };
 
+class LoadManualServiceWorker : public QThread
+{
+public:
+    explicit LoadManualServiceWorker(QObject *parent = nullptr);
+    ~LoadManualServiceWorker() override;
+    void checkManualServiceWakeUp();
+
+protected:
+    void run() override;
+};
+
+LoadManualServiceWorker::LoadManualServiceWorker(QObject *parent)
+    : QThread(parent)
+{
+    if (!parent)
+        connect(qApp, &QGuiApplication::aboutToQuit, this, std::bind(&LoadManualServiceWorker::exit, this, 0));
+}
+
+LoadManualServiceWorker::~LoadManualServiceWorker()
+{
+}
+
+void LoadManualServiceWorker::run()
+{
+    QDBusInterface("com.deepin.Manual.Search",
+                   "/com/deepin/Manual/Search",
+                   "com.deepin.Manual.Search");
+}
+
+void LoadManualServiceWorker::checkManualServiceWakeUp()
+{
+    if (this->isRunning())
+        return;
+
+    start();
+}
+
 DGuiApplicationHelper::HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
 Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
 
@@ -1354,11 +1391,9 @@ void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
 bool DGuiApplicationHelper::hasUserManual() const
 {
 #ifdef Q_OS_LINUX
-    auto loadManualFromLocalFile = [] () -> bool {
+    auto loadManualFromLocalFile = [=]() -> bool {
         const QString appName = qApp->applicationName();
-        if (!QFile::exists("/usr/bin/dman"))
-            return false;
-
+        bool dmanAppExists = QFile::exists("/usr/bin/dman");
         bool dmanDataExists = false;
         // search all subdirectories
         QString strManualPath = "/usr/share/deepin-manual";
@@ -1373,7 +1408,7 @@ bool DGuiApplicationHelper::hasUserManual() const
             if (file.isDir())
                 continue;
         }
-        return dmanDataExists;
+        return  dmanAppExists && dmanDataExists;
     };
 
     QDBusConnection conn = QDBusConnection::sessionBus();
@@ -1384,9 +1419,15 @@ bool DGuiApplicationHelper::hasUserManual() const
         if (manualSearch.isValid()) {
             QDBusReply<bool> reply = manualSearch.call("ManualExists", qApp->applicationName());
             return reply.value();
+        } else {
+            return loadManualFromLocalFile();
         }
+    } else {
+        static LoadManualServiceWorker *manualWorker = new LoadManualServiceWorker;
+        manualWorker->checkManualServiceWakeUp();
+
+        return loadManualFromLocalFile();
     }
-    return loadManualFromLocalFile();
 #else
     return false;
 #endif
