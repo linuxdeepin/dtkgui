@@ -15,11 +15,10 @@ else
 endif
 
 %:
-	dh $@ --buildsystem=qmake --parallel
+	dh $@ --parallel
 
 override_dh_auto_configure:
-	dh_auto_configure -- LIB_INSTALL_DIR=/usr/lib/$(DEB_HOST_MULTIARCH) VERSION=$(CONFIG_VERSION)
-
+	dh_auto_configure -- -DNOTPACKAGE=OFF -DBUILD_DOCS=OFF -DDVERSION=$(_PACK_VER)
 #override_dh_auto_test:
 #	echo "skip auto test"
 
