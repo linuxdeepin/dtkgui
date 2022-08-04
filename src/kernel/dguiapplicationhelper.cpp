@@ -5,7 +5,7 @@
 #include "dguiapplicationhelper.h"
 #include "private/dguiapplicationhelper_p.h"
 #include "dplatformhandle.h"
-#include <util/DFontManager>
+#include <DFontManager>
 
 #include <QHash>
 #include <QColor>

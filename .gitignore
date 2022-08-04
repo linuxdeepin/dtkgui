@@ -47,3 +47,8 @@ cmake
 DtkGuis
 dtkgui_config.h
 qt_lib_dtkgui*.pri
+build
+.cache
+dtkgui.pc
+DtkGuiConfig.cmake
+asan.*
