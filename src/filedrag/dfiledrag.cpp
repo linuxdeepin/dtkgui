@@ -30,6 +30,9 @@
 
 DGUI_BEGIN_NAMESPACE
 
+/*!
+ @private
+ */
 class DFileDragPrivate : DCORE_NAMESPACE::DObjectPrivate
 {
     DFileDragPrivate(DFileDrag *q, DFileDragServer *_srv)

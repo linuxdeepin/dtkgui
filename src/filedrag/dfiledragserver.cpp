@@ -37,6 +37,9 @@ DGUI_BEGIN_NAMESPACE
 
 class DDndSourceInterface;
 
+/*!
+ @private
+ */
 class DFileDragServerPrivate : public DCORE_NAMESPACE::DObjectPrivate
 {
     QMap<QString, QVariant> data;
