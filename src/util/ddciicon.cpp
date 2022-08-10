@@ -249,6 +249,14 @@ public:
     EntryNodeList icons;
 };
 
+#ifndef QT_NO_DATASTREAM
+__attribute__((constructor))
+static void registerMetaType()
+{
+    qRegisterMetaTypeStreamOperators<DDciIcon>("DDciIcon");
+}
+#endif
+
 static inline bool toMode(const QStringRef &name, DDciIcon::Mode *mode) {
     if (name == QLatin1String(MODE_NORMAL)) {
         *mode = DDciIcon::Normal;
