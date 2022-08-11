@@ -1,0 +1,60 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: dtkgui
+Upstream-Contact: UnionTech Software Technology Co., Ltd. <>
+Source: https://github.com/linuxdeepin/dtkgui
+
+# ci
+Files: .github/* .gitlab-ci.yml
+Copyright: None
+License: CC0-1.0
+
+# gitignore
+Files: .gitignore 
+Copyright: None
+License: CC0-1.0
+ 
+# json conf yaml
+Files: *.json *conf *.yaml
+Copyright: None
+License: CC0-1.0
+
+#interface
+Files: src/util/D* src/kernel/D* src/filedrag/D*
+Copyright: None
+License: CC0-1.0
+
+# rpm
+Files: rpm/*
+Copyright: None
+License: CC0-1.0
+
+# debian
+Files: debian/*
+Copyright: None
+License: LGPL-3.0-or-later
+
+# Arch
+Files: archlinux/*
+Copyright: None
+License: CC0-1.0
+
+# README&doc
+Files: README.md doc/src/*.qdoc
+Copyright: None
+License:  CC-BY-4.0 
+
+# DBus
+Files: src/dbus/*.xml
+Copyright: None
+License: CC0-1.0
+
+# Project file
+Files: *.pro *.prf *.pri *.qrc *CMakeLists.txt
+Copyright: None
+License: CC0-1.0
+
+# svg
+Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/* 
+  tests/images/logo_icon.svg
+Copyright: UnionTech Software Technology Co., Ltd.
+License: LGPL-3.0-or-later
