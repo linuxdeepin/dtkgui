@@ -39,7 +39,7 @@ Copyright: None
 License: CC0-1.0
 
 # README&doc
-Files: README*.md  doc/src/*.qdoc
+Files: README*.md  docs/src/*.qdoc
 Copyright: None
 License:  CC-BY-4.0 
 

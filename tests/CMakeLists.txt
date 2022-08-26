@@ -1,4 +1,4 @@
-set(BIN_NAME test)
+set(BIN_NAME "ut-${PROJECT_NAME}")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -64,6 +64,7 @@ if(NOT DTK_DISABLE_LIBXDG)
     ${GMOCK_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
   )
+  add_test(NAME ${BIN_NAME} COMMAND ${BIN_NAME})
 else()
   target_link_libraries(${BIN_NAME} PRIVATE 
     ${DtkCore_LIBRARIES}
@@ -90,4 +91,5 @@ else()
     ${GMOCK_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
   )
+  add_test(NAME ${BIN_NAME} COMMAND ${BIN_NAME})
 endif()
