@@ -526,7 +526,11 @@ void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePi
     for (auto layerIter = targetData.layers.begin(); layerIter != targetData.layers.end(); ++layerIter) {
         if (layerIter->data.isEmpty())
             continue;
-        const QImage &layer = readImageData(layerIter->data, layerIter->format, pixmapScale * pixelRatio / targetData.imagePixelRatio, layerIter->isAlpha8Format);
+        qreal deviceRatio = 1.0;
+        if (qApp->testAttribute(Qt::AA_UseHighDpiPixmaps)) {
+            deviceRatio = pixelRatio;
+        }
+        const QImage &layer = readImageData(layerIter->data, layerIter->format, pixmapScale * deviceRatio / targetData.imagePixelRatio, layerIter->isAlpha8Format);
         if (layer.isNull())
             continue;
         QColor fillColor;
@@ -567,7 +571,12 @@ void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePi
         painter->setRenderHint(QPainter::Antialiasing);
         QRect sourceRect(0, 0, layer.width(), layer.height());
         sourceRect.moveCenter(iconRect.center());
-        painter->drawImage(sourceRect, tmp);
+        QRect targetRect = sourceRect;
+        if (iconRect.width() < sourceRect.width())
+            targetRect = iconRect;
+
+        // Use AA_UseHighDpiPixmaps will solve blurred icon.
+        painter->drawImage(targetRect, tmp);
         painter->restore();
     }
 
@@ -703,7 +712,12 @@ QPixmap DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, DDciIconMatchResu
 
     Q_ASSERT_X((iconSize > 0), "DDciIcon::generatePixmap", "You must specify the icon size.");
     const qreal pixmapScale = iconSize * 1.0 / entry->iconSize;
-    const int pixmapSize = qRound((findMaxEntryPadding(entry) * 2 + entry->iconSize) * pixmapScale * devicePixelRatio);
+
+    qreal deviceRatio = 1.0;
+    if (qApp->testAttribute(Qt::AA_UseHighDpiPixmaps)) {
+        deviceRatio = devicePixelRatio;
+    }
+    const int pixmapSize = qRound((findMaxEntryPadding(entry) * 2 + entry->iconSize) * pixmapScale * deviceRatio);
 
     QPixmap pixmap(pixmapSize, pixmapSize);
     pixmap.fill(Qt::transparent);
