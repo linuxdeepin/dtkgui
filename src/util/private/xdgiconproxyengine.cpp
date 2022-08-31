@@ -29,7 +29,7 @@
 static bool XdgIconFollowColorScheme()
 {
     // XdgIcon::followColorScheme()
-    XdgIconLoader::instance()->followColorScheme();
+    return XdgIconLoader::instance()->followColorScheme();
 }
 
 #if XDG_ICON_VERSION_MAR >= 3
