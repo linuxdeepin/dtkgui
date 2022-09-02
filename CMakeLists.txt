@@ -1,20 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
-option(DVERSION "define project version" "5.5.23")
-if(DVERSION)
-  project(DtkGui
-   VERSION ${DVERSION}
-    DESCRIPTION "DTK Gui module"
-    HOMEPAGE_URL ""
-    LANGUAGES CXX C
-  )
-else()
-  project(DtkGui
-    VERSION "5.5.23"
-    DESCRIPTION "DTK Gui module"
-    HOMEPAGE_URL ""
-    LANGUAGES CXX C
-  )
-endif()
+
+set (DVERSION "5.6.0.2" CACHE STRING "define project version")
+project(DtkGui
+ VERSION ${DVERSION}
+  DESCRIPTION "DTK Gui module"
+  HOMEPAGE_URL "https://github.com/linuxdeepin/dtkgui"
+  LANGUAGES CXX C
+)
 
 include(GNUInstallDirs)
 option(NOTPACKAGE "to make package" ON)
