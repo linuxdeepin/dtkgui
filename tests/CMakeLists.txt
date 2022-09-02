@@ -37,59 +37,46 @@ add_executable(${BIN_NAME}
   ${private_SRC}
   ${test_SRC}
 )
+set(LIBRARIES 
+    ${DtkCore_LIBRARIES}
+    Qt5::Gui 
+    Qt5::Widgets
+    Qt5::DBus 
+    Qt5::Network 
+    Qt5::Test 
+    ${librsvg_LIBRARIES}
+    ${GTEST_LIBRARIES}
+    ${GMOCK_LIBRARIES}
+    -lpthread
+    -lgmock
+    -lm 
+    -lgcov
+)
+
 if(NOT DTK_DISABLE_LIBXDG)
-  target_link_libraries(${BIN_NAME} PRIVATE 
-    ${DtkCore_LIBRARIES}
-    Qt5::Gui 
-    Qt5::Widgets
-    Qt5::DBus 
-    Qt5::Network 
-    Qt5::Test 
-    Qt5XdgIconLoader
-    ${librsvg_LIBRARIES}
-    ${GTEST_LIBRARIES}
-    ${GMOCK_LIBRARIES}
-    -lpthread
-    -lgmock
-  )
-  target_include_directories(${BIN_NAME} PUBLIC
-    ../include/util/
-    ../include/DtkGui/
-    ../include/global/
-    ../include/kernel/
-    ../include/filedrag/
-    ../src/private/
-    ../src/
-    ${librsvg_INCLUDE_DIRS}
-    ${GMOCK_INCLUDE_DIRS}
-    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-  )
-  add_test(NAME ${BIN_NAME} COMMAND ${BIN_NAME})
-else()
-  target_link_libraries(${BIN_NAME} PRIVATE 
-    ${DtkCore_LIBRARIES}
-    Qt5::Gui 
-    Qt5::Widgets
-    Qt5::DBus 
-    Qt5::Network 
-    Qt5::Test 
-    ${librsvg_LIBRARIES}
-    ${GTEST_LIBRARIES}
-    ${GMOCK_LIBRARIES}
-    -lpthread
-    -lgmock
-  )
-  target_include_directories(${BIN_NAME} PUBLIC
-    ../include/util/
-    ../include/DtkGui/
-    ../include/global/
-    ../include/kernel/
-    ../include/filedrag/
-    ../src/private/
-    ../src/
-    ${librsvg_INCLUDE_DIRS}
-    ${GMOCK_INCLUDE_DIRS}
-    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-  )
-  add_test(NAME ${BIN_NAME} COMMAND ${BIN_NAME})
+  list(APPEND LIBRARIES Qt5XdgIconLoader)
 endif()
+
+target_link_libraries(${BIN_NAME} PRIVATE 
+  ${LIBRARIES}
+)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  target_compile_options(${BIN_NAME} PRIVATE -fprofile-instr-generate -ftest-coverage)
+endif()
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(${BIN_NAME} PRIVATE -fprofile-arcs -ftest-coverage)
+endif()
+target_include_directories(${BIN_NAME} PUBLIC
+  ../include/util/
+  ../include/DtkGui/
+  ../include/global/
+  ../include/kernel/
+  ../include/filedrag/
+  ../src/private/
+  ../src/
+  ${librsvg_INCLUDE_DIRS}
+  ${GMOCK_INCLUDE_DIRS}
+  ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+)
+add_test(NAME ${BIN_NAME} COMMAND ${BIN_NAME})
