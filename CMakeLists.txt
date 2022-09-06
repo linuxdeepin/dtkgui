@@ -12,18 +12,7 @@ include(GNUInstallDirs)
 option(NOTPACKAGE "to make package" ON)
 option(DTK_DISABLE_LIBXDG "Disabel libxdg" OFF)
 set (BUILD_DOCS ON CACHE BOOL "Generate doxygen-based documentation")
-
-#message(${DTK_DISABLE_LIBXDG})
-#set(LINUXNAME "debian")
-option(LINUXNAME "linuxname" "debian")
-set(SPECPATH "qt5/mkspecs/")
-if(LINUXNAME)
-  if (${LINUXNAME} STREQUAL "archlinux")
-    set(SPECPATH "qt/mkspecs/")
-    message("arch")
-  endif()
-endif()
-
+set (MKSPECS_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt5/mkspecs/modules" CACHE STRING "INSTALL DIR FOR qt pri files")
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX /usr)
 endif ()
@@ -55,7 +44,7 @@ configure_file(misc/dtkgui.pc.in dtkgui.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dtkgui.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")
 
 configure_file(misc/qt_lib_dtkgui.pri.in qt_lib_dtkgui.pri @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qt_lib_dtkgui.pri DESTINATION "${CMAKE_INSTALL_LIBDIR}/${SPECPATH}/modules")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qt_lib_dtkgui.pri DESTINATION "${MKSPECS_INSTALL_DIR}")
 
 set(GUISGNAME DtkGuis)
 
