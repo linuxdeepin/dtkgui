@@ -1,0 +1,16 @@
+/*!
+@~chinese
+
+@fn void DGuiApplicationHelper::newProcessInstance(qint64 pid, const QStringList &arguments)
+@brief 通知新进程的信息。
+
+单例程序情况下，尝试启动新的程序实例将触发此信号，以便获取所传入的参数列表等信息，来进行进一步处理。
+
+@param pid 进程 ID.
+@param arguments 启动进程时所传入的参数列表.
+
+@fn void DGuiApplicationHelper::applicationPaletteChanged()
+@brief 通知调色板对象的改变。
+
+@sa windowPalette()
+*/

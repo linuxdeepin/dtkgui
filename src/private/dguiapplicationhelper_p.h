@@ -16,6 +16,9 @@ QT_END_NAMESPACE
 
 DGUI_BEGIN_NAMESPACE
 
+/*!
+ @private
+ */
 class DGuiApplicationHelperPrivate : public DCORE_NAMESPACE::DObjectPrivate
 {
 public:
