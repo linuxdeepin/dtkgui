@@ -23,8 +23,8 @@ Files: include/DtkGui/D*
 Copyright: None
 License: CC0-1.0
 
-# rpm
-Files: rpm/*
+# RPM/Arch Packaging
+Files: archlinux/* rpm/*
 Copyright: None
 License: CC0-1.0
 
@@ -33,13 +33,13 @@ Files: debian/*
 Copyright: None
 License: LGPL-3.0-or-later
 
-# Arch
-Files: archlinux/*
+# README & doc
+Files: README.md README.zh_CN.md
 Copyright: None
-License: CC0-1.0
+License:  CC-BY-4.0 
 
-# README&doc
-Files: README*.md  docs/src/*.qdoc
+# Documentations
+Files: docs/*.qdoc docs/*.md docs/*.dox
 Copyright: None
 License:  CC-BY-4.0 
 
