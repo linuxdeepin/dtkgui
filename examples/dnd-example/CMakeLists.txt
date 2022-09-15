@@ -17,7 +17,7 @@ target_link_libraries(
   ${DtkCore_LIBRARIES}
 )
 
-install(TARGETS ${BIN1} DESTINATION "${CMAKE_INSTALL_LIBDIR}/libdtk-${PROJECT_VERSION}/DGui/bin/")
+install(TARGETS ${BIN1} DESTINATION "${TOOL_INSTALL_DIR}")
 set(BIN2 dnd-test-server)
 
 add_executable(${BIN2}
@@ -33,4 +33,4 @@ target_link_libraries(
 )
 
 
-install(TARGETS ${BIN2} DESTINATION "${CMAKE_INSTALL_LIBDIR}/libdtk-${PROJECT_VERSION}/DGui/bin/")
+install(TARGETS ${BIN2} DESTINATION "${TOOL_INSTALL_DIR}")

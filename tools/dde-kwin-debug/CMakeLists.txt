@@ -12,4 +12,4 @@ target_link_libraries(${BIN} PRIVATE
 target_include_directories(${BIN} PUBLIC
   ${x11_INCLUDE_DIRS}
 )
-install(TARGETS ${BIN} DESTINATION "${CMAKE_INSTALL_LIBDIR}/libdtk-${PROJECT_VERSION}/DGui/bin/")
+install(TARGETS ${BIN} DESTINATION "${TOOL_INSTALL_DIR}")
