@@ -1,6 +1,16 @@
-find_package(Dtk REQUIRED Core)
-set(DTKGUI_INCLUDE_DIR @CMAKE_INSTALL_FULL_INCLUDEDIR@/libdtk-@PROJECT_VERSION@/DGui)
-set(DTKGUI_TOOL_DIR @CMAKE_INSTALL_FULL_LIBDIR@/libdtk-@PROJECT_VERSION@/DGui/bin)
-set(DtkGui_LIBRARIES dtkgui ${DtkCore_LIBRARIES})
-include_directories("${DTKGUI_INCLUDE_DIR}")
+@PACKAGE_INIT@
 
+set_and_check(DtkGui_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set(DtkGui_TOOL_DIR "@PACKAGE_TOOL_INSTALL_DIR@")
+
+include(CMakeFindDependencyMacro)
+find_dependency(DtkCore REQUIRED)
+set(DtkGui_LIBRARIES dtkgui ${DtkCore_LIBRARIES})
+
+include_directories("${DtkGui_INCLUDE_DIR}")
+
+check_required_components(DtkWidget)
+
+# Keep deprecated variables for compatibility
+set(DTKGUI_INCLUDE_DIR ${DtkGui_INCLUDE_DIR})
+set(DTKGUI_TOOL_DIR ${DtkGui_TOOL_DIR})

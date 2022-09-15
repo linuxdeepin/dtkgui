@@ -1,5 +1,5 @@
 set(LIB_NAME dtkgui)
-find_package(DtkCore REQUIRED)
+find_package(DtkCore 5.6 REQUIRED)
 find_package(PkgConfig REQUIRED)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

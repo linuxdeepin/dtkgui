@@ -1,13 +1,11 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=${prefix}
-libdir=${prefix}/lib
-includedir=${prefix}/include/libdtk-@PROJECT_VERSION@/DGui
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@INCLUDE_INSTALL_DIR@
 
-
-Name: DTKGUI
+Name: dtkgui
 Description: Deepin Tool Kit dtkgui header files
 Version: @PROJECT_VERSION@
-Libs: -ldtkgui 
+Libs: -L${libdir} -ldtkgui 
 Cflags: -I${includedir}
 Requires: dtkcore
-

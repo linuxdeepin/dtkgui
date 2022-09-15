@@ -2,20 +2,28 @@ cmake_minimum_required(VERSION 3.5)
 
 set (DVERSION "5.6.0.2" CACHE STRING "define project version")
 project(DtkGui
- VERSION ${DVERSION}
+  VERSION ${DVERSION}
   DESCRIPTION "DTK Gui module"
   HOMEPAGE_URL "https://github.com/linuxdeepin/dtkgui"
   LANGUAGES CXX C
 )
 
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# Set build option
 option(NOTPACKAGE "to make package" ON)
 option(DTK_DISABLE_LIBXDG "Disabel libxdg" OFF)
 set (BUILD_DOCS ON CACHE BOOL "Generate doxygen-based documentation")
-set (MKSPECS_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt5/mkspecs/modules" CACHE STRING "INSTALL DIR FOR qt pri files")
+
+# Set install path
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX /usr)
 endif ()
+set (INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/libdtk-${PROJECT_VERSION}/DGui")
+set (TOOL_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/libdtk-${PROJECT_VERSION}/DGui/bin")
+set (MKSPECS_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt5/mkspecs/modules" CACHE STRING "INSTALL DIR FOR qt pri files")
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -36,9 +44,21 @@ foreach(FILENAME ${CONFIGSOURCE})
   file(APPEND ${CONFIGNAME} "#define DTKGUI_CLASS_${thefile}\n")
 endforeach()
 
-
-configure_file(misc/DtkGuiConfig.cmake.in DtkGuiConfig.cmake @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/DtkGuiConfig.cmake DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DtkGui")
+configure_package_config_file(misc/DtkGuiConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/DtkGuiConfig.cmake
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DtkGui"
+    PATH_VARS INCLUDE_INSTALL_DIR TOOL_INSTALL_DIR
+)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/DtkGuiConfigVersion.cmake"
+    VERSION ${DVERSION}
+    COMPATIBILITY SameMajorVersion
+)
+install(FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/DtkGuiConfig.cmake
+      ${CMAKE_CURRENT_BINARY_DIR}/DtkGuiConfigVersion.cmake
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/DtkGui"
+)
 
 configure_file(misc/dtkgui.pc.in dtkgui.pc @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dtkgui.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig/")
@@ -70,7 +90,7 @@ foreach(FILENAME ${UTILTOWRITESOURCE})
   file(APPEND ${GUISGNAME} "#include \"${thefile}\"\n")
 endforeach()
 file(APPEND ${GUISGNAME} "#endif")
-install(FILES DtkGuis DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libdtk-${PROJECT_VERSION}/DGui")
+install(FILES DtkGuis DESTINATION "${INCLUDE_INSTALL_DIR}")
 
 add_subdirectory(examples)
 add_subdirectory(src)
