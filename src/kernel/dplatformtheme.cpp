@@ -100,7 +100,11 @@ void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, co
     }
 
     if (p.hasNotifySignal()) {
-        p.notifySignal().invoke(q, QGenericArgument(value.typeName(), value.constData()));
+        // invoke会做Q_ASSERT(mobj->cast(object))判断, DPlatformTheme的dynamic metaObject为
+        // qt5platform-plugin插件的DNativeSettings. 导致崩溃.
+        // invokeOnGadget与invoke代码逻辑一致, 只是少了异步支持.
+        if (!p.notifySignal().invokeOnGadget(q, QGenericArgument(value.typeName(), value.constData())))
+            qWarning() << "_q_onThemePropertyChanged() error when notify signal" << p.notifySignal().name();
     }
 }
 
