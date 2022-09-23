@@ -188,13 +188,6 @@ DGuiApplicationHelperPrivate::DGuiApplicationHelperPrivate(DGuiApplicationHelper
 
 void DGuiApplicationHelperPrivate::init()
 {
-    D_Q(DGuiApplicationHelper);
-
-    systemTheme = new DPlatformTheme(0, q);
-    // 直接对应到系统级别的主题, 不再对外提供为某个单独程序设置主题的接口.
-    // 程序设置自身主题相关的东西皆可通过 setPaletteType 和 setApplicationPalette 实现.
-    appTheme = systemTheme;
-
     if (qGuiApp) {
         initApplication(qGuiApp);
     } else {
@@ -207,6 +200,15 @@ void DGuiApplicationHelperPrivate::init()
 void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
 {
     D_Q(DGuiApplicationHelper);
+
+    if (!systemTheme) {
+        // 需要在QGuiApplication创建后再创建DPlatformTheme，否则DPlatformTheme无效.
+        // qGuiApp->platformFunction()会报警告，并返回nullptr.
+        systemTheme = new DPlatformTheme(0, q);
+        // 直接对应到系统级别的主题, 不再对外提供为某个单独程序设置主题的接口.
+        // 程序设置自身主题相关的东西皆可通过 setPaletteType 和 setApplicationPalette 实现.
+        appTheme = systemTheme;
+    }
 
     // 跟随application销毁
     qAddPostRoutine(staticCleanApplication);
@@ -242,11 +244,8 @@ void DGuiApplicationHelperPrivate::staticInitApplication()
     if (!_globalHelper.exists())
         return;
 
-    if (DGuiApplicationHelper *helper = _globalHelper->m_helper.load()) {
-        // systemTheme未创建时说明DGuiApplicationHelper还未初始化
-        if (helper->d_func()->systemTheme)
-            helper->d_func()->initApplication(qGuiApp);
-    }
+    if (DGuiApplicationHelper *helper = _globalHelper->m_helper.load())
+        helper->d_func()->initApplication(qGuiApp);
 }
 
 void DGuiApplicationHelperPrivate::staticCleanApplication()
