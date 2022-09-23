@@ -50,7 +50,7 @@ public:
 
     DGuiApplicationHelper::ColorType paletteType = DGuiApplicationHelper::UnknownType;
     // 系统级别的主题设置
-    DPlatformTheme *systemTheme;
+    DPlatformTheme *systemTheme = nullptr;
     QScopedPointer<DPalette> appPalette;
     // 获取QLocalSever消息的等待时间
     static int waitTime;
