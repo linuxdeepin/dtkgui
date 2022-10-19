@@ -11,6 +11,7 @@
 #include <QUuid>
 #include <QDBusServer>
 #include <QDBusConnection>
+#include <QDBusConnectionInterface>
 #include <QDBusVariant>
 #include <QDBusError>
 #include <QCoreApplication>
@@ -170,7 +171,9 @@ DFileDragServerPrivate::~DFileDragServerPrivate()
 void DFileDragServerPrivate::writeMimeData(QMimeData *dest)
 {
     dest->setData(DND_MIME_SERVICE, QDBusConnection::sessionBus().baseService().toUtf8());
-    dest->setData(DND_MIME_PID, QString::number(QCoreApplication::applicationPid()).toUtf8());
+    // qApp->applicationPid() not right in ll-box
+    auto pid = QDBusConnection::sessionBus().interface()->servicePid(QDBusConnection::sessionBus().baseService());
+    dest->setData(DND_MIME_PID, QString::number(pid).toUtf8());
     dest->setData(DND_MIME_UUID, uuid.toString().toUtf8());
 }
 
