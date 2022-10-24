@@ -1375,22 +1375,37 @@ bool DGuiApplicationHelper::hasUserManual() const
 #ifdef Q_OS_LINUX
     auto loadManualFromLocalFile = [=]() -> bool {
         const QString appName = qApp->applicationName();
-        bool dmanAppExists = QFile::exists("/usr/bin/dman");
+        bool dmanBinaryExists = false;
         bool dmanDataExists = false;
-        // search all subdirectories
-        QString strManualPath = "/usr/share/deepin-manual";
-        QDirIterator it(strManualPath, QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            QFileInfo file(it.next());
-            if (file.isDir() && file.fileName().contains(appName, Qt::CaseInsensitive)) {
-                dmanDataExists = true;
+        const QString sysPath = qgetenv("PATH");
+        auto binPath = sysPath.split(":");
+        for (const auto path : binPath) {
+            if (QFile::exists(QStringList {path, "dman"}.join(QDir::separator()))) {
+                dmanBinaryExists = true;
                 break;
             }
-
-            if (file.isDir())
-                continue;
         }
-        return  dmanAppExists && dmanDataExists;
+
+        // search all subdirectories
+        const QString xdgDataPath = qgetenv("XDG_DATA_DIRS");
+        auto dataPath = xdgDataPath.split(":");
+        for (const auto path : dataPath) {
+            QString strManualPath = QStringList {path, "deepin-manual"}.join(QDir::separator());
+
+            QDirIterator it(strManualPath, QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                QFileInfo file(it.next());
+                if (file.isDir() && file.fileName().contains(appName, Qt::CaseInsensitive)) {
+                    dmanDataExists = true;
+                    break;
+                }
+
+                if (file.isDir())
+                    continue;
+            }
+        }
+
+        return  dmanBinaryExists && dmanDataExists;
     };
 
     QDBusConnection conn = QDBusConnection::sessionBus();
