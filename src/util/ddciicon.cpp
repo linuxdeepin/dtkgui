@@ -324,6 +324,8 @@ static QImage readImageData(const QByteArray &data, const QByteArray &format, qr
 
         if (!scaled)
             image = image.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    } else {
+        qWarning() << reader.errorString() << format;
     }
 
     return image;
