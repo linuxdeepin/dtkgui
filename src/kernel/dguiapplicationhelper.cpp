@@ -45,6 +45,7 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QProcess>
+#include <DPathBuf>
 #endif
 
 #include <private/qguiapplication_p.h>
@@ -1428,6 +1429,51 @@ bool DGuiApplicationHelper::hasUserManual() const
 #else
     return false;
 #endif
+}
+
+bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<QString> &translateDirs, const QList<QLocale> &localeFallback)
+{
+    DCORE_USE_NAMESPACE;
+
+    QList<QString> dirs = translateDirs;
+    const QList<DPathBuf> defaultDirPrefix {
+        qApp->applicationDirPath(),
+        QDir::currentPath()
+    };
+    for (auto item : defaultDirPrefix)
+        dirs << item.join("translations").toString();
+
+    QStringList missingQmfiles;
+    for (const auto &locale : localeFallback) {
+        QStringList translateFilenames {QString("%1_%2").arg(fileName).arg(locale.name())};
+        const QStringList parseLocalNameList = locale.name().split("_", QString::SkipEmptyParts);
+        if (parseLocalNameList.length() > 0)
+            translateFilenames << QString("%1_%2").arg(fileName).arg(parseLocalNameList.at(0));
+
+        for (const auto &translateFilename : translateFilenames) {
+            for (const auto &dir : dirs) {
+                DPathBuf path(dir);
+                QString translatePath = (path / translateFilename).toString();
+                if (QFile::exists(translatePath + ".qm")) {
+                    qDebug() << "load translate" << translatePath;
+                    auto translator = new QTranslator(qApp);
+                    translator->load(translatePath);
+                    qApp->installTranslator(translator);
+                    qApp->setProperty("dapp_locale", locale.name());
+                    return true;
+                }
+            }
+
+            // fix english does not need to translation.
+            if (locale.language() != QLocale::English)
+                missingQmfiles << translateFilename + ".qm";
+        }
+    }
+
+    if (missingQmfiles.size() > 0) {
+        qWarning() << fileName << "can not find qm files" << missingQmfiles;
+    }
+    return false;
 }
 
 void DGuiApplicationHelper::setAttribute(DGuiApplicationHelper::Attribute attribute, bool enable)
