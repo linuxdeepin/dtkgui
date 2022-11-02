@@ -101,6 +101,8 @@ public:
 
     bool hasUserManual() const;
 
+    static bool loadTranslator(const QString &fileName, const QList<QString> &translateDirs, const QList<QLocale> &localeFallback);
+
 public Q_SLOTS:
     D_DECL_DEPRECATED_X("Plase use setPaletteType") void setThemeType(ColorType themeType);
     void setPaletteType(ColorType paletteType);
