@@ -17,6 +17,11 @@ int main(int argc, char *argv[])
     if (!qEnvironmentVariableIsSet("DISPLAY"))
         qputenv("QT_QPA_PLATFORM", "offscreen");
 
+    // for ut_dicon.cpp 测试指定缩放时 dicon 的 ut
+    // 如果需要删除，请一起删除 ut_dicon.cpp 中 ASSERT_FLOAT_EQ(devicePixelRatio, 1.25);
+    qputenv("D_DXCB_DISABLE_OVERRIDE_HIDPI","1");
+    qputenv("QT_SCALE_FACTOR","1.25");
+
     QApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
     int ret = RUN_ALL_TESTS();
