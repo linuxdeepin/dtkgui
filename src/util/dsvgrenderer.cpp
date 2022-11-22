@@ -12,6 +12,7 @@
 #include <QDebug>
 #include <QGuiApplication>
 #include <QLibrary>
+#include <QXmlStreamReader>
 
 DCORE_USE_NAMESPACE
 
@@ -250,12 +251,53 @@ QImage DSvgRenderer::toImage(const QSize sz, const QString &elementId) const
     return d->getImage(sz, elementId);
 }
 
+static QByteArray updateXmlAttribute(const QString &contents)
+{
+    QByteArray data;
+    QXmlStreamWriter writer(&data);
+    QXmlStreamReader reader(contents);
+    while(reader.readNext() != QXmlStreamReader::Invalid && !reader.atEnd()) {
+        if (reader.tokenType() != QXmlStreamReader::StartElement ||
+                !reader.attributes().hasAttribute("href")) {
+            writer.writeCurrentToken(reader);
+            continue;
+        }
+
+        for (const auto &nd : reader.namespaceDeclarations())
+            writer.writeNamespace(nd.namespaceUri().toString(), nd.prefix().toString());
+
+        writer.writeStartElement(reader.namespaceUri().toString(), reader.name().toString());
+
+        for (const auto &attr : reader.attributes()) {
+            if (attr.name() == "href") {
+                writer.writeAttribute("xlink:href", attr.value().toString());
+                continue;
+            }
+            writer.writeAttribute(attr);
+        }
+    }
+
+    return data;
+}
+
+QByteArray format(const QByteArray &contents)
+{
+    QXmlStreamReader reader(contents);
+    while (reader.readNextStartElement()) {
+        if (reader.attributes().hasAttribute("href"))
+            return updateXmlAttribute(contents);
+    }
+
+    return contents;
+}
+
 bool DSvgRenderer::load(const QString &filename)
 {
     QFile file(filename);
 
     if (file.open(QIODevice::ReadOnly)) {
-        return load(file.readAll());
+        // TODO: if `href` attribute is adapted after librsvg upgrade revert me
+        return load(format(file.readAll()));
     }
 
     return false;
