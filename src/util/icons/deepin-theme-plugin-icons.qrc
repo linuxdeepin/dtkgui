@@ -48,6 +48,7 @@
     </qresource>
     <qresource prefix="/icons/deepin/builtin/light">
         <file alias="icons/button_edit-clear_30px.svg/normal.svg">icons/light/edit-clear_30px.svg</file>
+        <file alias="icons/button_edit-clear_30px.svg/active.svg">icons/light/edit-clear_active_30px.svg</file>
         <file alias="icons/button_edit-clear_30px.svg/selected.svg">icons/light/edit-clear_press_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/normal.svg">icons/light/button_voice_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/selected.svg">icons/light/button_voice_press_30px.svg</file>
@@ -58,6 +59,7 @@
     </qresource>
     <qresource prefix="/icons/deepin/builtin/dark">
         <file alias="icons/button_edit-clear_30px.svg/normal.svg">icons/dark/edit-clear_30px.svg</file>
+        <file alias="icons/button_edit-clear_30px.svg/active.svg">icons/dark/edit-clear_active_30px.svg</file>
         <file alias="icons/button_edit-clear_30px.svg/selected.svg">icons/dark/edit-clear_press_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/normal.svg">icons/dark/button_voice_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/selected.svg">icons/dark/button_voice_press_30px.svg</file>
