@@ -11,6 +11,10 @@
 #include <QColor>
 #include <QVector>
 
+QT_BEGIN_NAMESPACE
+class QPalette;
+QT_END_NAMESPACE
+
 DGUI_BEGIN_NAMESPACE
 
 class DDciIconPalette
@@ -50,6 +54,7 @@ public:
 
     static QString convertToString(const DDciIconPalette &palette);
     static DDciIconPalette convertFromString(const QString &data);
+    static DDciIconPalette fromQPalette(const QPalette &pa);
 private:
     QVector<QColor> colors;
 };
