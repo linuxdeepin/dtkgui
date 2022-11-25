@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QUrl>
 #include <QUrlQuery>
+#include <QPalette>
 
 DGUI_BEGIN_NAMESPACE
 
@@ -117,6 +118,12 @@ DDciIconPalette DDciIconPalette::convertFromString(const QString &data)
     if (query.hasQueryItem(QLatin1String("highlightForeground")))
         highlightForeground = query.queryItemValue(QLatin1String("highlightForeground"));
     return DDciIconPalette(foreground, background, highlight, highlightForeground);
+}
+
+DDciIconPalette DDciIconPalette::fromQPalette(const QPalette &pa)
+{
+    return DDciIconPalette(pa.windowText().color(), pa.window().color(),
+                           pa.highlight().color(), pa.highlightedText().color());
 }
 
 DGUI_END_NAMESPACE
