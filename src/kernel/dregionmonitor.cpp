@@ -8,6 +8,7 @@
 #include <QObject>
 #include <QDebug>
 #include <QGuiApplication>
+#include <QtDBus/QtDBus>
 
 DGUI_BEGIN_NAMESPACE
 
@@ -131,8 +132,15 @@ void DRegionMonitor::setCoordinateType(DRegionMonitor::CoordinateType type)
 
 DRegionMonitorPrivate::DRegionMonitorPrivate(DRegionMonitor *q)
     : DObjectPrivate(q)
-    , eventInter(new XEventMonitor("com.deepin.api.XEventMonitor", "/com/deepin/api/XEventMonitor", QDBusConnection::sessionBus()))
 {
+    if (QDBusConnection::sessionBus().interface()->isServiceRegistered(QLatin1String("org.deepin.api.XEventMonitor1"))) {
+        eventInter = new XEventMonitor("org.deepin.api.XEventMonitor1", "/org/deepin/api/XEventMonitor1",
+                                       "org.deepin.api.XEventMonitor1", q);
+    } else {
+        eventInter = new XEventMonitor("com.deepin.api.XEventMonitor", "/com/deepin/api/XEventMonitor",
+                                       "com.deepin.api.XEventMonitor", q);
+    }
+
 }
 
 DRegionMonitorPrivate::~DRegionMonitorPrivate()
