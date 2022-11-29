@@ -6,12 +6,14 @@ if(NOT DTK_DISABLE_LIBXDG)
     ${CMAKE_CURRENT_LIST_DIR}/private/xdgiconproxyengine.cpp
     ${CMAKE_CURRENT_LIST_DIR}/private/dbuiltiniconengine_p.h
     ${CMAKE_CURRENT_LIST_DIR}/private/dbuiltiniconengine.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/private/dimagehandlerlibs_p.h
   )
 else()
     add_definitions(-DDTK_DISABLE_LIBXDG)
     set(UTIL_PRIVATE
       ${CMAKE_CURRENT_LIST_DIR}/private/dbuiltiniconengine_p.h
       ${CMAKE_CURRENT_LIST_DIR}/private/dbuiltiniconengine.cpp
+      ${CMAKE_CURRENT_LIST_DIR}/private/dimagehandlerlibs_p.h
     )
 endif()
 
@@ -29,3 +31,8 @@ set(util_SRC
   ${UTIL_PRIVATE}
   ${CMAKE_CURRENT_LIST_DIR}/icons/deepin-theme-plugin-icons.qrc
 )
+
+# include custom Modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+find_package(freeimage REQUIRED)
+include_directories(${freeimage_INCLUDE_DIR})
