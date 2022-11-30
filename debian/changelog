@@ -1,3 +1,9 @@
+dtkgui (5.6.2.2) unstable; urgency=medium
+
+  * Release 5.6.2.2
+
+ -- Deepin Packages Builder <packages@deepin.com>  Wed, 30 Nov 2022 10:32:07 +0800
+
 dtkgui (5.6.1.1) unstable; urgency=medium
 
   * snipe release 5.6.1.1
