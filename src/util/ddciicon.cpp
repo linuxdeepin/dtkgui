@@ -755,7 +755,8 @@ DDciIcon DDciIcon::fromTheme(const QString &name)
     DDciIcon icon;
 
     QString iconName = name;
-    if (!DSGApplication::id().isEmpty()) {
+    // FIX uengine appname is empty, will cause qt_assert
+    if (!QCoreApplication::applicationName().isEmpty() &&  !DSGApplication::id().isEmpty()) {
         // allow the icon theme to override the icon for a given application
         iconName.prepend(DSGApplication::id() + "/");
     }
