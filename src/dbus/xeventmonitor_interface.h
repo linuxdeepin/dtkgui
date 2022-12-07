@@ -14,11 +14,11 @@
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
 
-typedef QList<QRect> AreaList;
 class ComDeepinApiXEventMonitorInterface: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:
+    typedef QList<QRect> AreaList;
     ComDeepinApiXEventMonitorInterface(const QString &service, const QString &path, const char *interface, QObject *parent = nullptr,
                                        const QDBusConnection &con = QDBusConnection::sessionBus());
 
