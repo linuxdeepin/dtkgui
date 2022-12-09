@@ -31,6 +31,12 @@ set (DOXYGEN_PREDEFINED
 set (DOXYGEN_MACRO_EXPANSION "YES")
 set (DOXYGEN_EXPAND_ONLY_PREDEF "YES")
 
+# Exclude private classes.
+set (DOXYGEN_EXCLUDE_PATTERNS 
+    ${PROJECT_SOURCE_DIR}/src/util/private/dimagehandlerlibs_p.h
+    ${PROJECT_SOURCE_DIR}/src/util/dimagehandlerlibs.cpp
+    )
+
 doxygen_add_docs (doxygen
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/include
