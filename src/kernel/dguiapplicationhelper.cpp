@@ -1374,13 +1374,17 @@ void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
 bool DGuiApplicationHelper::hasUserManual() const
 {
 #ifdef Q_OS_LINUX
+    static qint8 hasManual = -1;
+    if (hasManual >= 0)
+        return hasManual;
+
     auto loadManualFromLocalFile = [=]() -> bool {
         const QString appName = qApp->applicationName();
         bool dmanBinaryExists = false;
         bool dmanDataExists = false;
         const QString sysPath = qgetenv("PATH");
         auto binPath = sysPath.split(":");
-        for (const auto path : binPath) {
+        for (const auto &path : binPath) {
             if (QFile::exists(QStringList {path, "dman"}.join(QDir::separator()))) {
                 dmanBinaryExists = true;
                 break;
@@ -1390,7 +1394,7 @@ bool DGuiApplicationHelper::hasUserManual() const
         // search all subdirectories
         const QString xdgDataPath = qgetenv("XDG_DATA_DIRS");
         auto dataPath = xdgDataPath.split(":");
-        for (const auto path : dataPath) {
+        for (const auto &path : dataPath) {
             QString strManualPath = QStringList {path, "deepin-manual"}.join(QDir::separator());
 
             QDirIterator it(strManualPath, QDirIterator::Subdirectories);
@@ -1410,21 +1414,31 @@ bool DGuiApplicationHelper::hasUserManual() const
     };
 
     QDBusConnection conn = QDBusConnection::sessionBus();
-    if (conn.interface()->isServiceRegistered("com.deepin.Manual.Search")) {
+    if (conn.isConnected()) {
         QDBusInterface manualSearch("com.deepin.Manual.Search",
                                     "/com/deepin/Manual/Search",
                                     "com.deepin.Manual.Search");
         if (manualSearch.isValid()) {
-            QDBusReply<bool> reply = manualSearch.call("ManualExists", qApp->applicationName());
-            return reply.value();
+            QDBusPendingCall call = manualSearch.asyncCall("ManualExists", qApp->applicationName());
+            QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, const_cast<DGuiApplicationHelper *>(this));
+            QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher *pWatcher) {
+                QDBusPendingReply<bool> reply = *pWatcher;
+                if (reply.isError()) {
+                    qWarning() << reply.error();
+                } else {
+                    hasManual = reply.value();
+                }
+
+                pWatcher->deleteLater();
+            });
         } else {
-            return loadManualFromLocalFile();
+            return hasManual = loadManualFromLocalFile();
         }
     } else {
         static LoadManualServiceWorker *manualWorker = new LoadManualServiceWorker;
         manualWorker->checkManualServiceWakeUp();
 
-        return loadManualFromLocalFile();
+        return hasManual = loadManualFromLocalFile();
     }
 #else
     return false;
@@ -1566,12 +1580,19 @@ void DGuiApplicationHelper::handleHelpAction()
     QDBusInterface manual("com.deepin.Manual.Open",
                           "/com/deepin/Manual/Open",
                           "com.deepin.Manual.Open");
-    QDBusReply<void> reply = manual.call("ShowManual", appid);
-    if (reply.isValid())  {
-        return;
-    }
-    // fallback to old interface
-    QProcess::startDetached("dman", QStringList() << appid);
+    QDBusPendingCall call = manual.asyncCall("ShowManual", appid);
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [appid](QDBusPendingCallWatcher *pWatcher) {
+        QDBusPendingReply<bool> reply = *pWatcher;
+        if (reply.isError()) {
+            // fallback to old interface
+            qWarning() << reply.error() << "fallback to dman appid";
+            QProcess::startDetached("dman", QStringList() << appid);
+        }
+
+        pWatcher->deleteLater();
+    });
+
 #else
     qWarning() << "not support dman now";
 #endif
