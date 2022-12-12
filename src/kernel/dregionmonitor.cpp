@@ -133,9 +133,9 @@ void DRegionMonitor::setCoordinateType(DRegionMonitor::CoordinateType type)
 DRegionMonitorPrivate::DRegionMonitorPrivate(DRegionMonitor *q)
     : DObjectPrivate(q)
 {
-    if (QDBusConnection::sessionBus().interface()->isServiceRegistered(QLatin1String("org.deepin.api.XEventMonitor1"))) {
-        eventInter = new XEventMonitor("org.deepin.api.XEventMonitor1", "/org/deepin/api/XEventMonitor1",
-                                       "org.deepin.api.XEventMonitor1", q);
+    if (QDBusConnection::sessionBus().interface()->isServiceRegistered(QLatin1String("org.deepin.dde.XEventMonitor1"))) {
+        eventInter = new XEventMonitor("org.deepin.dde.XEventMonitor1", "/org/deepin/dde/XEventMonitor1",
+                                       "org.deepin.dde.XEventMonitor1", q);
     } else {
         eventInter = new XEventMonitor("com.deepin.api.XEventMonitor", "/com/deepin/api/XEventMonitor",
                                        "com.deepin.api.XEventMonitor", q);
