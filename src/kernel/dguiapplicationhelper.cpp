@@ -36,6 +36,7 @@
 #include <QLockFile>
 #include <QDirIterator>
 #include <QDesktopServices>
+#include <DStandardPaths>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
@@ -1367,6 +1368,43 @@ void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
     DGuiApplicationHelperPrivate::waitTime = interval;
 }
 
+static bool hasLocalManualFile()
+{
+    DCORE_USE_NAMESPACE
+    const QString appName = qApp->applicationName();
+    bool dmanBinaryExists = false;
+    const QString sysPath = qgetenv("PATH");
+    auto binPath = sysPath.split(":");
+    for (const auto &path : binPath) {
+        if (QFile::exists(QStringList {path, "dman"}.join(QDir::separator()))) {
+            dmanBinaryExists = true;
+            break;
+        }
+    }
+
+    if (!dmanBinaryExists)
+        return false;
+
+    // search all subdirectories
+    const QString xdgDataPath = qgetenv("XDG_DATA_DIRS");
+    auto dataPath = xdgDataPath.split(":");
+    // /usr/share /usr/loacal/share ...
+    const auto &dataDirs = DStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+    dataPath.append(dataDirs);
+    for (const auto &path : dataPath) {
+        QString strManualPath = QStringList {path, "deepin-manual"}.join(QDir::separator());
+
+        QDirIterator it(strManualPath, QDir::AllDirs | QDir::NoDotAndDotDot,QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            it.next();
+            if (it.fileName().contains(appName, Qt::CaseInsensitive))
+                return true;
+        }
+    }
+
+    return false;
+}
+
 /*!
  * \brief Determine whether it's a user manual for this application.
  * \return
@@ -1378,68 +1416,35 @@ bool DGuiApplicationHelper::hasUserManual() const
     if (hasManual >= 0)
         return hasManual;
 
-    auto loadManualFromLocalFile = [=]() -> bool {
-        const QString appName = qApp->applicationName();
-        bool dmanBinaryExists = false;
-        bool dmanDataExists = false;
-        const QString sysPath = qgetenv("PATH");
-        auto binPath = sysPath.split(":");
-        for (const auto &path : binPath) {
-            if (QFile::exists(QStringList {path, "dman"}.join(QDir::separator()))) {
-                dmanBinaryExists = true;
-                break;
-            }
-        }
-
-        // search all subdirectories
-        const QString xdgDataPath = qgetenv("XDG_DATA_DIRS");
-        auto dataPath = xdgDataPath.split(":");
-        for (const auto &path : dataPath) {
-            QString strManualPath = QStringList {path, "deepin-manual"}.join(QDir::separator());
-
-            QDirIterator it(strManualPath, QDirIterator::Subdirectories);
-            while (it.hasNext()) {
-                QFileInfo file(it.next());
-                if (file.isDir() && file.fileName().contains(appName, Qt::CaseInsensitive)) {
-                    dmanDataExists = true;
-                    break;
-                }
-
-                if (file.isDir())
-                    continue;
-            }
-        }
-
-        return  dmanBinaryExists && dmanDataExists;
-    };
-
     QDBusConnection conn = QDBusConnection::sessionBus();
-    if (conn.isConnected()) {
-        QDBusInterface manualSearch("com.deepin.Manual.Search",
-                                    "/com/deepin/Manual/Search",
-                                    "com.deepin.Manual.Search");
-        if (manualSearch.isValid()) {
-            QDBusPendingCall call = manualSearch.asyncCall("ManualExists", qApp->applicationName());
-            QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, const_cast<DGuiApplicationHelper *>(this));
-            QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher *pWatcher) {
-                QDBusPendingReply<bool> reply = *pWatcher;
-                if (reply.isError()) {
-                    qWarning() << reply.error();
-                } else {
-                    hasManual = reply.value();
-                }
-
-                pWatcher->deleteLater();
-            });
-        } else {
-            return hasManual = loadManualFromLocalFile();
-        }
-    } else {
+    if (!conn.isConnected()) {
         static LoadManualServiceWorker *manualWorker = new LoadManualServiceWorker;
         manualWorker->checkManualServiceWakeUp();
 
-        return hasManual = loadManualFromLocalFile();
+        // 可能存在 dbus 服务有问题，但是文件存在，这时不更新缓存
+        return /*hasManual = */hasLocalManualFile();
     }
+
+    QDBusInterface manualSearch("com.deepin.Manual.Search",
+                                "/com/deepin/Manual/Search",
+                                "com.deepin.Manual.Search");
+    if (!manualSearch.isValid())
+        return hasManual = hasLocalManualFile();
+
+    QDBusPendingCall call = manualSearch.asyncCall("ManualExists", qApp->applicationName());
+    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, const_cast<DGuiApplicationHelper *>(this));
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher *pWatcher) {
+        QDBusPendingReply<bool> reply = *pWatcher;
+        if (reply.isError()) {
+            qWarning() << reply.error();
+        } else {
+            hasManual = reply.value();
+        }
+
+        pWatcher->deleteLater();
+    });
+
+    return hasManual >=0 ? hasManual : false;
 #else
     return false;
 #endif
