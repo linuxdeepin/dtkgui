@@ -41,6 +41,12 @@ public:
     };
     Q_ENUM(SingleScope)
 
+    enum SizeMode {
+        NormalMode,
+        CompactMode
+    };
+    Q_ENUM(SizeMode)
+
     enum Attribute {
         UseInactiveColorGroup    = 1 << 0,
         ColorCompositing         = 1 << 1,
@@ -109,12 +115,21 @@ public Q_SLOTS:
     void handleHelpAction();
     static void openUrl(const QString &url);
 
+    DGuiApplicationHelper::SizeMode sizeMode() const;
+    void setSizeMode(const DGuiApplicationHelper::SizeMode mode);
+    void resetSizeMode();
+    static inline bool isCompactMode()
+    {
+        return instance()->sizeMode() == DGuiApplicationHelper::CompactMode;
+    }
+
 Q_SIGNALS:
     void themeTypeChanged(ColorType themeType);
     void paletteTypeChanged(ColorType paletteType);
     void newProcessInstance(qint64 pid, const QStringList &arguments);
     void fontChanged(const QFont &font);
     void applicationPaletteChanged();
+    void sizeModeChanged(DGuiApplicationHelper::SizeMode sizeMode);
 
 protected:
     explicit DGuiApplicationHelper();
@@ -122,6 +137,7 @@ protected:
 
 private:
     D_PRIVATE_SLOT(void _q_initApplicationTheme(bool))
+    D_PRIVATE_SLOT(void _q_sizeModeChanged(int))
     friend class _DGuiApplicationHelper;
 };
 

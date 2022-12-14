@@ -181,9 +181,11 @@ Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
 
 int DGuiApplicationHelperPrivate::waitTime = 3000;
 DGuiApplicationHelper::Attributes DGuiApplicationHelperPrivate::attributes = DGuiApplicationHelper::UseInactiveColorGroup;
+static const DGuiApplicationHelper::SizeMode InvalidSizeMode = static_cast<DGuiApplicationHelper::SizeMode>(-1);
 
 DGuiApplicationHelperPrivate::DGuiApplicationHelperPrivate(DGuiApplicationHelper *qq)
     : DObjectPrivate(qq)
+    , explicitSizeMode(InvalidSizeMode)
 {
 
 }
@@ -239,6 +241,9 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
         // 此时appTheme等价于systemTheme, 可以直接信号链接
         _q_initApplicationTheme();
     }
+
+    systemSizeMode = static_cast<DGuiApplicationHelper::SizeMode>(systemTheme->sizeMode());
+    q->connect(systemTheme, SIGNAL(sizeModeChanged(int)), q, SLOT(_q_sizeModeChanged(int)));
 }
 
 void DGuiApplicationHelperPrivate::staticInitApplication()
@@ -326,6 +331,40 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChanged()
 bool DGuiApplicationHelperPrivate::isCustomPalette() const
 {
     return appPalette || paletteType != DGuiApplicationHelper::UnknownType;
+}
+
+void DGuiApplicationHelperPrivate::_q_sizeModeChanged(int mode)
+{
+    D_Q(DGuiApplicationHelper);
+    qCInfo(dgAppHelper) << "Receiving that system size mode is set to [" << static_cast<DGuiApplicationHelper::SizeMode>(mode)
+                        << "], and old system size mode is [" << systemSizeMode << "]";
+
+    const auto oldSizeMode = fetchSizeMode();
+    systemSizeMode = static_cast<DGuiApplicationHelper::SizeMode>(mode);
+    const auto currentSizeMode = fetchSizeMode();
+    if (oldSizeMode != currentSizeMode)
+        Q_EMIT q->sizeModeChanged(currentSizeMode);
+}
+
+DGuiApplicationHelper::SizeMode DGuiApplicationHelperPrivate::fetchSizeMode(bool *isSystemSizeMode) const
+{
+    if (isSystemSizeMode)
+        *isSystemSizeMode = false;
+    // `setSizeMode` > `D_DTK_SIZEMODE` > `systemSizeMode`
+    if (explicitSizeMode != InvalidSizeMode)
+        return explicitSizeMode;
+
+    static const QString envSizeMode(qEnvironmentVariable("D_DTK_SIZEMODE"));
+    if (!envSizeMode.isEmpty()) {
+        bool ok = false;
+        const auto mode = envSizeMode.toInt(&ok);
+        if (ok)
+            return static_cast<DGuiApplicationHelper::SizeMode>(mode);
+    }
+
+    if (isSystemSizeMode)
+        *isSystemSizeMode = true;
+    return systemSizeMode;
 }
 
 /*!
@@ -1482,6 +1521,32 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
         qWarning() << fileName << "can not find qm files" << missingQmfiles;
     }
     return false;
+}
+
+DGuiApplicationHelper::SizeMode DGuiApplicationHelper::sizeMode() const
+{
+    D_DC(DGuiApplicationHelper);
+    return d->fetchSizeMode();
+}
+
+void DGuiApplicationHelper::setSizeMode(const DGuiApplicationHelper::SizeMode mode)
+{
+    D_D(DGuiApplicationHelper);
+    const auto old = d->fetchSizeMode();
+    d->explicitSizeMode = mode;
+    const auto current = d->fetchSizeMode();
+    if (old != current)
+        Q_EMIT sizeModeChanged(current);
+}
+
+void DGuiApplicationHelper::resetSizeMode()
+{
+    D_D(DGuiApplicationHelper);
+    const auto old = d->fetchSizeMode();
+    d->explicitSizeMode = InvalidSizeMode;
+    const auto current = d->fetchSizeMode();
+    if (current != old)
+        Q_EMIT sizeModeChanged(current);
 }
 
 void DGuiApplicationHelper::setAttribute(DGuiApplicationHelper::Attribute attribute, bool enable)

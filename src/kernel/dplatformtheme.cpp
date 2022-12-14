@@ -618,6 +618,17 @@ int DPlatformTheme::dotsPerInch(const QString &screenName) const
     return ok ? dpi : -1;
 }
 
+/*!
+  \property DPlatformTheme::sizeMode
+  \brief This property holds the sizeMode of the system's SizeMode.
+ */
+int DPlatformTheme::sizeMode() const
+{
+    D_DC(DPlatformTheme);
+    QVariant value = d->theme->getSetting(QByteArrayLiteral("DTK/SizeMode"));
+    return value.toInt();
+}
+
 void DPlatformTheme::setCursorBlinkTime(int cursorBlinkTime)
 {
     D_D(DPlatformTheme);
