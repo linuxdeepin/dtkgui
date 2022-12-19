@@ -102,6 +102,26 @@ bool setNoTitlebar(quint32 WId, bool on)
     return true;
 }
 
+QObject *createNativeSettingsFor(QWindow *window)
+{
+    // The platform function in dxcb plugin:
+    // https://github.com/linuxdeepin/qt5platform-plugins/blob/master/src/dnativesettings.h
+    static QFunctionPointer build_function = qApp->platformFunction("_d_buildNativeSettings");
+
+    if (!build_function) {
+        return nullptr;
+    }
+
+    QObject *obj = new QObject(window);
+    bool ok = reinterpret_cast<bool(*)(QObject*, quint32)>(build_function)(obj, window->winId());
+    if (!ok) {
+        delete obj;
+        return nullptr;
+    }
+
+    return obj;
+}
+
 class Window : public QWindow
 {
 public:
@@ -121,11 +141,23 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     Window window;
+    window.resize(200, 200);
 
     if (setNoTitlebar(window.winId(), true)) {
         // If enabled no titlebar mode, the window is no min/max/close buttons, you need to implement it by Qt widgets.
         // Like as https://github.com/linuxdeepin/dtkwidget/blob/master/src/widgets/dtitlebar.cpp
         window.handleMoveing = true;
+
+        auto nativeSettings = createNativeSettingsFor(&window);
+        if (nativeSettings) {
+            nativeSettings->setProperty("DTK/WindowRadius", "100,100");
+            nativeSettings->setProperty("borderWidth", 2);
+            nativeSettings->setProperty("borderColor", QColor(Qt::red));
+            nativeSettings->setProperty("shadowOffset", "30,30");
+            nativeSettings->setProperty("shadowRadius", 30);
+            nativeSettings->setProperty("shadowColor", QColor(Qt::blue));
+            // See more properties in DPlatformTheme
+        }
     }
 
     window.show();
