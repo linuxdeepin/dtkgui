@@ -34,7 +34,7 @@ Copyright: None
 License: LGPL-3.0-or-later
 
 # README & doc
-Files: README.md README.zh_CN.md
+Files: *README.md *README.zh_CN.md
 Copyright: None
 License:  CC-BY-4.0 
 
