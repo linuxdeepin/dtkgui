@@ -1,0 +1,135 @@
+/*!
+@~chinese
+@file include/util/ddciicon.h
+@ingroup dci
+@brief DCI图标类
+
+@class Dtk::Gui::DDciIcon ddciicon.h
+@details 如果需要详细dci相关介绍以及规范文档, 可以参见[dci文件图标规范](https://github.com/linuxdeepin/deepin-specifications/blob/master/unstable/%E5%9B%BE%E6%A0%87%E6%96%87%E4%BB%B6%E8%A7%84%E8%8C%83.md)
+
+@enum Dtk::Gui::DDciIcon::Mode
+@brief DCI图标模式
+@details
+    | 键        | 值 |
+    |:--------:|:---:|
+    | Normal   | 0 |
+    | Disabled | 1 |
+    | Hover    | 2 |
+    | Pressed  | 3 |
+
+
+@enum Dtk::Gui::DDciIcon::Theme
+@brief DCI图标主题
+@details
+    | 键     | 值 |
+    |:-----:|:---:|
+    | Light | 0 |
+    | Dark  | 1 |
+
+@enum Dtk::Gui::DDciIcon::IconAttibute
+@brief DCI图标属性
+@details
+    | 键     | 值 |
+    |:-----:|:---:|
+    | HasPalette | 0x001 |
+    这个属性为了获取dci图标的图层是否包含调色板颜色调整, 比如某一个图层的图片的需要用高亮色的填充就是 HasPalette, 这个高亮色还可以调整亮度饱和度rgba等参数
+
+@enum Dtk::Gui::DDciIcon::IconMatchedFlag
+@brief DCI图标匹配参数
+@details
+    | 键     | 值 |
+    |:-----:|:---:|
+    | None | 0 |
+    | DontFallbackMode | 0x01 |
+
+@fn Dtk::Gui::DDciIcon::DDciIcon()
+@brief 构造函数
+
+@fn Dtk::Gui::DDciIcon::DDciIcon(const DCORE_NAMESPACE::DDciFile *dciFile)
+@brief 指定DCI文件的构造函数
+
+@fn Dtk::Gui::DDciIcon(const QString &fileName)
+@brief 指定DCI文件名的构造函数
+
+@fn Dtk::Gui::DDciIcon::DDciIcon(const QByteArray &data)
+@brief 指定DCI文件数据的构造函数
+
+@fn Dtk::Gui::DDciIcon::DDciIcon(const DDciIcon &other)
+@brief 拷贝构造函数,重载赋值运算符
+
+@fn Dtk::Gui::DDciIcon::swap(DDciIcon &other)
+@brief 交换两个DDciIcon对象
+
+@fn bool Dtk::Gui::DDciIcon::isNull() const
+@brief 判断DCI图标是否为空
+
+@fn DDciIconMatchResult Dtk::Gui::DDciIcon::matchIcon(int size, Theme theme, Mode mode, IconMatchedFlags flags = None) const
+@brief 获取DCI图标匹配元信息, 元信息仅能作为传入参数使用
+@param[in] size 图标大小
+@param[in] theme 图标主题
+@param[in] mode 图标模式
+@param[in] flags 图标匹配标志
+
+@fn int Dtk::Gui::DDciIcon::actualSize(DDciIconMatchResult result) const
+@brief 获取DCI图标实际大小
+@param[in] result DCI图标匹配结果
+
+@fn int Dtk::Gui::DDciIcon::actualSize(int size, Theme theme, Mode mode =Normal) const
+@brief 获取DCI图标实际大小
+@details 该函数会根据传入的参数获取DCI图标匹配结果,然后调用actualSize(DDciIconMatchResult result)函数获取DCI图标实际大小
+@sa DDciIcon::actualSize(DDciIconMatchResult result)
+
+@fn QList<int> Dtk::Gui::DDciIcon::availableSizes(Theme theme, Mode mode=Normal) const
+@brief 获取DCI图标可用大小列表
+@param[in] theme 图标主题
+@param[in] mode 图标模式，默认为Normal
+
+@fn bool Dtk::Gui::DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttibute attr)
+@brief 判断DCI图标是否支持指定属性
+@param[in] result DCI图标匹配结果
+@param[in] attr 图标属性
+
+@fn QPixmap Dtk::Gui::DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, Theme theme, Mode mode = Normal,const DDciIconPalette &palette = DDciIconPalette()) const
+@brief 获取DCI图标的QPixmap
+@param[in] devicePixelRatio 设备像素比
+@param[in] iconSize 图标大小
+@param[in] theme 图标主题
+@param[in] mode 图标模式, 默认为Normal
+@param[in] palette 图标调色板,默认为无（空）调色板
+
+@fn QPixmap Dtk::Gui::DDciIcon::pixmap(qreal devicePixelRatio, int iconSize, DDciIconMatchResult result, const DDciIconPalette &palette = DDciIconPalette()) const
+@brief 获取DCI图标的QPixmap
+@param[in] devicePixelRatio 设备像素比
+@param[in] iconSize 图标大小
+@param[in] result DCI图标匹配结果
+@param[in] palette 图标调色板, 默认为无（空）调色板
+
+@fn void Dtk::Gui::DDciIcon::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Theme theme, Mode mode = Normal, Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const
+@brief 绘制DCI图标
+@param[in] painter QPainter对象
+@param[in] rect 绘制区域
+@param[in] devicePixelRatio 设备像素比
+@param[in] theme 图标主题
+@param[in] mode 图标模式, 默认为Normal
+@param[in] alignment 对齐方式, 默认为Qt::AlignCenter
+@param[in] palette 图标调色板, 默认为无（空）调色板
+
+@fn void Dtk::Gui::DDciIcon::paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, DDciIconMatchResult result, Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const
+@brief 绘制DCI图标
+@param[in] painter QPainter对象
+@param[in] rect 绘制区域
+@param[in] devicePixelRatio 设备像素比
+@param[in] result DCI图标匹配结果
+@param[in] alignment 对齐方式, 默认为Qt::AlignCenter
+@param[in] palette 图标调色板, 默认为无（空）调色板
+
+@fn static DDciIcon Dtk::Gui::DDciIcon::fromTheme(const QString &name)
+@brief 从dci图标主题(包括内置dci图标资源)中获取图标名字为name的图标
+@param[in] name DCI图标名称
+
+@fn static DDciIcon Dtk::Gui::DDciIcon::fromTheme (const QString &name, const DDciIcon &fallback)
+@brief 从dci图标主题(包括内置dci图标资源)中获取图标名字为name的图标
+@param[in] name DCI图标名称
+@param[in] fallback 当图标名为 name 的图标找不到时, fallback 到 fallback 的这个dci图标
+
+*/
