@@ -2,8 +2,8 @@ Source: dtkgui
 Section: libdevel
 Priority: optional
 Maintainer: Deepin Packages Builder <packages@deepin.com>
-Build-Depends: debhelper (>= 9), pkg-config, 
- qtbase5-private-dev, qtbase5-dev-tools, doxygen, qttools5-dev-tools,
+Build-Depends: debhelper-compat (= 12), pkg-config, 
+ qtbase5-private-dev, qtbase5-dev-tools, doxygen, graphviz, qttools5-dev-tools,
  libdtkcore-dev, librsvg2-dev, libfreeimage-dev, libgtest-dev, libgmock-dev,
  libqt5xdg-dev, libqt5xdgiconloader-dev, cmake
 Standards-Version: 3.9.8
@@ -37,6 +37,7 @@ Description: Deepin Tool Kit Gui Devel library
 
 Package: libdtkgui-doc
 Architecture: any
+Depends: ${misc:Depends}
 Description: Deepin Tool Kit Gui (Document)
  DtkGui is base devel library of Deepin Qt/C++ applications.
  .

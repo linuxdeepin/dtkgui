@@ -21,12 +21,12 @@ set (DOXYGEN_TAGFILES "qtcore.tags=qthelp://org.qt-project.qtcore/qtcore/" CACHE
 
 set (DOXYGEN_PREDEFINED
     "D_DECL_DEPRECATED_X(x)="
-    "\"DCORE_BEGIN_NAMESPACE=namespace Dtk { namespace Core {\""
-    "\"DCORE_END_NAMESPACE=}}\""
-    "\"DCORE_USE_NAMESPACE=using namespace Dtk::Core\;\""
-    "\"DGUI_BEGIN_NAMESPACE=namespace Dtk { namespace Gui {\""
-    "\"DGUI_END_NAMESPACE=}}\""
-    "\"DGUI_USE_NAMESPACE=using namespace Dtk::Gui\;\""
+    "DCORE_BEGIN_NAMESPACE=namespace Dtk { namespace Core {"
+    "DCORE_END_NAMESPACE=}}"
+    "DCORE_USE_NAMESPACE=using namespace Dtk::Core\;"
+    "DGUI_BEGIN_NAMESPACE=namespace Dtk { namespace Gui {"
+    "DGUI_END_NAMESPACE=}}"
+    "DGUI_USE_NAMESPACE=using namespace Dtk::Gui\;"
 )
 set (DOXYGEN_MACRO_EXPANSION "YES")
 set (DOXYGEN_EXPAND_ONLY_PREDEF "YES")

@@ -16,19 +16,18 @@ sha512sums=('SKIP')
 
 
 build() {
-  cd $deepin_source_name
-  cmake -GNinja \
-    -DNOTPACKAGE=OFF \
-    -DMKSPECS_INSTALL_DIR=/usr/lib/qt/mkspecs/modules/ \
+    cd $deepin_source_name
+    cmake -GNinja \
+    -DMKSPECS_INSTALL_DIR=lib/qt/mkspecs/modules/ \
     -DBUILD_DOCS=ON \
-    -DQCH_INSTALL_DESTINATION=/usr/share/doc/qt \
-    -DCMAKE_INSTALL_LIBDIR=/usr/lib \
+    -DQCH_INSTALL_DESTINATION=share/doc/qt \
+    -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_BUILD_TYPE=Release
-  ninja
+    ninja
 }
 
 package() {
-  cd $deepin_source_name
-  DESTDIR="$pkgdir" ninja install
+    cd $deepin_source_name
+    DESTDIR="$pkgdir" ninja install
 }
