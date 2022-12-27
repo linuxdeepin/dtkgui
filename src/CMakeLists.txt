@@ -29,6 +29,7 @@ target_link_libraries(${LIB_NAME} PRIVATE
 	Qt5::GuiPrivate
 	Qt5::CorePrivate
 	PkgConfig::librsvg
+	PkgConfig::libraw
 	FreeImage::FreeImage
 )
 

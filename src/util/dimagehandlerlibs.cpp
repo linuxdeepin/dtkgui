@@ -159,7 +159,7 @@ FIBITMAP *DLibFreeImage::readFileToFIBITMAP(const QString &fileName, int flags, 
             fif = FreeImage_GetFIFFromFilename(pc);
         }
     }
-    
+
     if ((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
         FIBITMAP *dib = FreeImage_Load(fif, pc, flags);
         return dib;
@@ -345,4 +345,197 @@ bool DLibFreeImage::rotateImageFile(const QString &fileName, int angle, QString 
     FreeImage_Unload(dib);
     FreeImage_Unload(rotateRes);
     return true;
+}
+
+DLibRaw::DLibRaw()
+{
+    libraw = new QLibrary("libraw");
+    if (!libraw->load()) {
+        delete libraw;
+        libraw = nullptr;
+        return;
+    }
+
+    auto initFunctionError = [this]() {
+        libraw->unload();
+        delete libraw;
+        libraw = nullptr;
+    };
+
+#define INIT_FUNCTION(Name)                                                                                                      \
+    Name = reinterpret_cast<decltype(Name)>(libraw->resolve(#Name));                                                             \
+    if (!Name) {                                                                                                                 \
+        initFunctionError();                                                                                                     \
+        return;                                                                                                                  \
+    }
+
+    INIT_FUNCTION(libraw_strerror);
+    INIT_FUNCTION(libraw_init);
+    INIT_FUNCTION(libraw_open_file);
+    INIT_FUNCTION(libraw_open_buffer);
+    INIT_FUNCTION(libraw_unpack);
+    INIT_FUNCTION(libraw_unpack_thumb);
+    INIT_FUNCTION(libraw_close);
+    INIT_FUNCTION(libraw_dcraw_process);
+    INIT_FUNCTION(libraw_dcraw_make_mem_image);
+    INIT_FUNCTION(libraw_dcraw_make_mem_thumb);
+    INIT_FUNCTION(libraw_dcraw_clear_mem);
+}
+
+DLibRaw::~DLibRaw()
+{
+    if (libraw) {
+        delete libraw;
+    }
+}
+
+bool DLibRaw::isValid()
+{
+    return libraw;
+}
+
+QImage DLibRaw::loadImage(const QString &fileName, QString &errString, QSize requestSize)
+{
+    QImage image;
+    libraw_data_t *rawData = libraw_init(0);
+    if (!rawData) {
+        errString = QStringLiteral("Create new libraw object failed!");
+        return image;
+    }
+
+    int ret = libraw_open_file(rawData, fileName.toUtf8().data());
+    if (LIBRAW_SUCCESS == ret) {
+        ret = readImage(rawData, image, requestSize);
+    }
+    libraw_close(rawData);
+
+    if (LIBRAW_SUCCESS != ret) {
+        errString = errorString(ret);
+    }
+    return image;
+}
+
+QImage DLibRaw::loadImage(QByteArray &data, QString &errString, QSize requestSize)
+{
+    QImage image;
+    libraw_data_t *rawData = libraw_init(0);
+    if (!rawData) {
+        errString = QStringLiteral("Create new libraw object failed!");
+        return image;
+    }
+
+    int ret = libraw_open_buffer(rawData, reinterpret_cast<void *>(data.data()), data.size());
+    if (LIBRAW_SUCCESS == ret) {
+        ret = readImage(rawData, image, requestSize);
+    }
+    libraw_close(rawData);
+
+    if (LIBRAW_SUCCESS != ret) {
+        errString = errorString(ret);
+    }
+    return image;
+}
+
+int DLibRaw::readImage(libraw_data_t *rawData, QImage &image, QSize requestSize)
+{
+    if (!rawData) {
+        return LIBRAW_INPUT_CLOSED;
+    }
+
+    int ret = LIBRAW_UNSPECIFIED_ERROR;
+    int errCode = LIBRAW_SUCCESS;
+    libraw_processed_image_t *output = nullptr;
+    // Try to read thumbnail image if possible.
+    if (!requestSize.isEmpty() &&
+        (requestSize.width() < rawData->thumbnail.twidth || requestSize.height() < rawData->thumbnail.theight)) {
+        ret = libraw_unpack_thumb(rawData);
+        if (LIBRAW_SUCCESS == ret) {
+            output = libraw_dcraw_make_mem_thumb(rawData, &errCode);
+            if (LIBRAW_SUCCESS != errCode && output) {
+                libraw_dcraw_clear_mem(output);
+            }
+        }
+    }
+
+    // Read default image if no thumbnail.
+    if (!output) {
+        ret = libraw_unpack(rawData);
+        if (LIBRAW_SUCCESS != ret) {
+            return ret;
+        }
+        ret = libraw_dcraw_process(rawData);
+        if (LIBRAW_SUCCESS != ret) {
+            return ret;
+        }
+
+        output = libraw_dcraw_make_mem_image(rawData, &errCode);
+        if (LIBRAW_SUCCESS != errCode) {
+            if (output) {
+                libraw_dcraw_clear_mem(output);
+            }
+
+            // Can't read data, return.
+            return errCode;
+        }
+    }
+
+    if (LIBRAW_IMAGE_JPEG == output->type) {
+        image.loadFromData(output->data, static_cast<int>(output->data_size), "JPEG");
+        if (rawData->sizes.flip) {
+            QTransform rotation;
+            int angle = 0;
+
+            // Image orientation (0 if does not require rotation; 3 if requires 180-deg rotation;
+            // 5 if 90 deg counterclockwise, 6 if 90 deg clockwise).
+            switch (rawData->sizes.flip) {
+                case 3:
+                    angle = 180;
+                    break;
+                case 5:
+                    angle = -90;
+                    break;
+                case 6:
+                    angle = 90;
+                    break;
+                default:
+                    break;
+            }
+
+            if (angle != 0) {
+                rotation.rotate(angle);
+                image = image.transformed(rotation);
+            }
+        }
+
+    } else {
+        int numPixels = output->width * output->height;
+        int colorSize = output->bits / 8;
+        int pixelSize = output->colors * colorSize;
+        uchar *pixels = new uchar[numPixels * 4];
+        uchar *data = output->data;
+
+        for (int i = 0; i < numPixels; i++, data += pixelSize) {
+            if (output->colors == 3) {
+                pixels[i * 4] = data[2 * colorSize];
+                pixels[i * 4 + 1] = data[1 * colorSize];
+                pixels[i * 4 + 2] = data[0];
+            } else {
+                pixels[i * 4] = data[0];
+                pixels[i * 4 + 1] = data[0];
+                pixels[i * 4 + 2] = data[0];
+            }
+        }
+
+        // QImage::Format_RGB32 will cause window transparent
+        image = QImage(pixels, output->width, output->height, QImage::Format_RGB32).convertToFormat(QImage::Format_ARGB32);
+        delete[] pixels;
+    }
+
+    libraw_dcraw_clear_mem(output);
+    return LIBRAW_SUCCESS;
+}
+
+QString DLibRaw::errorString(int errorCode)
+{
+    return QString(libraw_strerror(errorCode));
 }

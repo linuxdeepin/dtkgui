@@ -27,6 +27,7 @@ public:
 
     QImage readImage();
     QImage thumbnail(const QSize &size, Qt::AspectRatioMode mode);
+    QString imageFormat() const;
     QSize imageSize();
     QHash<QString, QString> findAllMetaData();
     void clearCache();
@@ -52,7 +53,7 @@ public:
     static QImage antiColorFilter(const QImage &img);
     static QImage metalColorFilter(const QImage &img);
 
-    static QImage bilateralFilter(const QImage &img, double spatialDecay, double photometricStandardDeviation);
+    static QImage bilateralFilter(const QImage &img, double spatialDecay = 0.02, double photometricStandardDeviation = 10);
     static QImage contourExtraction(const QImage &img);
     static QImage binaryzation(const QImage &img);
     static QImage grayScale(const QImage &img);
