@@ -1,17 +1,4 @@
-set(LIB_NAME dtkgui)
-find_package(DtkCore 5.6 REQUIRED)
-find_package(PkgConfig REQUIRED)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
-
-find_package(Qt5 REQUIRED COMPONENTS Gui)
-find_package(Qt5 REQUIRED COMPONENTS DBus)
-find_package(Qt5 REQUIRED COMPONENTS Network)
+add_library(${LIB_NAME} SHARED)
 
 include(dbus/dbus.cmake)
 include(filedrag/dfiledrag.cmake)
@@ -19,66 +6,61 @@ include(kernel/kernel.cmake)
 include(private/private.cmake)
 include(util/util.cmake)
 
-add_library(${LIB_NAME} SHARED 
-  ${dbus_SRC}
-  ${filedrag_SRC}
-  ${kernel_SRC}
-  ${util_SRC}
-  ${private_SRC}
+target_sources(${LIB_NAME} PRIVATE
+	${dbus_SRC}
+	${filedrag_SRC}
+	${kernel_SRC}
+	${util_SRC}
+	${private_SRC}
 )
+
+target_include_directories(${LIB_NAME} PUBLIC
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/util>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/global>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/kernel>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/filedrag>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/dbus>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/private>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/util/private>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/DtkGui>
+)
+
+target_link_libraries(${LIB_NAME} PRIVATE
+	Qt5::GuiPrivate
+	Qt5::CorePrivate
+	PkgConfig::librsvg
+	FreeImage::FreeImage
+)
+
+target_link_libraries(${LIB_NAME} PUBLIC
+	Qt5::Gui
+	Qt5::DBus
+	Qt5::Network
+	Dtk::Core
+)
+
 if(NOT DTK_DISABLE_LIBXDG)
-  target_link_libraries(
-    ${LIB_NAME} PRIVATE 
-    Qt5::Gui 
-    Qt5::DBus 
-    Qt5::Network
-    Qt5XdgIconLoader
-    ${librsvg_LIBRARIES}
-    ${DtkCore_LIBRARIES}
-  )
-  
-  target_include_directories(${LIB_NAME} PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}/../include/util/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/DtkGui/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/global/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/kernel/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/filedrag/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/
-    ${CMAKE_CURRENT_LIST_DIR}/private/
-    ${librsvg_INCLUDE_DIRS}
-    ${Qt5Core_PRIVATE_INCLUDE_DIRS}
-    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-    ${DtkCore_INCLUDE_DIRS}
-  )
-else()
-  target_link_libraries(
-    ${LIB_NAME} PRIVATE 
-    Qt5::Gui 
-    Qt5::DBus 
-    Qt5::Network
-    ${librsvg_LIBRARIES}
-    ${DtkCore_LIBRARIES}
-  )
-  
-  target_include_directories(${LIB_NAME} PUBLIC
-    ${CMAKE_CURRENT_LIST_DIR}/../include/util/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/DtkGui/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/global/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/kernel/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/filedrag/ 
-    ${CMAKE_CURRENT_LIST_DIR}/../include/
-    ${CMAKE_CURRENT_LIST_DIR}/private/
-    ${librsvg_INCLUDE_DIRS}
-    ${Qt5Core_PRIVATE_INCLUDE_DIRS}
-    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-    ${DtkCore_INCLUDE_DIRS}
-  )
+	target_link_libraries(${LIB_NAME} PRIVATE
+		Qt5XdgIconLoader
+	)
 endif()
+
 set_target_properties(${LIB_NAME} PROPERTIES
-  VERSION ${CMAKE_PROJECT_VERSION}
-  SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+	VERSION ${CMAKE_PROJECT_VERSION}
+	SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+	EXPORT_NAME Gui
 )
-install(TARGETS ${LIB_NAME} DESTINATION "${LIBRARY_INSTALL_DIR}")
+
+target_include_directories(${LIB_NAME} INTERFACE
+	$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
+)
+
+target_link_directories(${LIB_NAME} INTERFACE
+	$<INSTALL_INTERFACE:${LIBRARY_INSTALL_DIR}>
+)
+
+install(TARGETS ${LIB_NAME} EXPORT DtkGuiTargets DESTINATION "${LIBRARY_INSTALL_DIR}")
+install(EXPORT DtkGuiTargets NAMESPACE Dtk:: FILE DtkGuiTargets.cmake DESTINATION "${CONFIG_INSTALL_DIR}")
 install(DIRECTORY ../include/util/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/DtkGui/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/global/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")

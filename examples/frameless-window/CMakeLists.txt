@@ -1,21 +1,15 @@
-set(CMAKE_AUTOMOC ON)
-find_package(Qt5 REQUIRED COMPONENTS Gui X11Extras)
-include(FindPkgConfig)
-pkg_check_modules(XCB xcb)
+find_package(Qt5 REQUIRED COMPONENTS X11Extras)
+pkg_check_modules(XCB IMPORTED_TARGET xcb)
 
-set(TARGET frameless-window)
+set(BIN_NAME frameless-window)
 
-add_executable(${TARGET}
-  main.cpp
+add_executable(${BIN_NAME}
+    main.cpp
 )
 
-target_link_libraries(
-  ${TARGET} PRIVATE
-  Qt5::Gui
-  Qt5::X11Extras
-  ${XCB_LIBRARIES}
-)
-
-target_include_directories(${TARGET} PUBLIC
-  ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+target_link_libraries(${BIN_NAME} PRIVATE
+    Qt5::Gui
+    Qt5::GuiPrivate
+    Qt5::X11Extras
+    PkgConfig::XCB
 )

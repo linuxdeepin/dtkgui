@@ -2,6 +2,8 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: dtkgui
 Source: https://github.com/linuxdeepin/dtkgui
 
+Files: *
+Copyright: 2022 Uniontech Software Technology Co., Ltd.
 License: LGPL-3+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU Lesser General Public License as published by

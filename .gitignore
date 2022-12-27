@@ -46,7 +46,6 @@ CMakeLists.txt.user*
 .vscode
 
 bin
-cmake
 DtkGuis
 dtkgui_config.h
 qt_lib_dtkgui*.pri

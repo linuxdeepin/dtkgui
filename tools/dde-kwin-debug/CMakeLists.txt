@@ -1,15 +1,12 @@
-set(BIN dde-kwin-bug)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(x11 REQUIRED x11)
+set(BIN_NAME dde-kwin-bug)
+pkg_check_modules(X11 IMPORTED_TARGET REQUIRED x11)
 
-add_executable(${BIN}
-  main.cpp 
+add_executable(${BIN_NAME}
+    main.cpp
 )
-target_link_libraries(${BIN} PRIVATE 
-  ${x11_LIBRARIES}
-  -lpthread
+target_link_libraries(${BIN_NAME} PRIVATE 
+    PkgConfig::X11
+    pthread
 )
-target_include_directories(${BIN} PUBLIC
-  ${x11_INCLUDE_DIRS}
-)
-install(TARGETS ${BIN} DESTINATION "${TOOL_INSTALL_DIR}")
+
+install(TARGETS ${BIN_NAME} DESTINATION "${TOOL_INSTALL_DIR}")

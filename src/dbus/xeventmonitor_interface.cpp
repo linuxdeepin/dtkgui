@@ -55,4 +55,4 @@ ComDeepinApiXEventMonitorInterface::ComDeepinApiXEventMonitorInterface(const QSt
 ComDeepinApiXEventMonitorInterface::~ComDeepinApiXEventMonitorInterface()
 {
 }
-#include "xeventmonitor_interface.moc"
+
