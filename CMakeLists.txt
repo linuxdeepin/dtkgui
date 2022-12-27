@@ -112,6 +112,7 @@ find_package(PkgConfig REQUIRED)
 find_package(FreeImage REQUIRED)
 find_package(DtkCore 5.6 REQUIRED)
 pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
+pkg_check_modules(libraw REQUIRED IMPORTED_TARGET libraw)
 
 add_subdirectory(src)
 if(BUILD_TESTING)

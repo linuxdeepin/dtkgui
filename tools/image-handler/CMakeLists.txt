@@ -1,4 +1,4 @@
-set(BIN imagehandler)
+set(BIN image-handler)
 
 add_executable(${BIN}
     main.cpp
@@ -6,6 +6,6 @@ add_executable(${BIN}
 
 target_link_libraries(${BIN} PRIVATE
     Qt5::Gui
-    ${LIB_NAME}
     Dtk::Core
+    ${LIB_NAME}
 )

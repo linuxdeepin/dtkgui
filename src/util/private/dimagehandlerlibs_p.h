@@ -9,6 +9,7 @@
 #include <QMutex>
 #include <QImage>
 
+#include <libraw.h>
 #include <FreeImage.h>
 
 class QLibrary;
@@ -84,6 +85,36 @@ private:
     QMutex apiMutex;
 
     Q_DISABLE_COPY(DLibFreeImage)
+};
+
+class DLibRaw
+{
+public:
+    DLibRaw();
+    ~DLibRaw();
+
+    bool isValid();
+    QImage loadImage(const QString &fileName, QString &errString, QSize requestSize = QSize());
+    QImage loadImage(QByteArray &data, QString &errString, QSize requestSize = QSize());
+    int readImage(libraw_data_t *rawData, QImage &image, QSize requestSize = QSize());
+    QString errorString(int errorCode);
+
+    const char *(*libraw_strerror)(int errorcode);
+    libraw_data_t *(*libraw_init)(unsigned int flags);
+    int (*libraw_open_file)(libraw_data_t *, const char *);
+    int (*libraw_open_buffer)(libraw_data_t *, void *buffer, size_t size);
+    int (*libraw_unpack)(libraw_data_t *);
+    int (*libraw_unpack_thumb)(libraw_data_t *);
+    void (*libraw_close)(libraw_data_t *);
+    int (*libraw_dcraw_process)(libraw_data_t *lr);
+    libraw_processed_image_t *(*libraw_dcraw_make_mem_image)(libraw_data_t *lr, int *errc);
+    libraw_processed_image_t *(*libraw_dcraw_make_mem_thumb)(libraw_data_t *lr, int *errc);
+    void (*libraw_dcraw_clear_mem)(libraw_processed_image_t *);
+
+private:
+    QLibrary *libraw = nullptr;
+
+    Q_DISABLE_COPY(DLibRaw)
 };
 
 #endif  // DIMAGEHANDLERLIBS_P_H

@@ -9,8 +9,7 @@
 #include <QFile>
 #include <QUrl>
 #include <QPainter>
-
-#include <QDebug>
+#include <QImageReader>
 
 DGUI_USE_NAMESPACE
 
@@ -20,6 +19,8 @@ public:
     static void SetUpTestCase();
     static void TearDownTestCase();
 
+    static bool canLoadFreeImage;
+    static bool canLoadLibRaw;
     static int tmpImageWidth;
     static int tmpImageHeight;
     static QString tmpFileName;
@@ -29,15 +30,32 @@ protected:
     void TearDown();
 
     DImageHandler *handler;
-    bool canLoadFreeImage;
 };
 
+bool TDImageHandler::canLoadFreeImage = false;
+bool TDImageHandler::canLoadLibRaw = false;
 int TDImageHandler::tmpImageWidth = 300;
 int TDImageHandler::tmpImageHeight = 200;
 QString TDImageHandler::tmpFileName = QString("/tmp/TDImageHandler_shared_test.png");
 
 void TDImageHandler::SetUpTestCase()
 {
+    QLibrary freeImage("freeimage", "3");
+    if (!freeImage.isLoaded()) {
+        canLoadFreeImage = freeImage.load();
+        if (canLoadFreeImage) {
+            freeImage.unload();
+        }
+    }
+
+    QLibrary libraw("libraw");
+    if (!libraw.isLoaded()) {
+        canLoadLibRaw = libraw.load();
+        if (canLoadLibRaw) {
+            freeImage.unload();
+        }
+    }
+
     QImage image(tmpImageWidth, tmpImageHeight, QImage::Format_ARGB32);
     image.fill(Qt::red);
     image.save(tmpFileName);
@@ -52,15 +70,6 @@ void TDImageHandler::TearDownTestCase()
 
 void TDImageHandler::SetUp()
 {
-    QLibrary freeImage("freeimage", "3");
-
-    if (!freeImage.isLoaded()) {
-        canLoadFreeImage = freeImage.load();
-        if (canLoadFreeImage) {
-            freeImage.unload();
-        }
-    }
-
     handler = new DImageHandler;
 }
 
@@ -87,6 +96,15 @@ TEST_F(TDImageHandler, testThumbnail)
     handler->setFileName(tmpFileName);
     QImage image = handler->thumbnail(QSize(20, 20), Qt::IgnoreAspectRatio);
     ASSERT_EQ(QSize(20, 20), image.size());
+}
+
+TEST_F(TDImageHandler, testImageFormat)
+{
+    handler->setFileName(tmpFileName);
+    ASSERT_EQ(handler->imageFormat(), QString("PNG"));
+
+    handler->setFileName("/tmp/ut_parsefilesuffix.bmp");
+    ASSERT_EQ(handler->imageFormat(), QString("BMP"));
 }
 
 TEST_F(TDImageHandler, testImageSize)
@@ -165,6 +183,9 @@ TEST_F(TDImageHandler, testIsReadable)
     ASSERT_FALSE(handler->isReadable());
     handler->setFileName(tmpFileName);
     ASSERT_TRUE(handler->isReadable());
+
+    handler->setFileName("/tmp/ut_testIsReadable.error_suffix");
+    ASSERT_FALSE(handler->isReadable());
 }
 
 TEST_F(TDImageHandler, testIsWriteable)
@@ -172,6 +193,9 @@ TEST_F(TDImageHandler, testIsWriteable)
     ASSERT_FALSE(handler->isWriteable());
     handler->setFileName(tmpFileName);
     ASSERT_TRUE(handler->isWriteable());
+
+    handler->setFileName("/tmp/ut_testIsWriteable.error_suffix");
+    ASSERT_FALSE(handler->isWriteable());
 }
 
 TEST_F(TDImageHandler, testIsRotatable)
@@ -179,6 +203,25 @@ TEST_F(TDImageHandler, testIsRotatable)
     ASSERT_FALSE(handler->isRotatable());
     handler->setFileName(tmpFileName);
     ASSERT_TRUE(handler->isRotatable());
+}
+
+TEST_F(TDImageHandler, testSupportFormats)
+{
+    QStringList supportFormats = DImageHandler::supportFormats();
+    QByteArrayList qtSupport = QImageReader::supportedImageFormats();
+    for (const QByteArray &support : qtSupport) {
+        ASSERT_TRUE(supportFormats.contains(QString::fromUtf8(support).toUpper()));
+    }
+
+    if (canLoadFreeImage) {
+        ASSERT_TRUE(supportFormats.contains("TIF"));
+        ASSERT_TRUE(supportFormats.contains("PBMRAW"));
+    }
+
+    if (canLoadLibRaw) {
+        ASSERT_TRUE(supportFormats.contains("RAW"));
+        ASSERT_TRUE(supportFormats.contains("MRW"));
+    }
 }
 
 TEST_F(TDImageHandler, testDetectImageFormat)
@@ -197,6 +240,78 @@ TEST_F(TDImageHandler, testColorFilter)
     ASSERT_NE(image, DImageHandler::grayScaleColorFilter(image));
     ASSERT_NE(image, DImageHandler::antiColorFilter(image));
     ASSERT_NE(image, DImageHandler::metalColorFilter(image));
+}
+
+TEST_F(TDImageHandler, testBilateralFilter)
+{
+    QImage image(300, 300, QImage::Format_ARGB32);
+    image.fill(Qt::white);
+    QPainter painter(&image);
+    painter.setPen(QPen(QColor(Qt::black)));
+    painter.drawLine(0, 150, 300, 150);
+    painter.end();
+    image.setPixelColor(150, 155, QColor(Qt::black));
+
+    // The color at point 150,155 will be smoother.
+    image = DImageHandler::bilateralFilter(image, 0.02, 100);
+    ASSERT_NE(image.pixelColor(150, 155), QColor(Qt::black));
+}
+
+TEST_F(TDImageHandler, testBinaryzation)
+{
+    QImage image(300, 300, QImage::Format_ARGB32);
+    image.fill(QColor(0xEEEEEE));
+    QImage scaleImage = DImageHandler::binaryzation(image);
+    ASSERT_EQ(scaleImage.pixelColor(0, 0), QColor(Qt::white));
+
+    image.fill(QColor(0x0E0E0E));
+    scaleImage = DImageHandler::binaryzation(image);
+    ASSERT_EQ(scaleImage.pixelColor(0, 0), QColor(Qt::black));
+}
+
+TEST_F(TDImageHandler, testGrayScale)
+{
+    QImage image(300, 300, QImage::Format_ARGB32);
+    image.fill(Qt::red);
+
+    QImage scaleImage = DImageHandler::grayScale(image);
+    QColor color = scaleImage.pixelColor(0, 0);
+    ASSERT_EQ(color.red(), color.blue());
+    ASSERT_EQ(color.red(), color.green());
+}
+
+TEST_F(TDImageHandler, testChangeLightAndContrast)
+{
+    QImage image(300, 300, QImage::Format_ARGB32);
+    image.fill(Qt::red);
+    QImage scaleImage = DImageHandler::changeLightAndContrast(image, 0, 0);
+    ASSERT_EQ(scaleImage.pixelColor(0, 0), QColor(Qt::black));
+}
+
+TEST_F(TDImageHandler, testChangeBrightness)
+{
+    QImage image(300, 300, QImage::Format_ARGB32);
+    image.fill(Qt::gray);
+    QImage scaleImage = DImageHandler::changeBrightness(image, 100);
+    ASSERT_GT(scaleImage.pixel(0, 0), image.pixel(0, 0));
+}
+
+TEST_F(TDImageHandler, testChangeTransparency)
+{
+    QImage image(300, 300, QImage::Format_ARGB32);
+    image.fill(Qt::gray);
+    QImage scaleImage = DImageHandler::changeTransparency(image, 100);
+    ASSERT_EQ(scaleImage.pixelColor(0, 0).alpha(), 100);
+}
+
+TEST_F(TDImageHandler, testChangeStauration)
+{
+    QImage image(300, 300, QImage::Format_ARGB32);
+    image.fill(Qt::gray);
+    int oldSaturatuin = image.pixelColor(0, 0).saturation();
+
+    QImage scaleImage = DImageHandler::changeStauration(image, oldSaturatuin + 100);
+    ASSERT_GT(scaleImage.pixelColor(0, 0).saturation(), oldSaturatuin);
 }
 
 TEST_F(TDImageHandler, testFlip)
