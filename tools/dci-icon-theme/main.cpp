@@ -117,15 +117,59 @@ QMultiHash<QString, QString> parseIconFileSymlinkMap(const QString &csvFile) {
         }
 
         char ch = 0;
-        while (file.getChar(&ch)) {
-             if (ch == '\n')
-                 break;
-        }
+        while (file.getChar(&ch) && ch != '\n');
     }
 
     qInfo() << "Got symlinks:" << map.size();
 
     return map;
+}
+
+void makeLink(const QFileInfo &file, const QDir &outputDir, const QString &dciFilePath,
+              const QMultiHash<QString, QString> &symlinksMap)
+{
+    if (symlinksMap.contains(file.completeBaseName())) {
+        const QString symlinkKey = QFileInfo(dciFilePath).fileName();
+        for (const auto &symTarget : symlinksMap.values(file.completeBaseName())) {
+            const QString newSymlink = outputDir.absoluteFilePath(symTarget + ".dci");
+            qInfo() << "Create symlink from" << symlinkKey << "to" << newSymlink;
+            if (!QFile::link(symlinkKey, newSymlink)) {
+                qWarning() << "Failed on create symlink from" << symlinkKey << "to" << newSymlink;
+            }
+        }
+    }
+}
+
+void doFixDarkTheme(const QFileInfo &file, const QDir &outputDir, const QMultiHash<QString, QString> &symlinksMap)
+{
+    const QString &newFile = outputDir.absoluteFilePath(file.fileName());
+
+    DDciFile dciFile(file.absoluteFilePath());
+    if (!dciFile.isValid()) {
+        qWarning() << "Skip invalid dci file:" << file.absoluteFilePath();
+        return;
+    }
+
+    for (const auto &i : dciFile.list("/")) {
+        if (dciFile.type(i) != DDciFile::Directory)
+            continue;
+
+        for (const auto &j : dciFile.list(i)) {
+            if (dciFile.type(j) != DDciFile::Directory || !j.endsWith(".light"))
+                continue;
+
+            const QString darkDir(j.left(j.size() - 5) + "dark");
+            Q_ASSERT(darkDir.endsWith(".dark"));
+            if (!dciFile.exists(darkDir)) {
+                dciChecker(dciFile.mkdir(darkDir));
+                dciChecker(recursionLink(dciFile, j, darkDir));
+            }
+        }
+    }
+
+    dciChecker(dciFile.writeToFile(newFile));
+
+    makeLink(file, outputDir, newFile, symlinksMap);
 }
 
 int main(int argc, char *argv[])
@@ -135,7 +179,7 @@ int main(int argc, char *argv[])
                                                   "If the icon have the dark mode, it needs to store "
                                                   "the dark icon file at \"dark/\" directory relative "
                                                   "to current icon file, and the file name should be "
-                                                  "consistent.", "wirdcard palette");
+                                                  "consistent.", "wildcard palette");
     QCommandLineOption outputDirectory({"o", "output"}, "Save the *.dci files to the given directory.",
                                        "directory");
     QCommandLineOption symlinkMap({"s", "symlink"}, "Give a csv file to create symlinks for the output icon file."
@@ -152,7 +196,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
-    a.setApplicationVersion("0.0.1");
+    a.setApplicationVersion("0.0.2");
 
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
@@ -209,6 +253,27 @@ int main(int argc, char *argv[])
             continue;
         }
 
+        // read all links first
+        {
+            QDirIterator di(sourceDir.absolutePath(), nameFilter,
+                            QDir::NoDotAndDotDot | QDir::Files,
+                            QDirIterator::Subdirectories);
+            while (di.hasNext()) {
+                di.next();
+                QFileInfo file = di.fileInfo();
+                 if (!file.isSymLink())
+                     continue;
+
+                 const QString &linkTarget = QFileInfo(file.readLink()).completeBaseName();
+                 if (!symlinksMap.values(linkTarget).contains(file.completeBaseName())) {
+                     symlinksMap.insert(linkTarget, file.completeBaseName());
+                     qInfo() << "Add link" << file.completeBaseName() << "->" << linkTarget;
+                 } else {
+//                        qDebug() << "** link already existed in symlinksMap **";
+                 }
+            }
+        }
+
         QDirIterator di(sourceDir.absolutePath(), nameFilter,
                         QDir::NoDotAndDotDot | QDir::Files,
                         QDirIterator::Subdirectories);
@@ -216,47 +281,13 @@ int main(int argc, char *argv[])
             di.next();
             QFileInfo file = di.fileInfo();
 
-            if (cp.isSet(fixDarkTheme)) {
-                const QString &newFile = outputDir.absoluteFilePath(file.fileName());
-
-                if (file.isSymLink()) {
-                    if (!QFile::copy(file.absoluteFilePath(), newFile)) {
-                        qWarning() << "Failed on copy" << file.absoluteFilePath() << "to" << newFile;
-                        return -6;
-                    }
-                    continue;
-                }
-
-                DDciFile dciFile(file.absoluteFilePath());
-                if (!dciFile.isValid()) {
-                    qWarning() << "Skip invalid dci file:" << file.absoluteFilePath();
-                    continue;
-                }
-
-                for (const auto &i : dciFile.list("/")) {
-                    if (dciFile.type(i) != DDciFile::Directory)
-                        continue;
-
-                    for (const auto &j : dciFile.list(i)) {
-                        if (dciFile.type(j) != DDciFile::Directory || !j.endsWith(".light"))
-                            continue;
-
-                        const QString darkDir(j.left(j.size() - 5) + "dark");
-                        Q_ASSERT(darkDir.endsWith(".dark"));
-                        if (!dciFile.exists(darkDir)) {
-                            dciChecker(dciFile.mkdir(darkDir));
-                            dciChecker(recursionLink(dciFile, j, darkDir));
-                        }
-                    }
-                }
-
-                dciChecker(dciFile.writeToFile(newFile));
-
-                continue;
-            }
-
             if (file.isSymLink())
                 continue;
+
+            if (cp.isSet(fixDarkTheme)) {
+                doFixDarkTheme(file, outputDir, symlinksMap);
+                continue;
+            }
 
             if (file.path().endsWith(QStringLiteral("/dark"))) {
                 qInfo() << "Ignore the dark icon file:"  << file;
@@ -270,7 +301,7 @@ int main(int argc, char *argv[])
             }
             DDciFile dciFile;
 
-            qInfo() << "Wrting to dci file:" << dciFilePath;
+            qInfo() << "Writing to dci file:" << dciFilePath;
 
             dciChecker(dciFile.mkdir("/256"));
             dciChecker(dciFile.mkdir("/256/normal.light"));
@@ -287,16 +318,7 @@ int main(int argc, char *argv[])
 
             dciChecker(dciFile.writeToFile(dciFilePath));
 
-            if (symlinksMap.contains(file.completeBaseName())) {
-                const QString symlinkKey = QFileInfo(dciFilePath).fileName();
-                for (const auto &symTarget : symlinksMap.values(file.completeBaseName())) {
-                    const QString newSymlink = outputDir.absoluteFilePath(symTarget + ".dci");
-                    qInfo() << "Create symlink from" << symlinkKey << "to" << newSymlink;
-                    if (!QFile::link(symlinkKey, newSymlink)) {
-                        qWarning() << "Failed on create symlink from" << symlinkKey << "to" << newSymlink;
-                    }
-                }
-            }
+            makeLink(file, outputDir, dciFilePath, symlinksMap);
         }
     }
 
