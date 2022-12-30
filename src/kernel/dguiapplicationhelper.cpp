@@ -1577,7 +1577,7 @@ void DGuiApplicationHelper::handleHelpAction()
     QDBusPendingCall call = manual.asyncCall("ShowManual", appid);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [appid](QDBusPendingCallWatcher *pWatcher) {
-        QDBusPendingReply<bool> reply = *pWatcher;
+        QDBusPendingReply<void> reply = *pWatcher;
         if (reply.isError()) {
             // fallback to old interface
             qWarning() << reply.error() << "fallback to dman appid";
