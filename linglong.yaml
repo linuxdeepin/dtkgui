@@ -18,8 +18,7 @@ depends:
   - id: gsettings-qt/0.3.1.1
   - id: dtkcore/5.6.0.2
   - id: libqtxdg/3.6.0.1
-  - id: librsvg2/2.44.10.4
-  - id: libfreeimage/3.18.0
+  - id: freeimage/3.18.0
 
 source:
   kind: local
