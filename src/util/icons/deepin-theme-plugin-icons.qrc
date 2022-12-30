@@ -8,6 +8,9 @@
         <file alias="icons/button_voice_active_30px.svg/selected.svg">icons/button_voice_active_press_30px.svg</file>
         <file>icons/icon_fail_128px.svg</file>
         <file>icons/icon_success_128px.svg</file>
+        <file>icons/icon_ok_32px.svg</file>
+        <file>icons/icon_info_32px.svg</file>
+        <file>icons/icon_warning_32px.svg</file>
         <file>texts/button_add_20px.svg</file>
         <file>texts/button_reduce_12px.svg</file>
         <file>texts/combobox_arrow_12px.svg</file>
@@ -48,7 +51,6 @@
     </qresource>
     <qresource prefix="/icons/deepin/builtin/light">
         <file alias="icons/button_edit-clear_30px.svg/normal.svg">icons/light/edit-clear_30px.svg</file>
-        <file alias="icons/button_edit-clear_30px.svg/active.svg">icons/light/edit-clear_active_30px.svg</file>
         <file alias="icons/button_edit-clear_30px.svg/selected.svg">icons/light/edit-clear_press_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/normal.svg">icons/light/button_voice_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/selected.svg">icons/light/button_voice_press_30px.svg</file>
@@ -59,7 +61,6 @@
     </qresource>
     <qresource prefix="/icons/deepin/builtin/dark">
         <file alias="icons/button_edit-clear_30px.svg/normal.svg">icons/dark/edit-clear_30px.svg</file>
-        <file alias="icons/button_edit-clear_30px.svg/active.svg">icons/dark/edit-clear_active_30px.svg</file>
         <file alias="icons/button_edit-clear_30px.svg/selected.svg">icons/dark/edit-clear_press_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/normal.svg">icons/dark/button_voice_30px.svg</file>
         <file alias="icons/button_voice_30px.svg/selected.svg">icons/dark/button_voice_press_30px.svg</file>
@@ -67,5 +68,11 @@
         <file alias="icons/list_add_16px.svg">icons/dark/list_add_16px.svg</file>
         <file alias="icons/window-close_round_30px.svg/normal.svg">icons/dark/window-close_round_30px.svg</file>
         <file alias="icons/window-close_round_30px.svg/selected.svg">icons/dark/window-close_round_press_30px.svg</file>
+    </qresource>
+    <qresource prefix="/dsg/built-in-icons">
+        <file alias="sp_ok.dci">dci/sp_ok.dci</file>
+        <file alias="sp_alert.dci">dci/sp_alert.dci</file>
+        <file alias="sp_waiting.dci">dci/sp_waiting.dci</file>
+        <file alias="sp_warning.dci">dci/sp_warning.dci</file>
     </qresource>
 </RCC>
