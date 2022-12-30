@@ -53,8 +53,8 @@ Files: *.pro *.prf *.pri *.qrc *CMakeLists.txt *.cmake *.in
 Copyright: None
 License: CC0-1.0
 
-# svg
+# svg dci
 Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/* 
-  tests/images/logo_icon.svg
+       src/util/icons/dci/*  tests/images/logo_icon.svg 
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later
