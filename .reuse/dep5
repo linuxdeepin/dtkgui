@@ -8,11 +8,11 @@ Files: .github/* .gitlab-ci.yml
 Copyright: None
 License: CC0-1.0
 
-# gitignore
-Files: .gitignore 
+# project file
+Files: .gitignore .clang-format
 Copyright: None
 License: CC0-1.0
- 
+
 # json conf yaml
 Files: *.json *conf *.yaml
 Copyright: None
@@ -36,12 +36,12 @@ License: LGPL-3.0-or-later
 # README & doc
 Files: *README.md *README.zh_CN.md
 Copyright: None
-License:  CC-BY-4.0 
+License:  CC-BY-4.0
 
 # Documentations
-Files: docs/*.qdoc docs/*.md docs/*.dox
-Copyright: None
-License:  CC-BY-4.0 
+Files: docs/*
+Copyright: deepin doc doc go SIG 2022-2023
+License:  CC-BY-4.0
 
 # DBus
 Files: src/dbus/*.xml
@@ -49,12 +49,12 @@ Copyright: None
 License: CC0-1.0
 
 # Project file
-Files: *.pro *.prf *.pri *.qrc *CMakeLists.txt *.cmake *.in 
+Files: *.pro *.prf *.pri *.qrc *CMakeLists.txt *.cmake *.in
 Copyright: None
 License: CC0-1.0
 
 # svg
-Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/* 
+Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/*
   tests/images/logo_icon.svg
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later
