@@ -45,6 +45,12 @@ CMakeLists.txt.user*
 # vscode
 .vscode
 
+# idea
+.idea
+
+#clangformat
+.clang-format
+
 bin
 DtkGuis
 dtkgui_config.h
