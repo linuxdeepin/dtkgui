@@ -31,6 +31,8 @@ public:
     static void staticCleanApplication();
     DPlatformTheme *initWindow(QWindow *window) const;
     void _q_initApplicationTheme(bool notifyChange = false);
+    void _q_sizeModeChanged(int mode);
+    DGuiApplicationHelper::SizeMode fetchSizeMode(bool *isSystemSizeMode = nullptr) const;
     void notifyAppThemeChanged();
     // 返回程序是否自定义了调色板
     inline bool isCustomPalette() const;
@@ -42,6 +44,8 @@ public:
     // 获取QLocalSever消息的等待时间
     static int waitTime;
     static DGuiApplicationHelper::Attributes attributes;
+    DGuiApplicationHelper::SizeMode systemSizeMode = DGuiApplicationHelper::NormalMode;
+    DGuiApplicationHelper::SizeMode explicitSizeMode;
 
 private:
     // 应用程序级别的主题设置
