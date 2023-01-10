@@ -16,6 +16,7 @@
 #include <QBuffer>
 #include <QImageReader>
 #include <QtMath>
+#include <QDir>
 
 DCORE_USE_NAMESPACE
 DGUI_BEGIN_NAMESPACE
@@ -752,6 +753,9 @@ void DDciIcon::paint(QPainter *painter, const QRect &rect, qreal devicePixelRati
 
 DDciIcon DDciIcon::fromTheme(const QString &name)
 {
+    if (QDir::isAbsolutePath(name))
+        return DDciIcon(name);
+
     DDciIcon icon;
 
     QString iconName = name;
