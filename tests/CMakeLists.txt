@@ -35,7 +35,7 @@ target_link_libraries(${BIN_NAME} PRIVATE
     Qt5::Test
     Dtk::Core
     PkgConfig::librsvg
-    GTest::gtest
+    GTest::GTest
     gmock
     pthread
     m
