@@ -5,6 +5,7 @@
 #ifndef DIMAGEHANDLERLIBS_P_H
 #define DIMAGEHANDLERLIBS_P_H
 
+#ifndef DTK_DISABLE_EX_IMAGE_FORMAT
 #include <QHash>
 #include <QMutex>
 #include <QImage>
@@ -13,6 +14,7 @@
 #include <FreeImage.h>
 
 class QLibrary;
+#endif
 
 enum ExifImageOrientation {
     Undefined,
@@ -26,6 +28,7 @@ enum ExifImageOrientation {
     LeftBottom,
 };
 
+#ifndef DTK_DISABLE_EX_IMAGE_FORMAT
 class DLibFreeImage
 {
 public:
@@ -116,5 +119,7 @@ private:
 
     Q_DISABLE_COPY(DLibRaw)
 };
+
+#endif
 
 #endif  // DIMAGEHANDLERLIBS_P_H

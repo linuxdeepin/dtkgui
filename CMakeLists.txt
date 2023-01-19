@@ -20,6 +20,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set build option
 option(DTK_DISABLE_LIBXDG "Disable libxdg" OFF)
+option(DTK_DISABLE_EX_IMAGE_FORMAT "Disable libraw and freeimage" OFF)
 set(BUILD_DOCS ON CACHE BOOL "Generate doxygen-based documentation")
 
 # Set install path
@@ -109,10 +110,15 @@ install(FILES DtkGuis DESTINATION "${INCLUDE_INSTALL_DIR}")
 # Find common dependencies
 find_package(Qt5 REQUIRED COMPONENTS Gui DBus Network)
 find_package(PkgConfig REQUIRED)
-find_package(FreeImage REQUIRED)
 find_package(DtkCore 5.6 REQUIRED)
 pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
-pkg_check_modules(libraw REQUIRED IMPORTED_TARGET libraw)
+
+# Check optional image handler dependencies.
+find_package(FreeImage)
+pkg_check_modules(libraw IMPORTED_TARGET libraw)
+if(FreeImage_FOUND AND libraw_FOUND)
+  set(EX_IMAGE_FORMAT_LIBS_FOUND ON)
+endif()
 
 add_subdirectory(src)
 if(BUILD_TESTING)

@@ -4,6 +4,8 @@
 
 #include "private/dimagehandlerlibs_p.h"
 
+#ifndef DTK_DISABLE_EX_IMAGE_FORMAT
+
 #include <QLibrary>
 #include <QFileInfo>
 #include <QDateTime>
@@ -539,3 +541,5 @@ QString DLibRaw::errorString(int errorCode)
 {
     return QString(libraw_strerror(errorCode));
 }
+
+#endif

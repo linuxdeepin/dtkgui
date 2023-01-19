@@ -17,6 +17,13 @@ else()
     )
 endif()
 
+if(DTK_DISABLE_EX_IMAGE_FORMAT OR NOT EX_IMAGE_FORMAT_LIBS_FOUND)
+    add_definitions(-DDTK_DISABLE_EX_IMAGE_FORMAT)
+    message("Disable extended image format!")
+else()
+    message("Support extended image format!")
+endif()
+
 file(GLOB UTIL_HEADER
     ${PROJECT_SOURCE_DIR}/include/util/*.h
 )
