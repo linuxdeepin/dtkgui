@@ -35,13 +35,19 @@ target_link_libraries(${BIN_NAME} PRIVATE
     Qt5::Test
     Dtk::Core
     PkgConfig::librsvg
-    PkgConfig::libraw
     GTest::GTest
     gmock
     pthread
     m
     gcov
 )
+
+if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND) 
+target_link_libraries(${BIN_NAME} PRIVATE
+	PkgConfig::libraw
+    FreeImage::FreeImage
+)
+endif()
 
 if(NOT DTK_DISABLE_LIBXDG)
     target_link_libraries(${BIN_NAME} PRIVATE 

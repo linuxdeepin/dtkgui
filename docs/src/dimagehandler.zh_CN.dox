@@ -5,7 +5,7 @@
 dimagehandler.h 提供图像处理类 DImageHandler 
 
 @class Dtk::Gui::DImageHandler
-@brief DImageHandler 提供图像处理，
+@brief DImageHandler 提供图像处理，读取、保存、旋转、滤镜等。
 @details 
 ## 概述
 提供多种格式图片的读取、保存，允许对部分格式进行旋转。提供多种滤镜、锐化、二值化等图像处理算法。
@@ -13,7 +13,15 @@ dimagehandler.h 提供图像处理类 DImageHandler
 取得图片数据，通过 `DImageHandler::thumbnail` 取得图片缩略图。设置文件路径将不会立即加载图片，
 将在需要图片数据时读取，当不需要缓存数据时，可通过 `DImageHandler::clearCache` 清除缓存数据。
 
-@note 拓展的图片格式依赖 FreeImage 和 LibRaw 公共库，DImageHandler 通过动态加载的方式解析公共库接口。可通过 DImageHandler::supportFormats() 获取当前支持的图片格式类型。
+@note 拓展的图片格式依赖 FreeImage 和 LibRaw 公共库，DImageHandler 通过动态加载的方式解析公共库接口。
+可通过 DImageHandler::supportFormats() 获取当前支持的图片格式类型。
+
+## 编译
+支持拓展的图片格式，编译时会判断环境是否存在依赖包，安装 libfreeimage-dev 及 libraw-dev ，
+设置编译选项 DTK_DISABLE_EX_IMAGE_FORMAT=OFF 后将开启拓展图片格式支持。
+
+不同包构建环境默认策略不同，在 **debian** 和 **linglong** 构建环境默认依赖 libfreeimage-dev 及 libraw-dev ，
+支持拓展图片格式，其它环境需手动安装。
 
 ## image-handler 工具示例
 可在程序根目录 ./tools/image-handler 中查看 image-handler 工具项目。
@@ -31,6 +39,7 @@ image-handler [options] [file...]
 | -f <filter> | 为图片设置滤镜，可选图片滤镜包括 old, warm, cool, gray, anticolor, metal |
 | -l, --list | 列出所有图片的格式 |
 | -e | 列出所有图片的详细信息，结合 **-l** 使用 | 
+
 
 @fn Dtk::Gui::DImageHandler::DImageHandler(QObject *parent)
 @brief 构造 DImageHandler 实例，并指定父控件

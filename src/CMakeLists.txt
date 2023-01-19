@@ -29,8 +29,6 @@ target_link_libraries(${LIB_NAME} PRIVATE
 	Qt5::GuiPrivate
 	Qt5::CorePrivate
 	PkgConfig::librsvg
-	PkgConfig::libraw
-	FreeImage::FreeImage
 )
 
 target_link_libraries(${LIB_NAME} PUBLIC
@@ -39,6 +37,13 @@ target_link_libraries(${LIB_NAME} PUBLIC
 	Qt5::Network
 	Dtk::Core
 )
+
+if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
+	target_link_libraries(${LIB_NAME} PRIVATE
+		PkgConfig::libraw
+		FreeImage::FreeImage
+	)
+endif()
 
 if(NOT DTK_DISABLE_LIBXDG)
 	target_link_libraries(${LIB_NAME} PRIVATE

@@ -40,6 +40,8 @@ QString TDImageHandler::tmpFileName = QString("/tmp/TDImageHandler_shared_test.p
 
 void TDImageHandler::SetUpTestCase()
 {
+    // Always false if build without libfreeimage and libraw.
+#ifndef DTK_DISABLE_EX_IMAGE_FORMAT
     QLibrary freeImage("freeimage", "3");
     if (!freeImage.isLoaded()) {
         canLoadFreeImage = freeImage.load();
@@ -55,6 +57,7 @@ void TDImageHandler::SetUpTestCase()
             freeImage.unload();
         }
     }
+#endif
 
     QImage image(tmpImageWidth, tmpImageHeight, QImage::Format_ARGB32);
     image.fill(Qt::red);
