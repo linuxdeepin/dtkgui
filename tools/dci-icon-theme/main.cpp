@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -10,8 +10,12 @@
 #include <QDebug>
 
 #include <DDciFile>
+#include <DIconTheme>
+#include <DGuiApplicationHelper>
+#include <DPlatformTheme>
 
 DCORE_USE_NAMESPACE
+DGUI_USE_NAMESPACE
 
 static inline void dciChecker(bool result) {
     if (!result) {
@@ -193,6 +197,8 @@ int main(int argc, char *argv[])
                                   ,
                                        "csv file");
     QCommandLineOption fixDarkTheme("fix-dark-theme", "Create symlinks from light theme for dark theme files.");
+    QCommandLineOption iconFinder("find", "Find dci icon file path");
+    QCommandLineOption themeOpt({"t","theme"}, "Give a theme name to find dci icon file path", "theme name");
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
@@ -204,10 +210,12 @@ int main(int argc, char *argv[])
                                  "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps ~/Desktop/hicolor\n"
                                  "\t dci-icon-theme -m *.png /usr/share/icons/hicolor/256x256/apps ~/Desktop/hicolor\n"
                                  "\t dci-icon-theme --fix-dark-theme <input dci files directory> -o  <output directory path> \n"
+                                 "\t dci-icon-theme --find <icon name>\n"
+                                 "\t dci-icon-theme --find <icon name> -t bloom\n"
                                  "\t dci-icon-theme <input file directory> -o  <output directory path> -s ~/Desktop/symlink.csv \n"""
                                  );
 
-    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme});
+    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, iconFinder, themeOpt});
     cp.addPositionalArgument("source", "Search the given directory and it's subdirectories, "
                                        "get the files conform to rules of --match.",
                              "~/dci-png-icons");
@@ -218,9 +226,25 @@ int main(int argc, char *argv[])
     if (a.arguments().size() == 1)
         cp.showHelp(-1);
 
+    bool isIconFinder = cp.isSet(iconFinder);
     if (cp.positionalArguments().isEmpty()) {
-        qWarning() << "Not give a source directory.";
+        qWarning() << "Not give a" << (isIconFinder ? "icon name." : "source directory.");
         cp.showHelp(-2);
+    }
+
+    QString iconThemeName;
+    if (cp.isSet(themeOpt)) {
+        iconThemeName = cp.value(themeOpt);
+    } else {
+        iconThemeName = DGuiApplicationHelper::instance()->applicationTheme()->iconThemeName();
+    }
+
+    if (isIconFinder) {
+        QString iconName = cp.positionalArguments().value(0);
+
+        QString iconPath = DIconTheme::findDciIconFile(iconName, iconThemeName);
+        qInfo() << iconName << "[" << iconThemeName << "]:" << iconPath;
+        return 0;
     }
 
     if (!cp.isSet(outputDirectory)) {
