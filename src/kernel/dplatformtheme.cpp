@@ -629,6 +629,20 @@ int DPlatformTheme::sizeMode() const
     return value.toInt();
 }
 
+/*!
+  \property DPlatformTheme::scrollBarPolicy
+  \brief This property holds the scrollBarPolicy of the system. same as Qt::ScrollBarPolicy
+  \retval 0 show as needed auto hide, default
+  \retval 1 always off
+  \retval 2 always on
+ */
+int DPlatformTheme::scrollBarPolicy() const
+{
+    FETCH_PROPERTY("Qt/ScrollBarPolicy", scrollBarPolicy)
+
+    return qvariant_cast<int>(value);
+}
+
 void DPlatformTheme::setCursorBlinkTime(int cursorBlinkTime)
 {
     D_D(DPlatformTheme);

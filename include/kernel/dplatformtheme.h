@@ -66,6 +66,7 @@ class DPlatformTheme : public DNativeSettings
     Q_PROPERTY(QColor frameBorder READ frameBorder WRITE setFrameBorder NOTIFY frameBorderChanged)
     // DSizeMode
     Q_PROPERTY(int sizeMode READ sizeMode NOTIFY sizeModeChanged)
+    Q_PROPERTY(int scrollBarPolicy READ scrollBarPolicy NOTIFY scrollBarPolicyChanged)
 
 public:
     explicit DPlatformTheme(quint32 window, QObject *parent = nullptr);
@@ -132,6 +133,7 @@ public:
     int dotsPerInch(const QString &screenName = QString()) const;
 
     int sizeMode() const;
+    int scrollBarPolicy() const;
 
 public Q_SLOTS:
     void setCursorBlinkTime(int cursorBlinkTime);
@@ -225,6 +227,7 @@ Q_SIGNALS:
     void dotsPerInchChanged(const QString &screen, int dpi);
     void windowRadiusChanged(int r);
     void sizeModeChanged(int sizeMode);
+    void scrollBarPolicyChanged(int scrollBarPolicy);
 
 private:
     friend class DPlatformThemePrivate;
