@@ -27,41 +27,41 @@ DLibFreeImage::DLibFreeImage()
         freeImage = nullptr;
     };
 
-#define INIT_FUNCTION(Name)                                                                                                      \
+#define INIT_FUNCTION_FREEIMAGE(Name)                                                                                                      \
     Name = reinterpret_cast<decltype(Name)>(freeImage->resolve(#Name));                                                          \
     if (!Name) {                                                                                                                 \
         initFunctionError();                                                                                                     \
         return;                                                                                                                  \
     }
 
-    INIT_FUNCTION(FreeImage_Load);
-    INIT_FUNCTION(FreeImage_Unload);
-    INIT_FUNCTION(FreeImage_Save);
-    INIT_FUNCTION(FreeImage_FIFSupportsReading);
-    INIT_FUNCTION(FreeImage_GetFileType);
-    INIT_FUNCTION(FreeImage_GetFIFFromFilename);
-    INIT_FUNCTION(FreeImage_GetImageType);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_Load);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_Unload);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_Save);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_FIFSupportsReading);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetFileType);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetFIFFromFilename);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetImageType);
 
-    INIT_FUNCTION(FreeImage_GetBPP);
-    INIT_FUNCTION(FreeImage_GetWidth);
-    INIT_FUNCTION(FreeImage_GetHeight);
-    INIT_FUNCTION(FreeImage_GetRedMask);
-    INIT_FUNCTION(FreeImage_GetGreenMask);
-    INIT_FUNCTION(FreeImage_GetBlueMask);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetBPP);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetWidth);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetHeight);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetRedMask);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetGreenMask);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetBlueMask);
 
-    INIT_FUNCTION(FreeImage_GetThumbnail);
-    INIT_FUNCTION(FreeImage_SetThumbnail);
-    INIT_FUNCTION(FreeImage_ConvertToRawBits);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetThumbnail);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_SetThumbnail);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_ConvertToRawBits);
 
-    INIT_FUNCTION(FreeImage_GetMetadataCount);
-    INIT_FUNCTION(FreeImage_FindFirstMetadata);
-    INIT_FUNCTION(FreeImage_FindNextMetadata);
-    INIT_FUNCTION(FreeImage_FindCloseMetadata);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetMetadataCount);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_FindFirstMetadata);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_FindNextMetadata);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_FindCloseMetadata);
 
-    INIT_FUNCTION(FreeImage_GetTagKey);
-    INIT_FUNCTION(FreeImage_GetTagValue);
-    INIT_FUNCTION(FreeImage_TagToString);
-    INIT_FUNCTION(FreeImage_Rotate);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetTagKey);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_GetTagValue);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_TagToString);
+    INIT_FUNCTION_FREEIMAGE(FreeImage_Rotate);
 }
 
 DLibFreeImage::~DLibFreeImage()
@@ -106,17 +106,19 @@ QHash<QString, QString> DLibFreeImage::findMetaData(FREE_IMAGE_MDMODEL model, FI
 QHash<QString, QString> DLibFreeImage::findAllMetaData(const QString &fileName)
 {
     FIBITMAP *dib = readFileToFIBITMAP(fileName, FIF_LOAD_NOPIXELS);
-    QHash<QString, QString> admMap;
-    admMap.unite(findMetaData(FIMD_EXIF_MAIN, dib));
-    admMap.unite(findMetaData(FIMD_EXIF_EXIF, dib));
-    admMap.unite(findMetaData(FIMD_EXIF_GPS, dib));
-    admMap.unite(findMetaData(FIMD_EXIF_MAKERNOTE, dib));
-    admMap.unite(findMetaData(FIMD_EXIF_INTEROP, dib));
-    admMap.unite(findMetaData(FIMD_IPTC, dib));
+    QMultiHash<QString, QString> uniteMap;
+    uniteMap.unite(findMetaData(FIMD_EXIF_MAIN, dib));
+    uniteMap.unite(findMetaData(FIMD_EXIF_EXIF, dib));
+    uniteMap.unite(findMetaData(FIMD_EXIF_GPS, dib));
+    uniteMap.unite(findMetaData(FIMD_EXIF_MAKERNOTE, dib));
+    uniteMap.unite(findMetaData(FIMD_EXIF_INTEROP, dib));
+    uniteMap.unite(findMetaData(FIMD_IPTC, dib));
+    QHash<QString, QString> admMap = uniteMap;
 
     QFileInfo info(fileName);
     if (admMap.contains("DateTime")) {
-        QDateTime time = QDateTime::fromString(admMap["DateTime"], "yyyy:MM:dd hh:mm:ss");
+        // Get first DateTime.
+        QDateTime time = QDateTime::fromString(admMap.value("DateTime"), "yyyy:MM:dd hh:mm:ss");
         admMap.insert("DateTimeOriginal", time.toString("yyyy/MM/dd hh:mm"));
     } else {
         admMap.insert("DateTimeOriginal", info.lastModified().toString("yyyy/MM/dd HH:mm"));
@@ -133,7 +135,7 @@ QHash<QString, QString> DLibFreeImage::findAllMetaData(const QString &fileName)
     admMap.insert("FileName", info.fileName());
     admMap.insert("FileFormat", info.suffix());
 
-    static auto formatDataSize = [](int size) -> QString {
+    static auto formatDataSize = [](qint64 size) -> QString {
         static const QStringList suffix = {"B", "KB", "MB", "GB", "TB", "PB"};
         int level = 0;
         double bytes = size;
@@ -364,24 +366,24 @@ DLibRaw::DLibRaw()
         libraw = nullptr;
     };
 
-#define INIT_FUNCTION(Name)                                                                                                      \
+#define INIT_FUNCTION_LIBRAW(Name)                                                                                                      \
     Name = reinterpret_cast<decltype(Name)>(libraw->resolve(#Name));                                                             \
     if (!Name) {                                                                                                                 \
         initFunctionError();                                                                                                     \
         return;                                                                                                                  \
     }
 
-    INIT_FUNCTION(libraw_strerror);
-    INIT_FUNCTION(libraw_init);
-    INIT_FUNCTION(libraw_open_file);
-    INIT_FUNCTION(libraw_open_buffer);
-    INIT_FUNCTION(libraw_unpack);
-    INIT_FUNCTION(libraw_unpack_thumb);
-    INIT_FUNCTION(libraw_close);
-    INIT_FUNCTION(libraw_dcraw_process);
-    INIT_FUNCTION(libraw_dcraw_make_mem_image);
-    INIT_FUNCTION(libraw_dcraw_make_mem_thumb);
-    INIT_FUNCTION(libraw_dcraw_clear_mem);
+    INIT_FUNCTION_LIBRAW(libraw_strerror);
+    INIT_FUNCTION_LIBRAW(libraw_init);
+    INIT_FUNCTION_LIBRAW(libraw_open_file);
+    INIT_FUNCTION_LIBRAW(libraw_open_buffer);
+    INIT_FUNCTION_LIBRAW(libraw_unpack);
+    INIT_FUNCTION_LIBRAW(libraw_unpack_thumb);
+    INIT_FUNCTION_LIBRAW(libraw_close);
+    INIT_FUNCTION_LIBRAW(libraw_dcraw_process);
+    INIT_FUNCTION_LIBRAW(libraw_dcraw_make_mem_image);
+    INIT_FUNCTION_LIBRAW(libraw_dcraw_make_mem_thumb);
+    INIT_FUNCTION_LIBRAW(libraw_dcraw_clear_mem);
 }
 
 DLibRaw::~DLibRaw()
@@ -426,7 +428,7 @@ QImage DLibRaw::loadImage(QByteArray &data, QString &errString, QSize requestSiz
         return image;
     }
 
-    int ret = libraw_open_buffer(rawData, reinterpret_cast<void *>(data.data()), data.size());
+    int ret = libraw_open_buffer(rawData, reinterpret_cast<void *>(data.data()), static_cast<size_t>(data.size()));
     if (LIBRAW_SUCCESS == ret) {
         ret = readImage(rawData, image, requestSize);
     }

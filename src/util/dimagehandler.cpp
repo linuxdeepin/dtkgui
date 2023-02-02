@@ -990,34 +990,34 @@ QImage DImageHandler::bilateralFilter(const QImage &img, double spatialDecay, do
 #pragma omp parallel for
     for (int k2 = 0; k2 < height; ++k2) {
         int startIndex = k2 * width;
-        double mu = 0.0;
+        double mu2 = 0.0;
 
         for (int k = startIndex + 1, K = startIndex + width; k < K; ++k) {
             int div0Red = fabs(pRed[k] - pRed[k - 1]);
-            mu = exptable[div0Red];
-            pRed[k] = pRed[k - 1] * mu + pRed[k] * (1.0 - mu);
+            mu2 = exptable[div0Red];
+            pRed[k] = pRed[k - 1] * mu2 + pRed[k] * (1.0 - mu2);
 
             int div0Green = fabs(pGreen[k] - pGreen[k - 1]);
-            mu = exptable[div0Green];
-            pGreen[k] = pGreen[k - 1] * mu + pGreen[k] * (1.0 - mu);
+            mu2 = exptable[div0Green];
+            pGreen[k] = pGreen[k - 1] * mu2 + pGreen[k] * (1.0 - mu2);
 
             int div0Blue = fabs(pBlue[k] - pBlue[k - 1]);
-            mu = exptable[div0Blue];
-            pBlue[k] = pBlue[k - 1] * mu + pBlue[k] * (1.0 - mu);
+            mu2 = exptable[div0Blue];
+            pBlue[k] = pBlue[k - 1] * mu2 + pBlue[k] * (1.0 - mu2);
         }
 
         for (int k = startIndex + width - 2; startIndex <= k; --k) {
             int div0Red = fabs(rRed[k] - rRed[k + 1]);
-            double mu = exptable[div0Red];
-            rRed[k] = rRed[k + 1] * mu + rRed[k] * (1.0 - mu);
+            mu2 = exptable[div0Red];
+            rRed[k] = rRed[k + 1] * mu2 + rRed[k] * (1.0 - mu2);
 
             int div0Green = fabs(rGreen[k] - rGreen[k + 1]);
-            mu = exptable[div0Green];
-            rGreen[k] = rGreen[k + 1] * mu + rGreen[k] * (1.0 - mu);
+            mu2 = exptable[div0Green];
+            rGreen[k] = rGreen[k + 1] * mu2 + rGreen[k] * (1.0 - mu2);
 
             int div0Blue = fabs(rBlue[k] - rBlue[k + 1]);
-            mu = exptable[div0Blue];
-            rBlue[k] = rBlue[k + 1] * mu + rBlue[k] * (1.0 - mu);
+            mu2 = exptable[div0Blue];
+            rBlue[k] = rBlue[k + 1] * mu2 + rBlue[k] * (1.0 - mu2);
         }
 
         for (int k = startIndex, K = startIndex + width; k < K; k++) {
@@ -1053,34 +1053,34 @@ QImage DImageHandler::bilateralFilter(const QImage &img, double spatialDecay, do
 #pragma omp parallel for
     for (int k1 = 0; k1 < width; ++k1) {
         int startIndex = k1 * height;
-        double mu = 0.0;
+        double mu1 = 0.0;
 
         for (int k = startIndex + 1, K = startIndex + height; k < K; ++k) {
             int div0Red = fabs(pRed[k] - pRed[k - 1]);
-            mu = exptable[div0Red];
-            pRed[k] = pRed[k - 1] * mu + pRed[k] * (1.0 - mu);
+            mu1 = exptable[div0Red];
+            pRed[k] = pRed[k - 1] * mu1 + pRed[k] * (1.0 - mu1);
 
             int div0Green = fabs(pGreen[k] - pGreen[k - 1]);
-            mu = exptable[div0Green];
-            pGreen[k] = pGreen[k - 1] * mu + pGreen[k] * (1.0 - mu);
+            mu1 = exptable[div0Green];
+            pGreen[k] = pGreen[k - 1] * mu1 + pGreen[k] * (1.0 - mu1);
 
             int div0Blue = fabs(pBlue[k] - pBlue[k - 1]);
-            mu = exptable[div0Blue];
-            pBlue[k] = pBlue[k - 1] * mu + pBlue[k] * (1.0 - mu);
+            mu1 = exptable[div0Blue];
+            pBlue[k] = pBlue[k - 1] * mu1 + pBlue[k] * (1.0 - mu1);
         }
 
         for (int k = startIndex + height - 2; startIndex <= k; --k) {
             int div0Red = fabs(rRed[k] - rRed[k + 1]);
-            mu = exptable[div0Red];
-            rRed[k] = rRed[k + 1] * mu + rRed[k] * (1.0 - mu);
+            mu1 = exptable[div0Red];
+            rRed[k] = rRed[k + 1] * mu1 + rRed[k] * (1.0 - mu1);
 
             int div0Green = fabs(rGreen[k] - rGreen[k + 1]);
-            mu = exptable[div0Green];
-            rGreen[k] = rGreen[k + 1] * mu + rGreen[k] * (1.0 - mu);
+            mu1 = exptable[div0Green];
+            rGreen[k] = rGreen[k + 1] * mu1 + rGreen[k] * (1.0 - mu1);
 
             int div0Blue = fabs(rBlue[k] - rBlue[k + 1]);
-            mu = exptable[div0Blue];
-            rBlue[k] = rBlue[k + 1] * mu + rBlue[k] * (1.0 - mu);
+            mu1 = exptable[div0Blue];
+            rBlue[k] = rBlue[k + 1] * mu1 + rBlue[k] * (1.0 - mu1);
         }
     }
 
@@ -1166,7 +1166,7 @@ QImage DImageHandler::contourExtraction(const QImage &img)
     for (int y = 1; y < height - 1; y++) {
         for (int x = 1; x < width - 1; x++) {
             int pixel[8];
-            memset(pixel, 0, 8);
+            memset(pixel, 0, 8 * sizeof(int));
             int lineNum_24 = y * nRowBytes;
             if (binrgb[lineNum_24 + x * 3] == 0) {
                 rgb[lineNum_24 + x * 3] = 0;
@@ -1326,7 +1326,6 @@ QImage DImageHandler::sobelEdgeDetector(const QImage &img)
     Gy[7] = 2.0;
     Gy[8] = 1.0;
 
-    QRgb pixel;
     QImage grayImage = grayScale(img);
     int height = grayImage.height();
     int width = grayImage.width();
@@ -1349,7 +1348,6 @@ QImage DImageHandler::sobelEdgeDetector(const QImage &img)
             for (int k = 0; k < 3; k++) {
                 for (int p = 0; p < 3; p++) {
                     if ((x + 1 + 1 - k < width) && (y + 1 + 1 - p < height)) {
-                        pixel = grayImage.pixel(x + 1 + 1 - k, y + 1 + 1 - p);
                         int lineNum_24 = (y + 1 + 1 - p) * nRowBytes;
                         value_gx += Gx[p * 3 + k] * rgbImg[lineNum_24 + (x + 1 + 1 - k) * 3];
                         value_gy += Gy[p * 3 + k] * rgbImg[lineNum_24 + (x + 1 + 1 - k) * 3];
@@ -1482,12 +1480,13 @@ QImage DImageHandler::changeStauration(const QImage &img, int saturation)
                 continue;
             }
             int L = value >> 1;
-            int S = L < 128 ? (delta << 7) / value : (delta << 7) / (510 - value);
             if (k >= 0) {
+                int S = L < 128 ? (delta << 7) / value : (delta << 7) / (510 - value);
                 alpha = k + S >= 128 ? S : 128 - k;
                 alpha = 128 * 128 / alpha - 128;
-            } else
+            } else {
                 alpha = k;
+            }
             r = r + ((r - L) * alpha >> 7);
             g = g + ((g - L) * alpha >> 7);
             b = b + ((b - L) * alpha >> 7);
