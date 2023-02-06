@@ -25,17 +25,16 @@ target_include_directories(${LIB_NAME} PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/DtkGui>
 )
 
-target_link_libraries(${LIB_NAME} PRIVATE
-    Qt5::GuiPrivate
-    Qt5::CorePrivate
-    PkgConfig::librsvg
-)
-
-target_link_libraries(${LIB_NAME} PUBLIC
+target_link_libraries(${LIB_NAME}
+PUBLIC
     Qt5::Gui
-    Qt5::DBus
     Qt5::Network
     Dtk::Core
+PRIVATE
+    Qt5::GuiPrivate
+    Qt5::CorePrivate
+    Qt5::DBus
+    PkgConfig::librsvg
 )
 
 if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
