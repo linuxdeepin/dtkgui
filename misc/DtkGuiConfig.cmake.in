@@ -3,6 +3,7 @@
 include(CMakeFindDependencyMacro)
 find_dependency(DtkCore)
 find_dependency(Qt5Network)
+find_dependency(Qt5Gui)
 
 include(${CMAKE_CURRENT_LIST_DIR}/DtkGuiTargets.cmake)
 
