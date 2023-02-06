@@ -17,6 +17,16 @@
 DCORE_USE_NAMESPACE
 DGUI_USE_NAMESPACE
 
+#define MAX_SCALE 10
+static int quality4Scaled[MAX_SCALE] = {};
+static inline void initQuality() {
+    // scale size < 3 default quality set to 100
+    quality4Scaled[0] = 100;
+    quality4Scaled[1] = 100;
+    for (int i = 2; i < MAX_SCALE; ++i)
+        quality4Scaled[i] = 90;
+}
+
 static inline void dciChecker(bool result) {
     if (!result) {
         qWarning() << "Failed on writing dci file";
@@ -48,7 +58,9 @@ static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QStr
 
     dciChecker(dci.mkdir(targetDir + QString("/%1").arg(scale)));
     const QImage &img = image.read().scaledToWidth(size, Qt::SmoothTransformation);
-    const QByteArray &data = webpImageData(img, 100);
+    Q_ASSERT(scale > 0 && scale <= MAX_SCALE);
+    int quality =  quality4Scaled[scale - 1];
+    const QByteArray &data = webpImageData(img, quality);
     dciChecker(dci.writeFile(targetDir + QString("/%1/1.webp").arg(scale), data));
 
     return true;
@@ -199,6 +211,13 @@ int main(int argc, char *argv[])
     QCommandLineOption fixDarkTheme("fix-dark-theme", "Create symlinks from light theme for dark theme files.");
     QCommandLineOption iconFinder("find", "Find dci icon file path");
     QCommandLineOption themeOpt({"t","theme"}, "Give a theme name to find dci icon file path", "theme name");
+    QCommandLineOption quality({"q","quality"}, "Quility of dci scaled icon image\n"
+                                                "The value may like <scale size>=<quality value>  e.g. 1=100:2=98:3=95"
+                                                "The quality factor must be in the range 0 to 100 or -1."
+                                                "Specify 0 to obtain small compressed files, 100 for large uncompressed files."
+                                                "and -1 to use the image handler default settings."
+                                                "defaut value is 1=100:2=100:3=90...63=90 if quality not specify"
+                                                "(the higher the quality, the larger the dci icon file size)", "quality of image");
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
@@ -207,15 +226,15 @@ int main(int argc, char *argv[])
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
                                  "For example, the tool is used in the following ways: \n"
-                                 "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps ~/Desktop/hicolor\n"
+                                 "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -q 2=98:3=95\n"
                                  "\t dci-icon-theme -m *.png /usr/share/icons/hicolor/256x256/apps ~/Desktop/hicolor\n"
                                  "\t dci-icon-theme --fix-dark-theme <input dci files directory> -o  <output directory path> \n"
                                  "\t dci-icon-theme --find <icon name>\n"
                                  "\t dci-icon-theme --find <icon name> -t bloom\n"
-                                 "\t dci-icon-theme <input file directory> -o  <output directory path> -s ~/Desktop/symlink.csv \n"""
+                                 "\t dci-icon-theme <input file directory> -o  <output directory path> -s <csv file> -q <qualities>\n"""
                                  );
 
-    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, iconFinder, themeOpt});
+    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, iconFinder, themeOpt, quality});
     cp.addPositionalArgument("source", "Search the given directory and it's subdirectories, "
                                        "get the files conform to rules of --match.",
                              "~/dci-png-icons");
@@ -252,6 +271,31 @@ int main(int argc, char *argv[])
         cp.showHelp(-4);
     }
 
+    if (cp.isSet(quality)) {
+        initQuality();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        auto behavior = Qt::SkipEmptyParts;
+#else
+        auto behavior = QString::SkipEmptyParts;
+#endif
+        QStringList qualityList = cp.value(quality).split(":", behavior);
+        for (const QString &kv : qualityList) {
+            auto sq = kv.split("=");
+            if (sq.size() != 2) {
+                qWarning() << "Invalid quality value:" << kv;
+                continue;
+            }
+
+            int scaleSize = sq.value(0).toInt();
+            if (scaleSize < 1 || scaleSize > MAX_SCALE) {
+                qWarning() << "Invalid scale size:" << kv;
+                continue;
+            }
+            int validQuality = qMax(qMin(sq.value(1).toInt(), 100), -1); // -1,  0~100
+            quality4Scaled[scaleSize - 1] = validQuality;
+        }
+    }
+
     QDir outputDir(cp.value(outputDirectory));
     if (!outputDir.exists()) {
         if (!QDir::current().mkpath(outputDir.absolutePath())) {
@@ -260,7 +304,9 @@ int main(int argc, char *argv[])
         }
     } else {
         qErrnoWarning("The output directory have been exists.");
+#ifndef QT_DEBUG
         return -1;
+#endif
     }
 
     QMultiHash<QString, QString> symlinksMap;
