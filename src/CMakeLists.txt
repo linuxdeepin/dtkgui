@@ -7,62 +7,65 @@ include(private/private.cmake)
 include(util/util.cmake)
 
 target_sources(${LIB_NAME} PRIVATE
-	${dbus_SRC}
-	${filedrag_SRC}
-	${kernel_SRC}
-	${util_SRC}
-	${private_SRC}
+    ${dbus_SRC}
+    ${filedrag_SRC}
+    ${kernel_SRC}
+    ${util_SRC}
+    ${private_SRC}
 )
 
 target_include_directories(${LIB_NAME} PUBLIC
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/util>
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/global>
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/kernel>
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/filedrag>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/dbus>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/private>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/util/private>
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/DtkGui>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/util>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/global>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/kernel>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/filedrag>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/dbus>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/private>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/util/private>
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/DtkGui>
 )
 
 target_link_libraries(${LIB_NAME} PRIVATE
-	Qt5::GuiPrivate
-	Qt5::CorePrivate
-	PkgConfig::librsvg
+    Qt5::GuiPrivate
+    Qt5::CorePrivate
+    PkgConfig::librsvg
 )
 
 target_link_libraries(${LIB_NAME} PUBLIC
-	Qt5::Gui
-	Qt5::DBus
-	Qt5::Network
-	Dtk::Core
+    Qt5::Gui
+    Qt5::DBus
+    Qt5::Network
+    Dtk::Core
 )
 
 if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
-	target_link_libraries(${LIB_NAME} PRIVATE
-		PkgConfig::libraw
-		FreeImage::FreeImage
-	)
+    target_link_libraries(${LIB_NAME} PRIVATE
+        ${libraw_LIBRARIES}
+        FreeImage::FreeImage
+    )
+    target_include_directories(${LIB_NAME} PRIVATE
+        ${libraw_INCLUDE_DIRS}
+    )
 endif()
 
 if(NOT DTK_DISABLE_LIBXDG)
-	target_link_libraries(${LIB_NAME} PRIVATE
-		Qt5XdgIconLoader
-	)
+    target_link_libraries(${LIB_NAME} PRIVATE
+        Qt5XdgIconLoader
+    )
 endif()
 
 set_target_properties(${LIB_NAME} PROPERTIES
-	VERSION ${CMAKE_PROJECT_VERSION}
-	SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
-	EXPORT_NAME Gui
+    VERSION ${CMAKE_PROJECT_VERSION}
+    SOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}
+    EXPORT_NAME Gui
 )
 
 target_include_directories(${LIB_NAME} INTERFACE
-	$<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
+    $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
 )
 
 target_link_directories(${LIB_NAME} INTERFACE
-	$<INSTALL_INTERFACE:${LIBRARY_INSTALL_DIR}>
+    $<INSTALL_INTERFACE:${LIBRARY_INSTALL_DIR}>
 )
 
 install(TARGETS ${LIB_NAME} EXPORT DtkGuiTargets DESTINATION "${LIBRARY_INSTALL_DIR}")
