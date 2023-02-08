@@ -18,13 +18,11 @@ DCORE_USE_NAMESPACE
 DGUI_USE_NAMESPACE
 
 #define MAX_SCALE 10
+#define INVALIDE_QUALITY -2
 static int quality4Scaled[MAX_SCALE] = {};
 static inline void initQuality() {
-    // scale size < 3 default quality set to 100
-    quality4Scaled[0] = 100;
-    quality4Scaled[1] = 100;
-    for (int i = 2; i < MAX_SCALE; ++i)
-        quality4Scaled[i] = 90;
+    for (int i = 0; i < MAX_SCALE; ++i)
+        quality4Scaled[i] = INVALIDE_QUALITY;
 }
 
 static inline void dciChecker(bool result) {
@@ -58,7 +56,6 @@ static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QStr
 
     dciChecker(dci.mkdir(targetDir + QString("/%1").arg(scale)));
     const QImage &img = image.read().scaledToWidth(size, Qt::SmoothTransformation);
-    Q_ASSERT(scale > 0 && scale <= MAX_SCALE);
     int quality =  quality4Scaled[scale - 1];
     const QByteArray &data = webpImageData(img, quality);
     dciChecker(dci.writeFile(targetDir + QString("/%1/1.webp").arg(scale), data));
@@ -68,8 +65,15 @@ static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QStr
 
 static bool writeImage(DDciFile &dci, const QString &imageFile, const QString &targetDir)
 {
-    return writeScaledImage(dci, imageFile, targetDir, 2) &&
-            writeScaledImage(dci, imageFile, targetDir, 3);
+    for (int i = 0; i < MAX_SCALE; ++i) {
+        if (quality4Scaled[i] == INVALIDE_QUALITY)
+            continue;
+
+        if (!writeScaledImage(dci, imageFile, targetDir, i + 1))
+            return false;
+    }
+
+    return true;
 }
 
 static bool recursionLink(DDciFile &dci, const QString &fromDir, const QString &targetDir)
@@ -211,30 +215,30 @@ int main(int argc, char *argv[])
     QCommandLineOption fixDarkTheme("fix-dark-theme", "Create symlinks from light theme for dark theme files.");
     QCommandLineOption iconFinder("find", "Find dci icon file path");
     QCommandLineOption themeOpt({"t","theme"}, "Give a theme name to find dci icon file path", "theme name");
-    QCommandLineOption quality({"q","quality"}, "Quility of dci scaled icon image\n"
-                                                "The value may like <scale size>=<quality value>  e.g. 1=100:2=98:3=95"
+    QCommandLineOption scaleQuality({"O","scale-quality"}, "Quility of dci scaled icon image\n"
+                                                "The value may like <scale size>=<quality value>  e.g. 2=98:3=95\n"
                                                 "The quality factor must be in the range 0 to 100 or -1."
                                                 "Specify 0 to obtain small compressed files, 100 for large uncompressed files."
-                                                "and -1 to use the image handler default settings."
+                                                "and -1 to use the image handler default settings.\n"
                                                 "defaut value is 1=100:2=100:3=90...63=90 if quality not specify"
-                                                "(the higher the quality, the larger the dci icon file size)", "quality of image");
+                                                "(the higher the quality, the larger the dci icon file size)", "scale quality");
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
-    a.setApplicationVersion("0.0.3");
+    a.setApplicationVersion("0.0.4");
 
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
                                  "For example, the tool is used in the following ways: \n"
-                                 "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -q 2=98:3=95\n"
-                                 "\t dci-icon-theme -m *.png /usr/share/icons/hicolor/256x256/apps ~/Desktop/hicolor\n"
-                                 "\t dci-icon-theme --fix-dark-theme <input dci files directory> -o  <output directory path> \n"
+                                 "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -q 3=95\n"
+                                 "\t dci-icon-theme -m *.png /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -q 3=95\n"
+                                 "\t dci-icon-theme --fix-dark-theme <input dci files directory> -o <output directory path> \n"
                                  "\t dci-icon-theme --find <icon name>\n"
                                  "\t dci-icon-theme --find <icon name> -t bloom\n"
-                                 "\t dci-icon-theme <input file directory> -o  <output directory path> -s <csv file> -q <qualities>\n"""
+                                 "\t dci-icon-theme <input file directory> -o <output directory path> -s <csv file> -q <qualities>\n"""
                                  );
 
-    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, iconFinder, themeOpt, quality});
+    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, iconFinder, themeOpt, scaleQuality});
     cp.addPositionalArgument("source", "Search the given directory and it's subdirectories, "
                                        "get the files conform to rules of --match.",
                              "~/dci-png-icons");
@@ -271,14 +275,25 @@ int main(int argc, char *argv[])
         cp.showHelp(-4);
     }
 
+    if (!cp.isSet(scaleQuality) && !cp.isSet(fixDarkTheme)) {
+        qWarning() << "Not give -O argument"; scaleQuality.flags();
+        cp.showHelp(-5);
+    }
+
     initQuality();
-    if (cp.isSet(quality)) {
+    QString surfix;
+    if (cp.isSet(scaleQuality)) {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         auto behavior = Qt::SkipEmptyParts;
 #else
         auto behavior = QString::SkipEmptyParts;
 #endif
-        QStringList qualityList = cp.value(quality).split(":", behavior);
+        QStringList qualityList = cp.value(scaleQuality).split(":", behavior);
+
+#ifdef QT_DEBUG
+            surfix = cp.value(scaleQuality).prepend("-");
+#endif
+
         for (const QString &kv : qualityList) {
             auto sq = kv.split("=");
             if (sq.size() != 2) {
@@ -334,7 +349,12 @@ int main(int argc, char *argv[])
                  if (!file.isSymLink())
                      continue;
 
-                 const QString &linkTarget = QFileInfo(file.readLink()).completeBaseName();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 13, 0)
+        auto link = file.symLinkTarget();
+#else
+        auto link = file.readLink();
+#endif
+                 const QString &linkTarget = QFileInfo(link).completeBaseName();
                  if (!symlinksMap.values(linkTarget).contains(file.completeBaseName())) {
                      symlinksMap.insert(linkTarget, file.completeBaseName());
                      qInfo() << "Add link" << file.completeBaseName() << "->" << linkTarget;
@@ -364,7 +384,7 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            const QString dciFilePath(outputDir.absoluteFilePath(file.completeBaseName()) + ".dci");
+            const QString dciFilePath(outputDir.absoluteFilePath(file.completeBaseName()) + surfix + ".dci");
             if (QFile::exists(dciFilePath)) {
                 qWarning() << "Skip exists dci file:" << dciFilePath;
                 continue;
