@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
-    a.setApplicationVersion("0.0.2");
+    a.setApplicationVersion("0.0.3");
 
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
@@ -271,8 +271,8 @@ int main(int argc, char *argv[])
         cp.showHelp(-4);
     }
 
+    initQuality();
     if (cp.isSet(quality)) {
-        initQuality();
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         auto behavior = Qt::SkipEmptyParts;
 #else
