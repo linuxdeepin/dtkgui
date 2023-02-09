@@ -217,11 +217,10 @@ int main(int argc, char *argv[])
     QCommandLineOption themeOpt({"t","theme"}, "Give a theme name to find dci icon file path", "theme name");
     QCommandLineOption scaleQuality({"O","scale-quality"}, "Quility of dci scaled icon image\n"
                                                 "The value may like <scale size>=<quality value>  e.g. 2=98:3=95\n"
-                                                "The quality factor must be in the range 0 to 100 or -1."
-                                                "Specify 0 to obtain small compressed files, 100 for large uncompressed files."
+                                                "The quality factor must be in the range 0 to 100 or -1.\n"
+                                                "Specify 0 to obtain small compressed files, 100 for large uncompressed files "
                                                 "and -1 to use the image handler default settings.\n"
-                                                "default value is 1=100:2=100:3=90...63=90 if quality not specify"
-                                                "(the higher the quality, the larger the dci icon file size)", "scale quality");
+                                                "The higher the quality, the larger the dci icon file size", "scale quality");
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
@@ -230,12 +229,12 @@ int main(int argc, char *argv[])
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
                                  "For example, the tool is used in the following ways: \n"
-                                 "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -q 3=95\n"
-                                 "\t dci-icon-theme -m *.png /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -q 3=95\n"
+                                 "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -O 3=95\n"
+                                 "\t dci-icon-theme -m *.png /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -O 3=95\n"
                                  "\t dci-icon-theme --fix-dark-theme <input dci files directory> -o <output directory path> \n"
                                  "\t dci-icon-theme --find <icon name>\n"
                                  "\t dci-icon-theme --find <icon name> -t bloom\n"
-                                 "\t dci-icon-theme <input file directory> -o <output directory path> -s <csv file> -q <qualities>\n"""
+                                 "\t dci-icon-theme <input file directory> -o <output directory path> -s <csv file> -O <qualities>\n"""
                                  );
 
     cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, iconFinder, themeOpt, scaleQuality});
