@@ -5,7 +5,7 @@ Maintainer: Deepin Packages Builder <packages@deepin.com>
 Build-Depends: debhelper-compat (= 12), pkg-config, 
  qtbase5-private-dev, qtbase5-dev-tools, doxygen, graphviz, qttools5-dev-tools,
  libdtkcore-dev, librsvg2-dev, libfreeimage-dev, libraw-dev, libgtest-dev, libgmock-dev,
- libqt5xdg-dev, libqt5xdgiconloader-dev, cmake
+ libqt5xdg-dev, libqt5xdgiconloader-dev, cmake, qt5-image-formats-plugins
 Standards-Version: 3.9.8
 
 Package: libdtkgui5

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="/dsg/bulit-in-icons/test_heart.dci">dci_heart.dci</file>
+    </qresource>
+</RCC>
