@@ -79,6 +79,17 @@ TEST_F(TDGuiApplicationHelper, testFunction)
     ASSERT_EQ(helper->paletteType(), DGuiApplicationHelper::DarkType);
 }
 
+TEST_F(TDGuiApplicationHelper, adjustColor_NoChange)
+{
+    QColor testColor(Qt::red);
+    QColor adjustedColor = helper->adjustColor(testColor, 0, 0, 0, 0, 0, 0, 0);
+    ASSERT_EQ(testColor, adjustedColor);
+
+    testColor = QColor::fromHsl(100, 100, 100, 100);
+    adjustedColor = helper->adjustColor(testColor, 0, 0, 0, 0, 0, 0, 0);
+    ASSERT_EQ(testColor, adjustedColor);
+}
+
 TEST_F(TDGuiApplicationHelper, AttributeReadWrite)
 {
     QMap<DGuiApplicationHelper::Attribute, bool> oldData;
