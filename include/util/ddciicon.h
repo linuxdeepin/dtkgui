@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022-2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -16,6 +16,51 @@ DCORE_END_NAMESPACE
 DGUI_BEGIN_NAMESPACE
 
 typedef void* DDciIconMatchResult;
+
+class DDciIconImagePrivate;
+class DDciIconImage {
+    friend class DDciIcon;
+public:
+    DDciIconImage() = default;
+    DDciIconImage(const DDciIconImage &other);
+    DDciIconImage &operator=(const DDciIconImage &other) noexcept;
+    DDciIconImage(DDciIconImage && other) noexcept;
+    DDciIconImage &operator=(DDciIconImage &&other) noexcept;
+    void swap(DDciIconImage &other) noexcept { d.swap(other.d); }
+    ~DDciIconImage();
+
+    bool operator==(const DDciIconImage &other) const {
+        return d == other.d;
+    }
+    bool operator!=(const DDciIconImage &other) const {
+        return d != other.d;
+    }
+
+    inline bool isNull() const {
+        return !d;
+    }
+    void reset();
+
+    QImage toImage(const DDciIconPalette &palette = DDciIconPalette()) const;
+    void paint(QPainter *painter, const QRectF &rect, Qt::Alignment alignment = Qt::AlignCenter,
+               const DDciIconPalette &palette = DDciIconPalette()) const;
+
+    bool hasPalette() const;
+    bool supportsAnimation() const;
+    bool atBegin() const;
+    bool atEnd() const;
+    bool jumpToNextImage();
+    int loopCount() const;
+    int maxImageCount() const;
+    int currentImageDuration() const;
+    int currentImageNumber() const;
+
+protected:
+    DDciIconImage(const QSharedPointer<DDciIconImagePrivate> &dd)
+        : d(dd) {}
+
+    QSharedPointer<DDciIconImagePrivate> d;
+};
 
 class DDciIconPrivate;
 class DDciIcon
@@ -36,7 +81,8 @@ public:
     };
     enum IconMatchedFlag {
         None = 0,
-        DontFallbackMode = 0x01
+        DontFallbackMode = 0x01,
+        RegardPaddingsAsSize = 0x02
     };
     Q_DECLARE_FLAGS(IconMatchedFlags, IconMatchedFlag)
     Q_FLAGS(IconMatchedFlags);
@@ -60,6 +106,7 @@ public:
 
     QList<int> availableSizes(Theme theme, Mode mode = Normal) const;
     bool isSupportedAttribute(DDciIconMatchResult result, IconAttibute attr) const;
+    static bool isSupportedAttribute(const DDciIconImage &image, IconAttibute attr);
 
     QPixmap pixmap(qreal devicePixelRatio, int iconSize, Theme theme, Mode mode = Normal,
                    const DDciIconPalette &palette = DDciIconPalette()) const;
@@ -70,6 +117,8 @@ public:
                Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const;
     void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, DDciIconMatchResult result,
                Qt::Alignment alignment = Qt::AlignCenter, const DDciIconPalette &palette = DDciIconPalette()) const;
+
+    DDciIconImage image(DDciIconMatchResult result, int size, qreal devicePixelRatio) const;
 
     static DDciIcon fromTheme(const QString &name);
     static DDciIcon fromTheme(const QString &name, const DDciIcon &fallback);
