@@ -468,6 +468,43 @@ DGuiApplicationHelper::~DGuiApplicationHelper()
     _globalHelper->m_helper = nullptr;
 }
 
+static inline QColor adjustHSLColor(const QColor &base, qint8 hueFloat, qint8 saturationFloat,
+                                    qint8 lightnessFloat, qint8 alphaFloat = 0)
+{
+    if (Q_LIKELY(hueFloat || saturationFloat || lightnessFloat || alphaFloat)) {
+        // 按HSL格式调整
+        int H, S, L, A;
+        base.getHsl(&H, &S, &L, &A);
+
+        H = H > 0 ? adjustColorValue(H, hueFloat, 359) : H;
+        S = adjustColorValue(S, saturationFloat);
+        L = adjustColorValue(L, lightnessFloat);
+
+        return QColor::fromHsl(H, S, L, A);
+    }
+
+    return base;
+}
+
+static inline QColor adjustRGBColor(const QColor &base, qint8 redFloat, qint8 greenFloat,
+                                    qint8 blueFloat, qint8 alphaFloat = 0)
+{
+    if (Q_LIKELY(redFloat || greenFloat || blueFloat || alphaFloat)) {
+        // 按RGB格式调整
+        int R, G, B, A;
+        base.getRgb(&R, &G, &B, &A);
+
+        R = adjustColorValue(R, redFloat);
+        G = adjustColorValue(G, greenFloat);
+        B = adjustColorValue(B, blueFloat);
+        A = adjustColorValue(A, alphaFloat);
+
+        return QColor(R, G, B, A);
+    }
+
+    return base;
+}
+
 /*!
   \brief 调整颜色.
 
@@ -487,28 +524,18 @@ QColor DGuiApplicationHelper::adjustColor(const QColor &base,
                                           qint8 hueFloat, qint8 saturationFloat, qint8 lightnessFloat,
                                           qint8 redFloat, qint8 greenFloat, qint8 blueFloat, qint8 alphaFloat)
 {
-    // 按HSL格式调整
-    int H, S, L, A;
-    base.getHsl(&H, &S, &L, &A);
+    if (Q_UNLIKELY(!base.isValid()))
+        return base;
 
-    H = H > 0 ? adjustColorValue(H, hueFloat, 359) : H;
-    S = adjustColorValue(S, saturationFloat);
-    L = adjustColorValue(L, lightnessFloat);
-    A = adjustColorValue(A, alphaFloat);
+    // First do the adjust of spec of this color, Avoid precision loss caused by color spec conversion.
+    if (Q_UNLIKELY(base.spec() == QColor::Hsl)) {
+        QColor newColor = adjustHSLColor(base, hueFloat, saturationFloat, lightnessFloat, alphaFloat);
+        return adjustRGBColor(newColor, redFloat, greenFloat, blueFloat);
+    }
 
-    QColor new_color = QColor::fromHsl(H, S, L, A);
-
-    // 按RGB格式调整
-    int R, G, B;
-    new_color.getRgb(&R, &G, &B);
-
-    R = adjustColorValue(R, redFloat);
-    G = adjustColorValue(G, greenFloat);
-    B = adjustColorValue(B, blueFloat);
-
-    new_color.setRgb(R, G, B, A);
-
-    return new_color;
+    // For other specs, first do RGB adjust
+    QColor newColor = adjustRGBColor(base, redFloat, greenFloat, blueFloat, alphaFloat);
+    return adjustHSLColor(newColor, hueFloat, saturationFloat, lightnessFloat);
 }
 
 /*!
