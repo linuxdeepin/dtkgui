@@ -24,6 +24,13 @@ else()
     message("Support extended image format!")
 endif()
 
+if(DTK_DISABLE_LIBRSVG)
+    add_definitions(-DDTK_DISABLE_LIBRSVG)
+    message("Disable librsvg!")
+else()
+    message("Enable librsvg!")
+endif()
+
 file(GLOB UTIL_HEADER
     ${PROJECT_SOURCE_DIR}/include/util/*.h
 )

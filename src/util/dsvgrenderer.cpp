@@ -1,8 +1,12 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
+#ifndef DTK_DISABLE_LIBRSVG
 #include <librsvg/rsvg.h>
+#else
+#include <QSvgRenderer>
+#endif
 
 #include "dsvgrenderer.h"
 #include "dobject_p.h"
@@ -18,6 +22,7 @@ DCORE_USE_NAMESPACE
 
 DGUI_BEGIN_NAMESPACE
 
+#ifndef DTK_DISABLE_LIBRSVG
 class RSvg
 {
 public:
@@ -85,28 +90,36 @@ public:
 private:
     QLibrary *rsvg = nullptr;
 };
+#endif
 
 class DSvgRendererPrivate : public DObjectPrivate
 {
 public:
-    explicit DSvgRendererPrivate(DObject *qq);
+    explicit DSvgRendererPrivate(DSvgRenderer *qq);
 
     QImage getImage(const QSize &size, const QString &elementId) const;
 
+#ifndef DTK_DISABLE_LIBRSVG
     RsvgHandle *handle = nullptr;
     QSize defaultSize;
-
     mutable QRectF viewBox;
+#else
+    QSvgRenderer *qRenderer = nullptr;
+#endif
 };
 
-DSvgRendererPrivate::DSvgRendererPrivate(DObject *qq)
-    : DObjectPrivate(qq)
+DSvgRendererPrivate::DSvgRendererPrivate(DSvgRenderer *qq)
+    : DObjectPrivate(qq)           // qq ==> DObject
+#ifdef DTK_DISABLE_LIBRSVG
+    , qRenderer(new QSvgRenderer(qq)) // qq ==> QObject
+#endif
 {
 
 }
 
 QImage DSvgRendererPrivate::getImage(const QSize &size, const QString &elementId) const
 {
+#ifndef DTK_DISABLE_LIBRSVG
     if (!RSvg::instance()->isValid())
         return QImage();
 
@@ -128,6 +141,13 @@ QImage DSvgRendererPrivate::getImage(const QSize &size, const QString &elementId
     RSvg::instance()->cairo_surface_destroy(surface);
 
     return image;
+#else
+    QImage image(size, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+    QPainter pa(&image);
+    qRenderer->render(&pa, elementId);
+    return image;
+#endif
 }
 
 /*!
@@ -163,40 +183,54 @@ DSvgRenderer::DSvgRenderer(const QByteArray &contents, QObject *parent)
 
 DSvgRenderer::~DSvgRenderer()
 {
+#ifndef DTK_DISABLE_LIBRSVG
     D_D(DSvgRenderer);
 
     if (d->handle) {
         Q_ASSERT(RSvg::instance()->isValid());
         RSvg::instance()->g_object_unref(d->handle);
     }
+#endif
 }
 
 bool DSvgRenderer::isValid() const
 {
     D_DC(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     return d->handle;
+#else
+    return d->qRenderer->isValid();
+#endif
 }
 
 QSize DSvgRenderer::defaultSize() const
 {
     D_DC(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     return d->defaultSize;
+#else
+    return d->qRenderer->defaultSize();
+#endif
 }
 
 QRect DSvgRenderer::viewBox() const
 {
     D_DC(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     return d->handle ? d->viewBox.toRect() : QRect();
+#else
+    return d->qRenderer->viewBox();
+#endif
 }
 
 QRectF DSvgRenderer::viewBoxF() const
 {
     D_DC(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     return d->handle ? d->viewBox : QRectF();
+#else
+    return d->qRenderer->viewBoxF();
+#endif
 }
 
 void DSvgRenderer::setViewBox(const QRect &viewbox)
@@ -207,15 +241,18 @@ void DSvgRenderer::setViewBox(const QRect &viewbox)
 void DSvgRenderer::setViewBox(const QRectF &viewbox)
 {
     D_D(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     if (d->handle)
         d->viewBox = viewbox;
+#else
+    return d->qRenderer->setViewBox(viewbox);
+#endif
 }
 
 QRectF DSvgRenderer::boundsOnElement(const QString &id) const
 {
     D_DC(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     if (!d->handle)
         return QRectF();
 
@@ -232,16 +269,22 @@ QRectF DSvgRenderer::boundsOnElement(const QString &id) const
         return QRectF();
 
     return QRectF(pos_data.x, pos_data.y, dimension_data.width, dimension_data.height);
+#else
+    return d->qRenderer->boundsOnElement(id);
+#endif
 }
 
 bool DSvgRenderer::elementExists(const QString &id) const
 {
     D_DC(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     if (!d->handle)
         return false;
 
     return RSvg::instance()->rsvg_handle_has_sub(d->handle, id.toUtf8().constData());
+#else
+    return d->qRenderer->elementExists(id);
+#endif
 }
 
 QImage DSvgRenderer::toImage(const QSize sz, const QString &elementId) const
@@ -251,6 +294,7 @@ QImage DSvgRenderer::toImage(const QSize sz, const QString &elementId) const
     return d->getImage(sz, elementId);
 }
 
+#ifndef DTK_DISABLE_LIBRSVG
 static QByteArray updateXmlAttribute(const QString &contents)
 {
     QByteArray data;
@@ -280,7 +324,7 @@ static QByteArray updateXmlAttribute(const QString &contents)
     return data;
 }
 
-QByteArray format(const QByteArray &contents)
+static QByteArray format(const QByteArray &contents)
 {
     QXmlStreamReader reader(contents);
     while (reader.readNextStartElement()) {
@@ -290,9 +334,11 @@ QByteArray format(const QByteArray &contents)
 
     return contents;
 }
+#endif
 
 bool DSvgRenderer::load(const QString &filename)
 {
+#ifndef DTK_DISABLE_LIBRSVG
     QFile file(filename);
 
     if (file.open(QIODevice::ReadOnly)) {
@@ -301,12 +347,16 @@ bool DSvgRenderer::load(const QString &filename)
     }
 
     return false;
+#else
+    D_D(DSvgRenderer);
+    return d->qRenderer->load(filename);
+#endif
 }
 
 bool DSvgRenderer::load(const QByteArray &contents)
 {
     D_D(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     if (!RSvg::instance()->isValid())
         return false;
 
@@ -334,22 +384,35 @@ bool DSvgRenderer::load(const QByteArray &contents)
     d->viewBox = QRectF(QPointF(0, 0), d->defaultSize);
 
     return true;
+#else
+    return d->qRenderer->load(contents);
+#endif
 }
 
 void DSvgRenderer::render(QPainter *p)
 {
+#ifndef DTK_DISABLE_LIBRSVG
     render(p, QString(), QRectF());
+#else
+    D_D(DSvgRenderer);
+    d->qRenderer->render(p);
+#endif
 }
 
 void DSvgRenderer::render(QPainter *p, const QRectF &bounds)
 {
+#ifndef DTK_DISABLE_LIBRSVG
     render(p, QString(), bounds);
+#else
+    D_D(DSvgRenderer);
+    d->qRenderer->render(p, bounds);
+#endif
 }
 
 void DSvgRenderer::render(QPainter *p, const QString &elementId, const QRectF &bounds)
 {
     D_D(DSvgRenderer);
-
+#ifndef DTK_DISABLE_LIBRSVG
     if (!d->handle)
         return;
 
@@ -363,6 +426,9 @@ void DSvgRenderer::render(QPainter *p, const QString &elementId, const QRectF &b
         p->drawImage(bounds, image);
 
     p->restore();
+#else
+    d->qRenderer->render(p, elementId, bounds);
+#endif
 }
 
 DGUI_END_NAMESPACE

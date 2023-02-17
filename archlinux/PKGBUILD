@@ -6,7 +6,7 @@ pkgdesc='Deepin Toolkit, gui module for DDE look and feel'
 arch=('x86_64' 'aarch64')
 url="https://github.com/linuxdeepin/dtkgui"
 license=('LGPL3')
-depends=('dtkcore-git' 'librsvg' 'libqtxdg' 'freeimage')
+depends=('dtkcore-git' 'qt5-svg' 'libqtxdg' 'freeimage')
 # INFO: you can disable freeimage not to support RAW images
 # Then set DTK_DISABLE_EX_IMAGE_FORMAT=OFF
 makedepends=('git' 'qt5-tools' 'dtkcommon-git' 'dtkcore-git' 'librsvg' 'gtest' 'gmock' 'libqtxdg' 'ninja' 'cmake' 'doxygen')
@@ -22,6 +22,7 @@ build() {
     cmake -GNinja \
     -DMKSPECS_INSTALL_DIR=lib/qt/mkspecs/modules/ \
     -DBUILD_DOCS=ON \
+    -DDTK_DISABLE_LIBRSVG=ON \
     -DQCH_INSTALL_DESTINATION=share/doc/qt \
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_INSTALL_PREFIX=/usr \

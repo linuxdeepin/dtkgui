@@ -20,6 +20,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set build option
 option(DTK_DISABLE_LIBXDG "Disable libxdg" OFF)
+option(DTK_DISABLE_LIBRSVG "Disable librsvg" OFF)
 option(DTK_DISABLE_EX_IMAGE_FORMAT "Disable libraw and freeimage" OFF)
 set(BUILD_DOCS ON CACHE BOOL "Generate doxygen-based documentation")
 
