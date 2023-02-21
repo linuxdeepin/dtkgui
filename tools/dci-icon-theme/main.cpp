@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                                                 "The quality factor must be in the range 0 to 100 or -1."
                                                 "Specify 0 to obtain small compressed files, 100 for large uncompressed files."
                                                 "and -1 to use the image handler default settings.\n"
-                                                "defaut value is 1=100:2=100:3=90...63=90 if quality not specify"
+                                                "default value is 1=100:2=100:3=90...63=90 if quality not specify"
                                                 "(the higher the quality, the larger the dci icon file size)", "scale quality");
 
     QGuiApplication a(argc, argv);
