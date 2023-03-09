@@ -881,7 +881,7 @@ DDciIconImage DDciIcon::image(DDciIconMatchResult result, int size, qreal device
     if (iconSize <= 0)
         iconSize = entry->iconSize;
     Q_ASSERT_X((iconSize > 0), "DDciIcon::generatePixmap", "You must specify the icon size.");
-    const qreal pixmapScale = iconSize / entry->iconSize;
+    const qreal pixmapScale = qreal(iconSize) / entry->iconSize;
     const qreal imageSize = (entry->maxPaddings * 2 + entry->iconSize) * pixmapScale;
     const qreal imageScale = pixmapScale * devicePixelRatio / scalableLayer.imagePixelRatio;
 
