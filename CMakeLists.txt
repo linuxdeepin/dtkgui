@@ -10,6 +10,8 @@ project(DtkGui
 set(LIB_NAME dtkgui)
 
 include(GNUInstallDirs)
+include(FeatureSummary)
+include(CMakeDependentOption)
 include(CMakePackageConfigHelpers)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 11)
@@ -19,7 +21,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set build option
-option(DTK_DISABLE_LIBXDG "Disable libxdg" OFF)
+option(DTK_DISABLE_ICON_ENGINE_PROXY "Disable icon engine, use QIcon::fromTheme() as possible fallback" OFF)
+cmake_dependent_option(DTK_DISABLE_LIBXDG "If icon engine proxy is used, prefer KIconEngine instead of using libqxdg" OFF "NOT DTK_DISABLE_ICON_ENGINE_PROXY" OFF)
 option(DTK_DISABLE_LIBRSVG "Disable librsvg" OFF)
 option(DTK_DISABLE_EX_IMAGE_FORMAT "Disable libraw and freeimage" OFF)
 set(BUILD_DOCS ON CACHE BOOL "Generate doxygen-based documentation")
@@ -132,3 +135,5 @@ add_subdirectory(examples)
 if (BUILD_DOCS)
   add_subdirectory(docs)
 endif ()
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

@@ -47,10 +47,12 @@ if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
     )
 endif()
 
-if(NOT DTK_DISABLE_LIBXDG)
-    target_link_libraries(${LIB_NAME} PRIVATE
-        Qt5XdgIconLoader
-    )
+if(NOT DTK_DISABLE_ICON_ENGINE_PROXY)
+    if(DTK_DISABLE_LIBXDG)
+        target_link_libraries(${LIB_NAME} PRIVATE KF5::IconThemes)
+    else()
+        target_link_libraries(${LIB_NAME} PRIVATE Qt5XdgIconLoader)
+    endif()
 endif()
 
 set_target_properties(${LIB_NAME} PROPERTIES

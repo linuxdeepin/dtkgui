@@ -4,8 +4,13 @@
 
 #include "dicontheme.h"
 #include "private/dbuiltiniconengine_p.h"
-#ifndef DTK_DISABLE_LIBXDG
-#include "private/xdgiconproxyengine_p.h"
+#ifndef DTK_DISABLE_ICON_ENGINE_PROXY
+  #ifndef DTK_DISABLE_LIBXDG
+    #include "private/xdgiconproxyengine_p.h"
+  #else
+    #include <KIconEngine>
+    #include <KIconLoader>
+  #endif
 #endif
 
 #include <DStandardPaths>
@@ -87,10 +92,14 @@ static inline QIconEngine *createBuiltinIconEngine(const QString &iconName)
     return new DBuiltinIconEngine(iconName);
 }
 
-#ifndef DTK_DISABLE_LIBXDG
+#ifndef DTK_DISABLE_ICON_ENGINE_PROXY
 static inline QIconEngine *createXdgProxyIconEngine(const QString &iconName)
 {
+#ifndef DTK_DISABLE_LIBXDG
     return new XdgIconProxyEngine(new XdgIconLoaderEngine(iconName));
+#else
+    return new KIconEngine(iconName, KIconLoader::global());
+#endif
 }
 #endif
 
@@ -116,7 +125,7 @@ QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
         }
     }
 
-#ifdef DTK_DISABLE_LIBXDG
+#ifdef DTK_DISABLE_ICON_ENGINE_PROXY
     if (options.testFlag(DontFallbackToQIconFromTheme))
         return QIcon();
     return QIcon::fromTheme(iconName);
@@ -135,12 +144,16 @@ bool DIconTheme::isBuiltinIcon(const QIcon &icon)
 
 bool DIconTheme::isXdgIcon(const QIcon &icon)
 {
-#ifdef DTK_DISABLE_LIBXDG
+#ifdef DTK_DISABLE_ICON_ENGINE_PROXY
     return false;
 #else
     if (icon.isNull())
         return false;
-    return typeid(*const_cast<QIcon&>(icon).data_ptr()->engine) == typeid(XdgIconProxyEngine);
+    #ifndef DTK_DISABLE_LIBXDG
+        return typeid(*const_cast<QIcon&>(icon).data_ptr()->engine) == typeid(XdgIconProxyEngine);
+    #else
+        return typeid(*const_cast<QIcon&>(icon).data_ptr()->engine) == typeid(KIconEngine);
+    #endif
 #endif
 }
 
