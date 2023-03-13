@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022-2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -6,6 +6,10 @@
 #include "private/dbuiltiniconengine_p.h"
 #ifndef DTK_DISABLE_LIBXDG
 #include "private/xdgiconproxyengine_p.h"
+#else
+#include <qpa/qplatformtheme.h>
+#include <private/qguiapplication_p.h>
+#include <private/qiconloader_p.h>
 #endif
 
 #include <DStandardPaths>
@@ -94,7 +98,7 @@ static inline QIconEngine *createXdgProxyIconEngine(const QString &iconName)
 }
 #endif
 
-QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
+QIconEngine *DIconTheme::createIconEngine(const QString &iconName, Options options)
 {
     if (Q_UNLIKELY(!options.testFlag(IgnoreBuiltinIcons))) {
         thread_local static QSet<QString> non_builtin_icon_cache;
@@ -108,7 +112,7 @@ QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
                     non_builtin_icon_cache.insert(iconName);
                     delete engine;
                 } else {
-                    return QIcon(engine);
+                    return engine;
                 }
             } else {
                 non_builtin_icon_cache.insert(iconName);
@@ -118,12 +122,27 @@ QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
 
 #ifdef DTK_DISABLE_LIBXDG
     if (options.testFlag(DontFallbackToQIconFromTheme))
-        return QIcon();
-    return QIcon::fromTheme(iconName);
+        return nullptr; // QIconLoaderEngine not export
+
+    // Warning : do not call from qplatformTheme createIconEngine (stackoverflow)
+    if (QPlatformTheme * const platformTheme = QGuiApplicationPrivate::platformTheme())
+        return platformTheme->createIconEngine(iconName);
+
+    return nullptr;
 #else
     Q_UNUSED(options)
-    return QIcon(createXdgProxyIconEngine(iconName));
+    return createXdgProxyIconEngine(iconName);
 #endif
+}
+
+QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
+{
+    auto engine = createIconEngine(iconName, options);
+    // fallback to QIcon::fromTheme
+    if (!options.testFlag(DontFallbackToQIconFromTheme) && !engine)
+        return QIcon::fromTheme(iconName);
+
+    return QIcon(engine);
 }
 
 bool DIconTheme::isBuiltinIcon(const QIcon &icon)

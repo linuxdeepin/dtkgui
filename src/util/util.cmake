@@ -1,4 +1,5 @@
 if(NOT DTK_DISABLE_LIBXDG)
+    message("Enable libxdg!")
     find_package(qt5xdgiconloader)
     add_definitions(-DXDG_ICON_VERSION_MAR=${qt5xdgiconloader_VERSION_MAJOR})
     set(UTIL_PRIVATE
@@ -9,6 +10,7 @@ if(NOT DTK_DISABLE_LIBXDG)
         ${CMAKE_CURRENT_LIST_DIR}/private/dimagehandlerlibs_p.h
     )
 else()
+    message("Disable libxdg!")
     add_definitions(-DDTK_DISABLE_LIBXDG)
     set(UTIL_PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/private/dbuiltiniconengine_p.h
