@@ -2,23 +2,26 @@
 pkgname=dtkgui-git
 pkgver=5.5.22.r8.g6ef1509
 pkgrel=1
+sourcename=dtkgui
+sourcetars=("$sourcename"_"$pkgver".tar.xz)
+sourcedir="$sourcename"
 pkgdesc='Deepin Toolkit, gui module for DDE look and feel'
 arch=('x86_64' 'aarch64')
 url="https://github.com/linuxdeepin/dtkgui"
 license=('LGPL3')
-depends=('dtkcore-git' 'qt5-svg' 'libqtxdg' 'freeimage')
+depends=('dtkcore-git' 'dtkcommon-git' 'qt5-svg' 'libqtxdg' 'freeimage' 'librsvg')
 # INFO: you can disable freeimage not to support RAW images
 # Then set DTK_DISABLE_EX_IMAGE_FORMAT=OFF
-makedepends=('git' 'qt5-tools' 'dtkcommon-git' 'dtkcore-git' 'librsvg' 'gtest' 'gmock' 'libqtxdg' 'ninja' 'cmake' 'doxygen')
+makedepends=('git' 'qt5-tools' 'gtest' 'gmock' 'ninja' 'cmake' 'doxygen')
 conflicts=('dtkgui')
 provides=('dtkgui')
 groups=('deepin-git')
-source=('source.tar.gz')
+source=("${sourcetars[@]}")
 sha512sums=('SKIP')
 
 
 build() {
-    cd $deepin_source_name
+    cd $sourcedir
     cmake -GNinja \
     -DMKSPECS_INSTALL_DIR=lib/qt/mkspecs/modules/ \
     -DBUILD_DOCS=ON \
@@ -33,6 +36,6 @@ build() {
 }
 
 package() {
-    cd $deepin_source_name
+    cd $sourcedir
     DESTDIR="$pkgdir" ninja install
 }
