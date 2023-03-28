@@ -111,7 +111,7 @@ install(FILES DtkGuis DESTINATION "${INCLUDE_INSTALL_DIR}")
 # Find common dependencies
 find_package(Qt5 REQUIRED COMPONENTS Gui DBus Network)
 find_package(PkgConfig REQUIRED)
-find_package(DtkCore 5.6 REQUIRED)
+find_package(Dtk REQUIRED COMPONENTS Core)
 pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
 
 # Check optional image handler dependencies.
@@ -132,3 +132,6 @@ add_subdirectory(examples)
 if (BUILD_DOCS)
   add_subdirectory(docs)
 endif ()
+
+# dconfig
+dconfig_meta_files(COMMONID org.deepin.dtk FILES ${CMAKE_CURRENT_LIST_DIR}/misc/org.deepin.dtk.ui.preference.json)
