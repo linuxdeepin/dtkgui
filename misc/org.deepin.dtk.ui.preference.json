@@ -1,0 +1,16 @@
+{
+    "magic": "dsg.config.meta",
+    "version": "1.0",
+    "contents": {
+        "titlebarHeight": {
+            "value": -1,
+            "serial": 0,
+            "name": "The height of DTitleBar",
+            "name[zh_CN]": "标题栏高度",
+            "description": "Configure the height of the DTitleBar",
+            "description[zh_CN]": "配置标题栏的高度",
+            "permissions": "readwrite",
+            "visibility": "public"
+        }
+    }
+}
