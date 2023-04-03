@@ -74,3 +74,5 @@ install(DIRECTORY ../include/DtkGui/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_
 install(DIRECTORY ../include/global/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/kernel/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/filedrag/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
+# dconfig meta file
+dconfig_meta_files(COMMONID org.deepin.dtk FILES ${PROJECT_SOURCE_DIR}/misc/org.deepin.dtk.ui.preference.json)
