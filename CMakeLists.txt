@@ -133,5 +133,3 @@ if (BUILD_DOCS)
   add_subdirectory(docs)
 endif ()
 
-# dconfig
-dconfig_meta_files(COMMONID org.deepin.dtk FILES ${CMAKE_CURRENT_LIST_DIR}/misc/org.deepin.dtk.ui.preference.json)
