@@ -31,6 +31,7 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QProcess>
+#include <DConfig>
 #endif
 #include <QDir>
 #include <QLockFile>
@@ -105,6 +106,9 @@ static quint8 _d_singleServerVersion = 1;
 Q_GLOBAL_STATIC(DFontManager, _globalFM)
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
+
+#define APP_THEME_TYPE "themeType"
+Q_GLOBAL_STATIC_WITH_ARGS(DTK_CORE_NAMESPACE::DConfig, _d_dconfig, ("org.deepin.dtk.ui.preference"));
 
 /*!
  @private
@@ -201,6 +205,16 @@ void DGuiApplicationHelperPrivate::init()
     }
 }
 
+static void applyThemeType()
+{
+    DCORE_USE_NAMESPACE
+    int ct = _d_dconfig->value(APP_THEME_TYPE, DGuiApplicationHelper::UnknownType).toInt();
+    if (ct > DGuiApplicationHelper::DarkType || ct < DGuiApplicationHelper::UnknownType)
+        ct = DGuiApplicationHelper::UnknownType;
+
+    DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::ColorType(ct));
+}
+
 void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
 {
     D_Q(DGuiApplicationHelper);
@@ -212,6 +226,22 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
         // 直接对应到系统级别的主题, 不再对外提供为某个单独程序设置主题的接口.
         // 程序设置自身主题相关的东西皆可通过 setPaletteType 和 setApplicationPalette 实现.
         appTheme = systemTheme;
+
+        if (!q->testAttribute(DGuiApplicationHelper::DontSaveApplicationTheme)) {
+            applyThemeType();
+
+            DCORE_USE_NAMESPACE
+            auto con = QObject::connect(_d_dconfig, &DConfig::valueChanged, _d_dconfig, [](const QString &key){
+                if (key != APP_THEME_TYPE)
+                    return;
+                applyThemeType();
+            });
+            QObject::connect(qGuiApp, &QGuiApplication::aboutToQuit, _d_dconfig, [con](){
+                QObject::disconnect(con);
+                int paletteType = DGuiApplicationHelper::instance()->paletteType();
+                _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
+            });
+        }
     }
 
     // 跟随application销毁
