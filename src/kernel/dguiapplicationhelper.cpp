@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2019 - 2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -1601,8 +1601,10 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
             return false;
         }
         return QString(typeid(*QGuiApplicationPrivate::platform_theme).name()).contains("QDeepinTheme");
-    case IsDeepinEnvironment:
-        return QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment().toLower().contains("deepin");
+    case IsDeepinEnvironment: {
+        const auto &de = QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment();
+        return de.toLower().contains("deepin") || !de.compare("DDE");
+    }
     case IsSpecialEffectsEnvironment: {
         return qgetenv("DTK_DISABLED_SPECIAL_EFFECTS").toInt() != 1;
     }
