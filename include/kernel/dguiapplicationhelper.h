@@ -50,6 +50,7 @@ public:
     enum Attribute {
         UseInactiveColorGroup    = 1 << 0,
         ColorCompositing         = 1 << 1,
+        DontSaveApplicationTheme = 1 << 2,
 
         /* readonly flag */
         ReadOnlyLimit            = 1 << 22,
