@@ -1,3 +1,11 @@
+dtkgui (5.6.10) unstable; urgency=medium
+
+  * Release 5.6.10
+  * support XDG_SESSION_DESKTOP set to DDE
+  * add DontSaveApplciationTheme Attribute
+
+ -- Deepin Packages Builder <packages@deepin.com>  Mon, 17 Apr 2023 17:11:55 +0800
+
 dtkgui (5.6.9) unstable; urgency=medium
 
   * Release 5.6.9
