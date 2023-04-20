@@ -36,6 +36,8 @@ public:
     void notifyAppThemeChanged();
     // 返回程序是否自定义了调色板
     inline bool isCustomPalette() const;
+    void setPaletteType(DGuiApplicationHelper::ColorType ct, bool emitSignal);
+    void initPaletteType() const;
 
     DGuiApplicationHelper::ColorType paletteType = DGuiApplicationHelper::UnknownType;
     // 系统级别的主题设置

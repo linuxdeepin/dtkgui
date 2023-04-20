@@ -205,16 +205,6 @@ void DGuiApplicationHelperPrivate::init()
     }
 }
 
-static void applyThemeType()
-{
-    DCORE_USE_NAMESPACE
-    int ct = _d_dconfig->value(APP_THEME_TYPE, DGuiApplicationHelper::UnknownType).toInt();
-    if (ct > DGuiApplicationHelper::DarkType || ct < DGuiApplicationHelper::UnknownType)
-        ct = DGuiApplicationHelper::UnknownType;
-
-    DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::ColorType(ct));
-}
-
 void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
 {
     D_Q(DGuiApplicationHelper);
@@ -226,22 +216,6 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
         // 直接对应到系统级别的主题, 不再对外提供为某个单独程序设置主题的接口.
         // 程序设置自身主题相关的东西皆可通过 setPaletteType 和 setApplicationPalette 实现.
         appTheme = systemTheme;
-
-        if (!q->testAttribute(DGuiApplicationHelper::DontSaveApplicationTheme)) {
-            applyThemeType();
-
-            DCORE_USE_NAMESPACE
-            auto con = QObject::connect(_d_dconfig, &DConfig::valueChanged, _d_dconfig, [](const QString &key){
-                if (key != APP_THEME_TYPE)
-                    return;
-                applyThemeType();
-            });
-            QObject::connect(qGuiApp, &QGuiApplication::aboutToQuit, _d_dconfig, [con](){
-                QObject::disconnect(con);
-                int paletteType = DGuiApplicationHelper::instance()->paletteType();
-                _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
-            });
-        }
     }
 
     // 跟随application销毁
@@ -361,6 +335,61 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChanged()
 bool DGuiApplicationHelperPrivate::isCustomPalette() const
 {
     return appPalette || paletteType != DGuiApplicationHelper::UnknownType;
+}
+
+void DGuiApplicationHelperPrivate::setPaletteType(DGuiApplicationHelper::ColorType ct, bool emitSignal)
+{
+    if (paletteType == ct)
+        return;
+
+    if (qGuiApp && qGuiApp->testAttribute(Qt::AA_SetPalette))
+        qWarning() << "DGuiApplicationHelper: Plase check 'QGuiApplication::setPalette',"
+                      " Don't use it on DTK application.";
+
+    paletteType = ct;
+
+    if (!emitSignal)
+        return;
+
+    // 如果未固定调色板, 则paletteType的变化可能会导致调色板改变, 应当通知程序更新数据
+    if (!appPalette)
+        notifyAppThemeChanged();
+
+    D_Q(DGuiApplicationHelper);
+    Q_EMIT q->paletteTypeChanged(paletteType);
+}
+
+void DGuiApplicationHelperPrivate::initPaletteType() const
+{
+    DCORE_USE_NAMESPACE
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::DontSaveApplicationTheme))
+        return;
+
+    if (_d_dconfig.exists())
+        return;
+
+    auto applyThemeType = [this](bool emitSignal){
+        int ct = _d_dconfig->value(APP_THEME_TYPE, DGuiApplicationHelper::UnknownType).toInt();
+        if (ct > DGuiApplicationHelper::DarkType || ct < DGuiApplicationHelper::UnknownType)
+            ct = DGuiApplicationHelper::UnknownType;
+
+        const_cast<DGuiApplicationHelperPrivate *>(this)->setPaletteType(DGuiApplicationHelper::ColorType(ct), emitSignal);
+    };
+
+    applyThemeType(false);
+
+    auto conn = QObject::connect(_d_dconfig, &DConfig::valueChanged, _d_dconfig, [applyThemeType](const QString &key){
+        if (key != APP_THEME_TYPE)
+            return;
+
+        applyThemeType(true);
+    });
+
+    QObject::connect(qGuiApp, &QGuiApplication::aboutToQuit, _d_dconfig, [conn](){
+        QObject::disconnect(conn);
+        int paletteType = DGuiApplicationHelper::instance()->paletteType();
+        _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
+    });
 }
 
 void DGuiApplicationHelperPrivate::_q_sizeModeChanged(int mode)
@@ -1296,6 +1325,7 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
 {
     D_DC(DGuiApplicationHelper);
 
+    d->initPaletteType();
     if (d->paletteType != UnknownType) {
         return d->paletteType;
     }
@@ -1315,6 +1345,8 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::themeType() const
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::paletteType() const
 {
     D_DC(DGuiApplicationHelper);
+
+    d->initPaletteType();
     return d->paletteType;
 }
 
@@ -1666,19 +1698,7 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
 {
     D_D(DGuiApplicationHelper);
 
-    if (d->paletteType == paletteType)
-        return;
-
-    if (qGuiApp && qGuiApp->testAttribute(Qt::AA_SetPalette)) {
-        qWarning() << "DGuiApplicationHelper: Plase check 'QGuiApplication::setPalette', Don't use it on DTK application.";
-    }
-
-    d->paletteType = paletteType;
-    // 如果未固定调色板, 则paletteType的变化可能会导致调色板改变, 应当通知程序更新数据
-    if (!d->appPalette)
-        d->notifyAppThemeChanged();
-
-    Q_EMIT paletteTypeChanged(paletteType);
+    d->setPaletteType(paletteType, true);
 }
 
 /*!
