@@ -1696,6 +1696,11 @@ void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeT
  */
 void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType paletteType)
 {
+    if (!qApp) {
+        qWarning() << "Can't call `DGuiApplicationHelper::setPaletteType` before QCoreApplication constructed.";
+        return;
+    }
+
     D_D(DGuiApplicationHelper);
 
     d->setPaletteType(paletteType, true);
