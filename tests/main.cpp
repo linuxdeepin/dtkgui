@@ -11,6 +11,8 @@
 #include <sanitizer/asan_interface.h>
 #endif
 
+#include <DGuiApplicationHelper>
+DGUI_USE_NAMESPACE
 int main(int argc, char *argv[])
 {
     // gerrit编译时没有显示器，需要指定环境变量
@@ -22,6 +24,8 @@ int main(int argc, char *argv[])
     qputenv("D_DXCB_DISABLE_OVERRIDE_HIDPI","1");
     qputenv("QT_SCALE_FACTOR","1.25");
 
+    // Testing `setPaletteType` called before QApplication constructed.
+    DGuiApplicationHelper::instance()->setPaletteType(DGuiApplicationHelper::LightType);
     QApplication app(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
     int ret = RUN_ALL_TESTS();
