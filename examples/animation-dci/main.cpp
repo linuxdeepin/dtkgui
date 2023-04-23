@@ -43,7 +43,7 @@ static QString iconModeToString(DDciIcon::Mode mode)
 class IconWidget : public QMainWindow
 {
 public:
-    IconWidget(const QString &iconFile)
+    IconWidget(const QString &iconName)
     {
         setCentralWidget(label = new QLabel(this));
         centralWidget()->setAttribute(Qt::WA_MouseTracking);
@@ -74,7 +74,7 @@ public:
         layout->addWidget(disabled);
         setMenuWidget(menuWidget);
 
-        icon = DDciIcon(iconFile);
+        icon = DDciIcon::fromTheme(iconName);
 
         connect(&player, &DDciIconPlayer::updated, this, [this] {
             auto image = player.currentImage();
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    IconWidget *window = new IconWidget(QStringLiteral(":/dsg/bulit-in-icons/test_heart.dci"));
+    IconWidget *window = new IconWidget(QStringLiteral("test_heart"));
 
     window->setMinimumSize(300, 300);
     window->show();
