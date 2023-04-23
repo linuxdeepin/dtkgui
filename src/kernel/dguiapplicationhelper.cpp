@@ -1700,6 +1700,7 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
 {
     D_D(DGuiApplicationHelper);
 
+    d->initPaletteType();
     d->setPaletteType(paletteType, true);
 }
 
