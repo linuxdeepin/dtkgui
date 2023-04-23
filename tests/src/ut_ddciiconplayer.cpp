@@ -357,3 +357,16 @@ TEST_F(ut_DDciIconPlayer, animationSequentially)
 
     ASSERT_EQ(lastImageIndex, images.count());
 }
+
+TEST_F(ut_DDciIconPlayer, nonAnimationImage)
+{
+    DDciIcon icon(QStringLiteral(":/images/3depict.dci"));
+    ASSERT_FALSE(icon.isNull());
+
+    DDciIconPlayer player;
+    update_signal_spy.clear();
+    player.setIcon(icon);
+    update_signal_spy.wait(1000);
+    ASSERT_EQ(update_signal_spy.count(), 1);
+    ASSERT_FALSE(player.currentImage().isNull());
+}
