@@ -320,16 +320,20 @@ void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
 void DGuiApplicationHelperPrivate::notifyAppThemeChanged()
 {
     D_Q(DGuiApplicationHelper);
-
-    QWindowSystemInterfacePrivate::ThemeChangeEvent event(nullptr);
-    // 此事件会促使QGuiApplication重新从QPlatformTheme中获取系统级别的QPalette.
-    // 而在deepin平台下, 系统级别的QPalette来源自 \a applicationPalette()
-    QGuiApplicationPrivate::processThemeChanged(&event);
+    notifyAppThemeChangedByEvent();
     // 通知主题类型发生变化, 此处可能存在误报的行为, 不过不应该对此做额外的约束
     // 此信号的行为应当等价于 applicationPaletteChanged
     Q_EMIT q->themeTypeChanged(q->themeType());
     // 通知调色板对象的改变
     Q_EMIT q->applicationPaletteChanged();
+}
+
+void DGuiApplicationHelperPrivate::notifyAppThemeChangedByEvent()
+{
+    QWindowSystemInterfacePrivate::ThemeChangeEvent event(nullptr);
+    // 此事件会促使QGuiApplication重新从QPlatformTheme中获取系统级别的QPalette.
+    // 而在deepin平台下, 系统级别的QPalette来源自 \a applicationPalette()
+    QGuiApplicationPrivate::processThemeChanged(&event);
 }
 
 bool DGuiApplicationHelperPrivate::isCustomPalette() const
@@ -348,8 +352,10 @@ void DGuiApplicationHelperPrivate::setPaletteType(DGuiApplicationHelper::ColorTy
 
     paletteType = ct;
 
-    if (!emitSignal)
+    if (!emitSignal) {
+        notifyAppThemeChangedByEvent();
         return;
+    }
 
     // 如果未固定调色板, 则paletteType的变化可能会导致调色板改变, 应当通知程序更新数据
     if (!appPalette)
