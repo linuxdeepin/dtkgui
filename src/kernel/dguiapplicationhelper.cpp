@@ -121,11 +121,11 @@ public:
     {
         // 临时存储一个无效的指针值, 用于此处条件变量的竞争
         if (m_helper.testAndSetRelaxed(nullptr, INVALID_HELPER)) {
-            m_helper.store(creator());
-            m_helper.load()->initialize();
+            m_helper.storeRelaxed(creator());
+            m_helper.loadRelaxed()->initialize();
         }
 
-        return m_helper.load();
+        return m_helper.loadRelaxed();
     }
 
     inline void clear()
@@ -255,7 +255,7 @@ void DGuiApplicationHelperPrivate::staticInitApplication()
     if (!_globalHelper.exists())
         return;
 
-    if (DGuiApplicationHelper *helper = _globalHelper->m_helper.load())
+    if (DGuiApplicationHelper *helper = _globalHelper->m_helper.loadRelaxed())
         helper->d_func()->initApplication(qGuiApp);
 }
 
@@ -276,6 +276,7 @@ DPlatformTheme *DGuiApplicationHelperPrivate::initWindow(QWindow *window) const
         // 需要注意的是, 这里的信号和事件可能会与 notifyAppThemeChanged 中的重复
         // 但是不能因此而移除这里的通知, 当窗口自身所对应的平台主题发生变化时, 这里
         // 的通知机制就有了用武之地.
+        Q_UNUSED(theme)
         if (Q_LIKELY(!isCustomPalette())) {
             qGuiApp->postEvent(window, new QEvent(QEvent::ThemeChange));
         }
@@ -1313,7 +1314,7 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QColor
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QPalette &palette)
 {
-    return toColorType(palette.background().color());
+    return toColorType(palette.window().color());
 }
 
 /*!
@@ -1468,8 +1469,8 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
                 qCInfo(dgAppHelper) << "New instance: pid=" << pid << "arguments=" << arguments;
 
                 // 通知新进程的信息
-                if (_globalHelper.exists() && _globalHelper->m_helper.load())
-                    Q_EMIT _globalHelper->m_helper.load()->newProcessInstance(pid, arguments);
+                if (_globalHelper.exists() && _globalHelper->m_helper.loadRelaxed())
+                    Q_EMIT _globalHelper->m_helper.loadRelaxed()->newProcessInstance(pid, arguments);
             });
 
             instance->flush(); //发送数据给新的实例
@@ -1552,8 +1553,10 @@ bool DGuiApplicationHelper::hasUserManual() const
     QDBusInterface manualSearch("com.deepin.Manual.Search",
                                 "/com/deepin/Manual/Search",
                                 "com.deepin.Manual.Search");
-    if (!manualSearch.isValid())
-        return hasManual = hasLocalManualFile();
+    if (!manualSearch.isValid()) {
+        hasManual = hasLocalManualFile();
+        return hasManual;
+    }
 
     QDBusPendingCall call = manualSearch.asyncCall("ManualExists", qApp->applicationName());
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, const_cast<DGuiApplicationHelper *>(this));
@@ -1589,7 +1592,11 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
     QStringList missingQmfiles;
     for (const auto &locale : localeFallback) {
         QStringList translateFilenames {QString("%1_%2").arg(fileName).arg(locale.name())};
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        const QStringList parseLocalNameList = locale.name().split("_", Qt::SkipEmptyParts);
+#else
         const QStringList parseLocalNameList = locale.name().split("_", QString::SkipEmptyParts);
+#endif
         if (parseLocalNameList.length() > 0)
             translateFilenames << QString("%1_%2").arg(fileName).arg(parseLocalNameList.at(0));
 

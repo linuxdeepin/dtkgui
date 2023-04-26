@@ -49,12 +49,14 @@ TEST_F(TDWindowMangerHelper, testStaticFunction)
 
     DWindowManagerHelper::setMotifDecorations(w->windowHandle(), DWindowManagerHelper::MotifDecorations(TestDecorations));
     DWindowManagerHelper::MotifDecorations mDecos = DWindowManagerHelper::getMotifDecorations(w->windowHandle());
-    if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM)
+    if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM) {
         ASSERT_EQ(mDecos, TestDecorations);
+    }
 
     mDecos = DWindowManagerHelper::setMotifDecorations(w->windowHandle(), DWindowManagerHelper::MotifDecorations(TestAllDecorations), true);
-    if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM)
+    if (wm_helper->windowManagerName() == DWindowManagerHelper::KWinWM) {
         ASSERT_EQ(mDecos, TestAllDecorations);
+    }
 
     // 没有崩溃则测试成功
     enum { TestWindowType =  DWindowManagerHelper::DesktopType | DWindowManagerHelper::MenuType };

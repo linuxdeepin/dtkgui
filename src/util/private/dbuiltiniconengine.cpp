@@ -54,7 +54,11 @@ public:
 
         QPixmap pm;
         QString pmckey(pmcKey(size, mode, state));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 13, 0)
+        if (QPixmapCache::find(pmckey, &pm)) {
+#else
         if (QPixmapCache::find(pmckey, pm)) {
+#endif
             genIconTypeIcon(pm, mode);
             return pm;
         }
