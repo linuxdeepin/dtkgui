@@ -9,6 +9,11 @@ project(DtkGui
 )
 set(LIB_NAME dtkgui)
 
+# Set install path
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX /usr)
+endif ()
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -23,11 +28,6 @@ option(DTK_DISABLE_LIBXDG "Disable libxdg" OFF)
 option(DTK_DISABLE_LIBRSVG "Disable librsvg" OFF)
 option(DTK_DISABLE_EX_IMAGE_FORMAT "Disable libraw and freeimage" OFF)
 set(BUILD_DOCS ON CACHE BOOL "Generate doxygen-based documentation")
-
-# Set install path
-if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX /usr)
-endif ()
 
 set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/dtk${PROJECT_VERSION_MAJOR}/DGui")
 set(TOOL_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/dtk${PROJECT_VERSION_MAJOR}/DGui/bin")
