@@ -57,6 +57,6 @@ License: CC0-1.0
 Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/*
   src/util/icons/dci/*  tests/images/logo_icon.svg
   examples/animation-dci/dci_heart.dci tests/images/dci_heart.dci
-  tests/images/*.webp
+  tests/images/*.webp examples/animation-dci/3depict.dci
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later
