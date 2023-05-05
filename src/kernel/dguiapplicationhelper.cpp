@@ -1540,7 +1540,8 @@ bool DGuiApplicationHelper::hasUserManual() const
         return hasManual;
 
     QDBusConnection conn = QDBusConnection::sessionBus();
-    if (!conn.isConnected()) {
+    if (!conn.isConnected() ||
+        !conn.interface()->isServiceRegistered("com.deepin.Manual.Search")) {
         static LoadManualServiceWorker *manualWorker = new LoadManualServiceWorker;
         manualWorker->checkManualServiceWakeUp();
 
