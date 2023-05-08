@@ -103,6 +103,12 @@ QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
     return QIcon(engine);
 }
 
+QIcon DIconTheme::findQIcon(const QString &iconName, const QIcon &fallback, Options options)
+{
+    QIcon icon = findQIcon(iconName, options);
+    return !icon.isNull() ? icon : fallback;
+}
+
 bool DIconTheme::isBuiltinIcon(const QIcon &icon)
 {
     if (icon.isNull())
