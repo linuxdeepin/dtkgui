@@ -38,6 +38,7 @@ namespace DIconTheme
 
     Cached *cached();
     QIcon findQIcon(const QString &iconName, Options options = Options());
+    QIcon findQIcon(const QString &iconName, const QIcon &fallback, Options options = Options());
     QIconEngine *createIconEngine(const QString &iconName, Options options = DontFallbackToQIconFromTheme);
 
     QString findDciIconFile(const QString &iconName, const QString &themeName);

@@ -55,6 +55,14 @@
 @sa DIconTheme::Cached::findQIcon
 @sa DIconTheme::createIconEngine
 
+@fn Dtk::Gui::DIconTheme::findQIcon(const QString &iconName, const QIcon &fallback, Options options)
+@details 重载 DIconTheme::findQIcon, 当查找图标失败时返回调用者中提供的 fallback 图标
+@param[in] iconName 要查找的图标名称
+@param[in] options 要查找的选项, 选项默认为空
+@param[in] fallback 如果 iconName 无法找到, 返回此图标
+@sa DIconTheme::Cached::findQIcon
+@sa DIconTheme::createIconEngine
+
 @fn Dtk::Gui::DIconTheme::createIconEngine(const QString &iconName, Options options)
 @details 通过图标名构造图标引擎, 如果未设置 IgnoreBuiltinIcons 标志则优先尝试 qrc:/icons/deepin/builtin 目录查找图标来构造内置图标引擎，否则构造 XDG 图标引擎。
 @param[in] iconName 图标名称
