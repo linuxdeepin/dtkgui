@@ -313,7 +313,7 @@ static QByteArray updateXmlAttribute(const QString &contents)
         writer.writeStartElement(reader.namespaceUri().toString(), reader.name().toString());
 
         for (const auto &attr : reader.attributes()) {
-            if (attr.name() == "href") {
+            if (attr.name() == QString("href")) {
                 writer.writeAttribute("xlink:href", attr.value().toString());
                 continue;
             }

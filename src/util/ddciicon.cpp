@@ -72,28 +72,28 @@ class EntryPropertyParser
 {
 public:
     static void registerSteps();
-    static void doParse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties);
+    static void doParse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties);
 private:
     static struct Step {
         virtual ~Step() {}
         Step *nextStep = nullptr;
-        virtual QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) = 0;
+        virtual QVector<QStringView> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties) = 0;
     } *root;
 
     struct PriorStep : public Step {
-        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+        QVector<QStringView> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties) override;
     };
 
     struct FormatAndAlpha8Step : public Step {
-        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+        QVector<QStringView> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties) override;
     };
 
     struct PaddingStep : public Step {
-        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+        QVector<QStringView> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties) override;
     };
 
     struct PaletteStep : public Step {
-        QVector<QStringRef> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties) override;
+        QVector<QStringView> parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties) override;
     };
 };
 
@@ -113,13 +113,13 @@ void EntryPropertyParser::registerSteps()
     root = &priorSt;
 }
 
-void EntryPropertyParser::doParse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+void EntryPropertyParser::doParse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties)
 {
     Q_ASSERT(layer);
     if (!root)
         registerSteps();
     EntryPropertyParser::Step *step = root;
-    QVector<QStringRef> ps = properties;
+    QVector<QStringView> ps = properties;
     while (step) {
         // If the input information flow is empty, it means that the next steps do not need to be continued
         if (ps.isEmpty())
@@ -129,19 +129,19 @@ void EntryPropertyParser::doParse(DDciIconEntry::ScalableLayer::Layer *layer, co
     }
 }
 
-QVector<QStringRef> EntryPropertyParser::PriorStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+QVector<QStringView> EntryPropertyParser::PriorStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties)
 {
     bool ok = false;
-    QVector<QStringRef> ps = properties;
+    QVector<QStringView> ps = properties;
     layer->prior = ps.takeFirst().toInt(&ok);
     if (!ok)
         return {};  // error priority.
     return ps;
 }
 
-QVector<QStringRef> EntryPropertyParser::FormatAndAlpha8Step::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+QVector<QStringView> EntryPropertyParser::FormatAndAlpha8Step::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties)
 {
-    QVector<QStringRef> ps = properties;
+    QVector<QStringView> ps = properties;
     const QString alpha8OrFormat = ps.takeLast().toString();
     if (alpha8OrFormat.compare(ALPHA8STRING, Qt::CaseInsensitive) == 0) {
         // Alpha8 format
@@ -155,11 +155,11 @@ QVector<QStringRef> EntryPropertyParser::FormatAndAlpha8Step::parse(DDciIconEntr
     return ps;
 }
 
-QVector<QStringRef> EntryPropertyParser::PaddingStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+QVector<QStringView> EntryPropertyParser::PaddingStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties)
 {
-    QVector<QStringRef> ps = properties;
+    QVector<QStringView> ps = properties;
     // Take the padding property
-    auto it = std::find_if(ps.cbegin(), ps.cend(), [](const QStringRef &p) {
+    auto it = std::find_if(ps.cbegin(), ps.cend(), [](const QStringView &p) {
         return p.endsWith(QLatin1Char('p'));
     });
 
@@ -171,13 +171,18 @@ QVector<QStringRef> EntryPropertyParser::PaddingStep::parse(DDciIconEntry::Scala
     return ps;
 }
 
-QVector<QStringRef> EntryPropertyParser::PaletteStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringRef> &properties)
+QVector<QStringView> EntryPropertyParser::PaletteStep::parse(DDciIconEntry::ScalableLayer::Layer *layer, const QVector<QStringView> &properties)
 {
-    QVector<QStringRef> ps = properties;
-    QStringRef palettes = ps.takeFirst();
+    QVector<QStringView> ps = properties;
+    QStringView palettes = ps.takeFirst();
     // `role_hue_saturation_lightness_red_green_blue_alpha` or `role`
     if (palettes.contains(QLatin1Char('_'))) {
-        const QVector<QStringRef> paletteProps = palettes.split(QLatin1Char('_'));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        // QVector is an alias for QList in Qt6
+        const QVector<QStringView> paletteProps = palettes.split(QLatin1Char('_'));
+#else
+        const QVector<QStringView> paletteProps = QVector<QStringView>::fromList(palettes.split(QLatin1Char('_')));
+#endif
         if (paletteProps.length() != 8)
             return ps;
 
@@ -205,7 +210,7 @@ QVector<QStringRef> EntryPropertyParser::PaletteStep::parse(DDciIconEntry::Scala
 }
 
 void alpha8ImageDeleter(void *image) {
-    delete (QImage *)image;
+    delete static_cast<QImage *>(image);
 }
 
 static QImage readImageData(QImageReader &reader, qreal pixmapScale, bool isAlpha8Format)
@@ -227,7 +232,7 @@ static QImage readImageData(QImageReader &reader, qreal pixmapScale, bool isAlph
         reader.read(imagePtr);
         if (isAlpha8Format) {
             QImage tt(imagePtr->bits(), imagePtr->width(), imagePtr->width(), imagePtr->bytesPerLine(),
-                      QImage::Format_Alpha8, alpha8ImageDeleter, (void *)imagePtr);
+                      QImage::Format_Alpha8, alpha8ImageDeleter, static_cast<void *>(imagePtr));
             return tt.scaled(scaledSize, scaledSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
         }
 
@@ -299,7 +304,8 @@ public:
             m_currentImageEndTime = std::move(other.m_currentImageEndTime);
         }
 
-        int index = 0;
+        qsizetype index = 0;
+        // Use std::unique_ptr instead of QScopedPointer.
         QScopedPointer<QBuffer> buffer;
         QScopedPointer<QImageReader> reader;
         int pastImageDelay = 0;
@@ -336,7 +342,7 @@ public:
         }
     };
 
-    QVector<ReaderData> readers;
+    QVector<ReaderData *> readers;
     bool supportsAnimation = false;
     int totalMaxImageCount = 0;
     int maxLoopCount = -2;
@@ -372,7 +378,7 @@ public:
     DDciIconEntry *tryMatchIcon(int iconSize, DDciIcon::Theme theme, DDciIcon::Mode mode, DDciIcon::IconMatchedFlags flags = DDciIcon::None) const;
     static void paint(QPainter *painter, const QRectF &rect, Qt::Alignment alignment,
                       const QVector<DDciIconEntry::ScalableLayer::Layer> &layers,
-                      QVector<DDciIconImagePrivate::ReaderData> *layerReaders,
+                      QVector<DDciIconImagePrivate::ReaderData *> *layerReaders,
                       const DDciIconPalette &palette, qreal pixmapScale);
     static void paint(QPainter *painter, const QRect &rect, qreal devicePixelRatio, Qt::Alignment alignment,
                       const DDciIconEntry *entry, const DDciIconPalette &palette, qreal pixmapScale);
@@ -391,7 +397,12 @@ public:
     EntryNodeList icons;
 };
 
-#ifndef QT_NO_DATASTREAM
+// In Qt 6, registration of comparators, and QDebug and QDataStream streaming operators is
+// done automatically. Consequently, \c QMetaType::registerEqualsComparator(),
+// \c QMetaType::registerComparators(), \c qRegisterMetaTypeStreamOperators() and
+// \c QMetaType::registerDebugStreamOperator() do no longer exist. Calls to those methods
+// have to be removed when porting to Qt 6.
+#if !defined(QT_NO_DATASTREAM) && (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
 __attribute__((constructor))
 static void registerMetaType()
 {
@@ -399,7 +410,7 @@ static void registerMetaType()
 }
 #endif
 
-static inline bool toMode(const QStringRef &name, DDciIcon::Mode *mode) {
+static inline bool toMode(const QStringView &name, DDciIcon::Mode *mode) {
     if (name == QLatin1String(MODE_NORMAL)) {
         *mode = DDciIcon::Normal;
         return true;
@@ -423,7 +434,7 @@ static inline bool toMode(const QStringRef &name, DDciIcon::Mode *mode) {
     return false;
 }
 
-static inline bool toTheme(const QStringRef &name, DDciIcon::Theme *theme) {
+static inline bool toTheme(const QStringView &name, DDciIcon::Theme *theme) {
     if (name == QLatin1String(THEME_LIGHT)) {
         *theme = DDciIcon::Light;
         return true;
@@ -473,7 +484,7 @@ static int findIconsByLowerBoundSize(const EntryNodeList &list, const int size, 
                                      regardPaddingsAsSize ? compFun2 : compFun1);
 
     if (neighbor != list.cend())
-        return neighbor - list.constBegin();
+        return int(neighbor - list.constBegin());
     return -1;
 }
 
@@ -502,10 +513,22 @@ DDciIconPrivate::~DDciIconPrivate()
         qDeleteAll(icon.entries);
 }
 
+// Note that QStringView is a non-owning, read-only view of a QString
+// so we need to make sure that the original QString object stays alive
+// for as long as we're using the QStringView.
+static inline QVector<QStringView> fromQStringList(const QStringList *list)
+{
+    QVector<QStringView> views;
+    for (const QString &str : *list)
+        views.push_back(str);
+    return views;
+}
+
 DDciIconEntry *DDciIconPrivate::loadIcon(const QString &parentDir, const QString &imageDir)
 {
     // Mode-Theme
-    const QVector<QStringRef> &iconProps = imageDir.splitRef(QLatin1Char('.'));
+    QStringList props = imageDir.split(QLatin1Char('.'));
+    const QVector<QStringView> &iconProps = fromQStringList(&props);
     if (iconProps.count() != 2) // Error file name.
         return nullptr;
 
@@ -530,7 +553,8 @@ DDciIconEntry *DDciIconPrivate::loadIcon(const QString &parentDir, const QString
         scaleIcon.imagePixelRatio = scale;
         const QString &path = joinPath(stateDir, scaleString);
         for (const QString &layerPath : dciFile->list(path, true)) {
-            QVector<QStringRef> layerProps = layerPath.splitRef(QLatin1Char('.'));
+            QStringList props = layerPath.split(QLatin1Char('.'));
+            const QVector<QStringView> &layerProps = fromQStringList(&props);
             DDciIconEntry::ScalableLayer::Layer layer;
             EntryPropertyParser::doParse(&layer, layerProps);
             layer.data = dciFile->dataRef(joinPath(path, layerPath));
@@ -584,7 +608,7 @@ DDciIconEntry *DDciIconPrivate::tryMatchIcon(int iconSize, DDciIcon::Theme theme
 
     auto neighborIndex = findIconsByLowerBoundSize(icons, iconSize, flags & DDciIcon::RegardPaddingsAsSize);
     if (neighborIndex < 0) {
-        neighborIndex = icons.size() - 1;
+        neighborIndex = int(icons.size() - 1);
     }
 
     const auto &listOfSize = icons.at(neighborIndex);
@@ -636,7 +660,7 @@ static const DDciIconEntry::ScalableLayer &findScalableLayer(const DDciIconEntry
 
 void DDciIconPrivate::paint(QPainter *painter, const QRectF &rect, Qt::Alignment alignment,
                             const QVector<DDciIconEntry::ScalableLayer::Layer> &layers,
-                            QVector<DDciIconImagePrivate::ReaderData> *layerReaders,
+                            QVector<DDciIconImagePrivate::ReaderData *> *layerReaders,
                             const DDciIconPalette &palette, qreal pixmapScale)
 {
     const bool useImageReader = layerReaders && !layerReaders->isEmpty();
@@ -644,14 +668,14 @@ void DDciIconPrivate::paint(QPainter *painter, const QRectF &rect, Qt::Alignment
     for (auto layerIter = layers.begin(); layerIter != layers.end(); ++layerIter) {
         QImage layer;
         if (useImageReader) {
-            const int index = layerIter - layers.begin();
+            const qsizetype index = layerIter - layers.begin();
             auto &reader = layerReaders->operator [](index);
-            if (reader.currentImageIsValid) {
-                layer = reader.currentImage;
+            if (reader->currentImageIsValid) {
+                layer = reader->currentImage;
             } else {
-                layer = readImageData(*reader.reader, pixmapScale, layerIter->isAlpha8Format);
-                reader.currentImage = layer;
-                reader.currentImageIsValid = true;
+                layer = readImageData(*reader->reader, pixmapScale, layerIter->isAlpha8Format);
+                reader->currentImage = layer;
+                reader->currentImageIsValid = true;
             }
         } else {
             if (layerIter->data.isEmpty())
@@ -981,6 +1005,7 @@ void DDciIconImage::reset()
     if (!d || d->pastImageCount == 0)
         return;
 
+    qDeleteAll(d->readers);
     d->readers.clear();
     d->supportsAnimation = false;
     d->totalMaxImageCount = 0;
@@ -1048,8 +1073,8 @@ bool DDciIconImage::jumpToNextImage()
 
         // Clear old images if icon animation is not last frame
         for (auto &reader : d->readers) {
-            if (reader.currentImageIsEnd(d.get()))
-                reader.currentImage = QImage();
+            if (reader->currentImageIsEnd(d.get()))
+                reader->currentImage = QImage();
         }
     }
 
@@ -1096,12 +1121,14 @@ void DDciIconImagePrivate::init()
 {
     readers.reserve(layers.size());
     for (const auto &layer : qAsConst(layers)) {
-        readers.append(ReaderData());
-        readers.last().index = readers.size() - 1;
+        ReaderData *data = new ReaderData;
+        Q_ASSERT(data);
         auto buffer = new QBuffer();
-        readers.last().buffer.reset(buffer);
+        data->buffer.reset(buffer);
         auto reader = new QImageReader();
-        readers.last().reader.reset(reader);
+        data->reader.reset(reader);
+        readers.append(data);
+        data->index = readers.size() - 1;
 
         buffer->setData(layer.data);
         buffer->open(QIODevice::ReadOnly);
@@ -1125,15 +1152,15 @@ DDciIconImagePrivate::ReaderData *DDciIconImagePrivate::readAnimationNextData()
     const ReaderData *next = nullptr;
 
     for (auto &reader : readers) {
-        if (!reader.reader->supportsAnimation())
+        if (!reader->reader->supportsAnimation())
             continue;
         // Ensure can get a valid QImageReader::nextImageDelay(), Because
         // using QImageReader::nextImageDelay() needs call QImageReader::read() before.
-        reader.initCurrentImage(this);
-        if (reader.currentImageIsEnd(this) && !reader.jumpToNextImage(this))
+        reader->initCurrentImage(this);
+        if (reader->currentImageIsEnd(this) && !reader->jumpToNextImage(this))
             continue;
-        if (!next || reader.currentImageEndTime() < next->currentImageEndTime())
-            next = &reader;
+        if (!next || reader->currentImageEndTime() < next->currentImageEndTime())
+            next = reader;
     }
     return const_cast<ReaderData*>(next);
 }

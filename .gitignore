@@ -51,6 +51,9 @@ CMakeLists.txt.user*
 #clangformat
 .clang-format
 
+# build 
+compile_commands.json
+
 bin
 DtkGuis
 dtkgui_config.h

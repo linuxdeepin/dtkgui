@@ -76,7 +76,7 @@ static bool testPixmapHasData(const QPixmap &pixmap)
 
     image.reinterpretAsFormat(QImage::Format_RGB32);
     const QRgb *bits = reinterpret_cast<const QRgb *>(image.constBits());
-    const QRgb *end = bits + image.byteCount() / sizeof(QRgb);
+    const QRgb *end = bits + qulonglong(image.sizeInBytes()) / sizeof(QRgb);
     return !std::all_of(bits, end, [](QRgb r) { return r == QColor(Qt::green).rgb(); });
 }
 

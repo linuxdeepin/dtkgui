@@ -18,20 +18,24 @@ class Q_DECL_HIDDEN DBuiltinIconEngine : public QIconEngine
 {
 public:
     DBuiltinIconEngine(const QString &iconName);
-    ~DBuiltinIconEngine();
+    ~DBuiltinIconEngine() override;
     void paint(QPainter *painter, const QRect &rect,
-               QIcon::Mode mode, QIcon::State state);
+               QIcon::Mode mode, QIcon::State state) override;
     QSize actualSize(const QSize &size, QIcon::Mode mode,
-                     QIcon::State state);
+                     QIcon::State state) override;
     QPixmap pixmap(const QSize &size, QIcon::Mode mode,
-                   QIcon::State state);
+                   QIcon::State state) override;
 
-    QString key() const;
-    QIconEngine *clone() const;
-    bool read(QDataStream &in);
-    bool write(QDataStream &out) const;
+    QString key() const override;
+    QIconEngine *clone() const override;
+    bool read(QDataStream &in) override;
+    bool write(QDataStream &out) const override;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QString iconName() override;
+#else
     QString iconName() const override;
+#endif
 
     static QThemeIconInfo loadIcon(const QString &iconName, uint key);
 
