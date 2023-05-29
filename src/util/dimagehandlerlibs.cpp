@@ -76,9 +76,9 @@ bool DLibFreeImage::isValid()
     return freeImage;
 }
 
-QHash<QString, QString> DLibFreeImage::findMetaData(FREE_IMAGE_MDMODEL model, FIBITMAP *dib)
+bool DLibFreeImage::findMetaData(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, QHash<QString, QString> &data)
 {
-    QHash<QString, QString> data;
+    bool ret = false;
     if (freeImage) {
         if (FreeImage_GetMetadataCount(model, dib)) {
             FITAG *tag = nullptr;
@@ -94,26 +94,23 @@ QHash<QString, QString> DLibFreeImage::findMetaData(FREE_IMAGE_MDMODEL model, FI
                     apiMutex.unlock();
 
                     data.insert(FreeImage_GetTagKey(tag), value);
+                    ret = true;
                 } while (FreeImage_FindNextMetadata(mdhandle, &tag));
                 FreeImage_FindCloseMetadata(mdhandle);
             }
         }
     }
 
-    return data;
+    return ret;
 }
 
 QHash<QString, QString> DLibFreeImage::findAllMetaData(const QString &fileName)
 {
     FIBITMAP *dib = readFileToFIBITMAP(fileName, FIF_LOAD_NOPIXELS);
-    QMultiHash<QString, QString> uniteMap;
-    uniteMap.unite(findMetaData(FIMD_EXIF_MAIN, dib));
-    uniteMap.unite(findMetaData(FIMD_EXIF_EXIF, dib));
-    uniteMap.unite(findMetaData(FIMD_EXIF_GPS, dib));
-    uniteMap.unite(findMetaData(FIMD_EXIF_MAKERNOTE, dib));
-    uniteMap.unite(findMetaData(FIMD_EXIF_INTEROP, dib));
-    uniteMap.unite(findMetaData(FIMD_IPTC, dib));
-    QHash<QString, QString> admMap = uniteMap;
+    QHash<QString, QString> admMap;
+    for (int i = FIMD_EXIF_MAIN; i <= FIMD_IPTC; ++i) {
+        findMetaData(FREE_IMAGE_MDMODEL(i), dib, admMap);
+    }
 
     QFileInfo info(fileName);
     if (admMap.contains("DateTime")) {

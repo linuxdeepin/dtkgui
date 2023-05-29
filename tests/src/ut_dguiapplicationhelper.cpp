@@ -52,7 +52,7 @@ TEST_F(TDGuiApplicationHelper, testFunction)
     helper->generatePaletteColor(tPalette, QPalette::Window, DGuiApplicationHelper::ColorType::LightType);
     ASSERT_EQ(tPalette.brush(QPalette::Disabled, QPalette::Window), tPalette.brush(QPalette::Normal, QPalette::Window));
 
-    tPalette.setColor(DPalette::Background, Qt::black);
+    tPalette.setColor(DPalette::Window, Qt::black);
     helper->generatePaletteColor(tPalette, QPalette::Highlight, DGuiApplicationHelper::ColorType::DarkType);
     ASSERT_TRUE(tPalette.highlight().color().isValid());
 

@@ -121,11 +121,17 @@ public:
     {
         // 临时存储一个无效的指针值, 用于此处条件变量的竞争
         if (m_helper.testAndSetRelaxed(nullptr, INVALID_HELPER)) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+            m_helper.storeRelaxed(creator());
+            m_helper.loadRelaxed()->initialize();
+        }
+        return m_helper.loadRelaxed();
+#else
             m_helper.store(creator());
             m_helper.load()->initialize();
         }
-
         return m_helper.load();
+#endif
     }
 
     inline void clear()
@@ -255,7 +261,7 @@ void DGuiApplicationHelperPrivate::staticInitApplication()
     if (!_globalHelper.exists())
         return;
 
-    if (DGuiApplicationHelper *helper = _globalHelper->m_helper.load())
+    if (DGuiApplicationHelper *helper = _globalHelper->helper())
         helper->d_func()->initApplication(qGuiApp);
 }
 
@@ -1211,13 +1217,21 @@ void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
         qWarning() << "DGuiApplicationHelper: Plase check 'QGuiApplication::setPalette', Don't use it on DTK application.";
     }
 
+    auto resolve = [](const DPalette &palette) ->bool {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    return palette.resolveMask();
+#else
+    return palette.resolve();
+#endif
+    };
+
     if (d->appPalette) {
-        if (palette.resolve()) {
+        if (resolve(palette)) {
             *d->appPalette = palette;
         } else {
             d->appPalette.reset();
         }
-    } else if (palette.resolve()) {
+    } else if (resolve(palette)) {
         d->appPalette.reset(new DPalette(palette));
     } else {
         return;
@@ -1313,7 +1327,7 @@ DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QColor
  */
 DGuiApplicationHelper::ColorType DGuiApplicationHelper::toColorType(const QPalette &palette)
 {
-    return toColorType(palette.background().color());
+    return toColorType(palette.window().color());
 }
 
 /*!
@@ -1468,8 +1482,8 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
                 qCInfo(dgAppHelper) << "New instance: pid=" << pid << "arguments=" << arguments;
 
                 // 通知新进程的信息
-                if (_globalHelper.exists() && _globalHelper->m_helper.load())
-                    Q_EMIT _globalHelper->m_helper.load()->newProcessInstance(pid, arguments);
+                if (_globalHelper.exists() && _globalHelper->helper())
+                    Q_EMIT _globalHelper->helper()->newProcessInstance(pid, arguments);
             });
 
             instance->flush(); //发送数据给新的实例
@@ -1589,7 +1603,12 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
     QStringList missingQmfiles;
     for (const auto &locale : localeFallback) {
         QStringList translateFilenames {QString("%1_%2").arg(fileName).arg(locale.name())};
-        const QStringList parseLocalNameList = locale.name().split("_", QString::SkipEmptyParts);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        auto behavior = Qt::SkipEmptyParts;
+#else
+        auto behavior = QString::SkipEmptyParts;
+#endif
+        const QStringList parseLocalNameList = locale.name().split("_", behavior);
         if (parseLocalNameList.length() > 0)
             translateFilenames << QString("%1_%2").arg(fileName).arg(parseLocalNameList.at(0));
 

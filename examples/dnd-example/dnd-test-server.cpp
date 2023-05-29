@@ -14,6 +14,7 @@
 #include <QVBoxLayout>
 #include <QProgressBar>
 #include <QDebug>
+#include <QRandomGenerator>
 
 DGUI_USE_NAMESPACE
 
@@ -97,7 +98,7 @@ int main(int argc, char **argv)
     });
 
     QObject::connect(&t, &QTimer::timeout, [&t, &pg] {
-        if (qrand() & 1) {
+        if (QRandomGenerator::global()->generate() & 1) {
             s->setProgress(++p);
             pg.setValue(p);
             if(p == 100) {

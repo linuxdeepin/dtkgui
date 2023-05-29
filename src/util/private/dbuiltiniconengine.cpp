@@ -54,7 +54,7 @@ public:
 
         QPixmap pm;
         QString pmckey(pmcKey(size, mode, state));
-        if (QPixmapCache::find(pmckey, pm)) {
+        if (QPixmapCache::find(pmckey, &pm)) {
             genIconTypeIcon(pm, mode);
             return pm;
         }
@@ -261,7 +261,11 @@ bool DBuiltinIconEngine::write(QDataStream &out) const
     return true;
 }
 
-QString DBuiltinIconEngine::iconName() const
+
+QString DBuiltinIconEngine::iconName()
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    const
+#endif
 {
     return m_iconName;
 }
@@ -341,6 +345,8 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
     ensureLoaded();
 
     switch (id) {
+    // Get rid of Qt4 virtual hooks ?
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     case QIconEngine::AvailableSizesHook:
         {
             QIconEngine::AvailableSizesArgument &arg
@@ -364,6 +370,7 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
             name = m_info.iconName;
         }
         break;
+#endif
     case QIconEngine::IsNullHook:
         {
             *reinterpret_cast<bool*>(data) = m_info.entries.isEmpty();
