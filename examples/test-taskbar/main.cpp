@@ -6,7 +6,6 @@
 #include <DFontManager>
 
 #include <QApplication>
-#include <QDesktopWidget>
 
 #include "testtaskbarwindow.h"
 

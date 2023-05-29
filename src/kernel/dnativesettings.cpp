@@ -128,7 +128,12 @@ QDebug operator<<(QDebug debug, const DTK_GUI_NAMESPACE::DNativeSettings &settin
     const QByteArrayList &keys = settings.allKeys();
 
     for (const QByteArray &key : keys) {
-        debug << key << settings.getSetting(key) << endl;
+        debug << key << settings.getSetting(key) <<
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+              Qt::endl;
+#else
+              endl;
+#endif
     }
 
     return debug;

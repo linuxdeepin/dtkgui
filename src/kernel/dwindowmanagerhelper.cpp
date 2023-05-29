@@ -9,7 +9,16 @@
 #include <DGuiApplicationHelper>
 #include <QGuiApplication>
 
-#include <QtPlatformHeaders/QXcbWindowFunctions>
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    #include <qpa/qplatformwindow_p.h>
+    #define D_XCB_WINDOW_TYPE QNativeInterface::Private::QXcbWindow::WindowType
+#else
+    #include <QtPlatformHeaders/QXcbWindowFunctions>
+    #define D_XCB_WINDOW_TYPE QXcbWindowFunctions::WmWindowType
+#endif
+
+
 #include <qpa/qplatformwindow.h>
 #include <qpa/qplatformnativeinterface.h>
 
@@ -44,81 +53,53 @@ DEFINE_CONST_CHAR(connectWindowMotifWMHintsChanged);
 DEFINE_CONST_CHAR(popupSystemWindowMenu);
 DEFINE_CONST_CHAR(setWMClassName);
 
-static bool connectWindowManagerChangedSignal(QObject *object, std::function<void ()> slot)
+template<typename ReturnT, typename FunctionT, typename... Args>
+static inline ReturnT callPlatformFunction(const QByteArray &funcName,  Args... args)
 {
-    QFunctionPointer connectWindowManagerChangedSignal = Q_NULLPTR;
+    QFunctionPointer func = Q_NULLPTR;
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    connectWindowManagerChangedSignal = qApp->platformFunction(_connectWindowManagerChangedSignal);
+    func = qApp->platformFunction(funcName);
 #endif
 
-    return connectWindowManagerChangedSignal && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectWindowManagerChangedSignal)(object, slot);
+    return func ? reinterpret_cast<FunctionT>(func)(args...) : ReturnT();
+}
+
+typedef bool(*func_t)(QObject *object, std::function<void ()>);
+static bool connectWindowManagerChangedSignal(QObject *object, std::function<void ()> slot)
+{
+    return callPlatformFunction<bool, func_t>(_connectWindowManagerChangedSignal, object, slot);
 }
 
 static bool connectHasBlurWindowChanged(QObject *object, std::function<void ()> slot)
 {
-    QFunctionPointer connectHasBlurWindowChanged = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    connectHasBlurWindowChanged = qApp->platformFunction(_connectHasBlurWindowChanged);
-#endif
-
-    return connectHasBlurWindowChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectHasBlurWindowChanged)(object, slot);
+    return callPlatformFunction<bool, func_t>(_connectHasBlurWindowChanged, object, slot);
 }
 
 static bool connectHasCompositeChanged(QObject *object, std::function<void ()> slot)
 {
-    QFunctionPointer connectHasCompositeChanged = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    connectHasCompositeChanged = qApp->platformFunction(_connectHasCompositeChanged);
-#endif
-
-    return connectHasCompositeChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectHasCompositeChanged)(object, slot);
+    return callPlatformFunction<bool, func_t>(_connectHasCompositeChanged, object, slot);
 }
 
 static bool connectHasNoTitlebarChanged(QObject *object, std::function<void ()> slot)
 {
-    QFunctionPointer connectHasNoTitlebarChanged = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    connectHasNoTitlebarChanged = qApp->platformFunction(_connectHasNoTitlebarChanged);
-#endif
-
-    return connectHasNoTitlebarChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectHasNoTitlebarChanged)(object, slot);
+    return callPlatformFunction<bool, func_t>(_connectHasNoTitlebarChanged, object, slot);
 }
 
 static bool connectHasWallpaperEffectChanged(QObject *object, std::function<void ()> slot)
 {
-    QFunctionPointer connectHasWallpaperEffectChanged = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    connectHasWallpaperEffectChanged = qApp->platformFunction(_connectHasWallpaperEffectChanged);
-#endif
-
-    return connectHasWallpaperEffectChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectHasWallpaperEffectChanged)(object, slot);
+    return callPlatformFunction<bool, func_t>(_connectHasWallpaperEffectChanged, object, slot);
 }
 
 static bool connectWindowListChanged(QObject *object, std::function<void ()> slot)
 {
-    QFunctionPointer connectWindowListChanged = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    connectWindowListChanged = qApp->platformFunction(_connectWindowListChanged);
-#endif
-
-    return connectWindowListChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void ()>)>(connectWindowListChanged)(object, slot);
+    return callPlatformFunction<bool, func_t>(_connectWindowListChanged, object, slot);
 }
 
 static bool connectWindowMotifWMHintsChanged(QObject *object, std::function<void (quint32)> slot)
 {
-    QFunctionPointer connectWindowMotifWMHintsChanged = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    connectWindowMotifWMHintsChanged = qApp->platformFunction(_connectWindowMotifWMHintsChanged);
-#endif
-
-    return connectWindowMotifWMHintsChanged && reinterpret_cast<bool(*)(QObject *object, std::function<void (quint32)>)>(connectWindowMotifWMHintsChanged)(object, slot);
+    typedef bool(*quint32_func_t)(QObject *object, std::function<void (quint32)>);
+    return callPlatformFunction<bool, quint32_func_t>(_connectWindowMotifWMHintsChanged, object, slot);
 }
 
 class DWindowManagerHelperPrivate : public DTK_CORE_NAMESPACE::DObjectPrivate
@@ -494,7 +475,17 @@ DWindowManagerHelper::MotifDecorations DWindowManagerHelper::getMotifDecorations
 void DWindowManagerHelper::setWmWindowTypes(QWindow *window, WmWindowTypes types)
 {
     const int _types = static_cast<int>(types);
-    QXcbWindowFunctions::setWmWindowType(window, static_cast<QXcbWindowFunctions::WmWindowType>(_types));
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    typedef QNativeInterface::Private::QXcbWindow  QXcbWindow_P;
+    if (auto w = dynamic_cast<QXcbWindow_P *>(window->handle())) {
+        w->setWindowType(static_cast<D_XCB_WINDOW_TYPE>(_types));
+    } else {
+        qWarning() << "cast" << window << "to platform window failed";
+    }
+#else
+    QXcbWindowFunctions::setWmWindowType(window, static_cast<D_XCB_WINDOW_TYPE>(_types));
+#endif
 }
 
 /*!
@@ -507,7 +498,7 @@ void DWindowManagerHelper::setWmWindowTypes(QWindow *window, WmWindowTypes types
 void DWindowManagerHelper::setWmClassName(const QByteArray &name)
 {
     typedef void (*SetWmNameType)(const QByteArray&);
-    return QPlatformHeaderHelper::callPlatformFunction<void, SetWmNameType>(_setWMClassName, name);
+    return callPlatformFunction<void, SetWmNameType>(_setWMClassName, name);
 }
 
 /*!
@@ -519,15 +510,7 @@ void DWindowManagerHelper::setWmClassName(const QByteArray &name)
  */
 void DWindowManagerHelper::popupSystemWindowMenu(const QWindow *window)
 {
-    QFunctionPointer popupSystemWindowMenu = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    popupSystemWindowMenu = qApp->platformFunction(_popupSystemWindowMenu);
-#endif
-
-    if (popupSystemWindowMenu && window->handle()) {
-        reinterpret_cast<void(*)(quint32)>(popupSystemWindowMenu)(window->handle()->winId());
-    }
+    return callPlatformFunction<void, void(*)(quint32)>(_popupSystemWindowMenu, quint32(window->handle()->winId()));
 }
 
 /*!
@@ -536,13 +519,7 @@ void DWindowManagerHelper::popupSystemWindowMenu(const QWindow *window)
  */
 bool DWindowManagerHelper::hasBlurWindow() const
 {
-    QFunctionPointer wmHasBlurWindow = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    wmHasBlurWindow = qApp->platformFunction(_hasBlurWindow);
-#endif
-
-    return wmHasBlurWindow && reinterpret_cast<bool(*)()>(wmHasBlurWindow)();
+    return callPlatformFunction<bool, bool(*)()>(_hasBlurWindow);
 }
 
 /*!
@@ -571,7 +548,7 @@ bool DWindowManagerHelper::hasComposite() const
         return true;
     }
 
-    return reinterpret_cast<bool(*)()>(hasComposite)();
+    return callPlatformFunction<bool, bool(*)()>(_hasComposite);
 }
 
 /*!
@@ -580,13 +557,7 @@ bool DWindowManagerHelper::hasComposite() const
  */
 bool DWindowManagerHelper::hasNoTitlebar() const
 {
-    QFunctionPointer hasNoTitlebar = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    hasNoTitlebar = qApp->platformFunction(_hasNoTitlebar);
-#endif
-
-    return hasNoTitlebar && reinterpret_cast<bool(*)()>(hasNoTitlebar)();
+    return callPlatformFunction<bool, bool(*)()>(_hasNoTitlebar);
 }
 
 /*!
@@ -595,13 +566,7 @@ bool DWindowManagerHelper::hasNoTitlebar() const
  */
 bool DWindowManagerHelper::hasWallpaperEffect() const
 {
-    QFunctionPointer hasWallpaperEffect = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    hasWallpaperEffect = qApp->platformFunction(_hasWallpaperEffect);
-#endif
-
-    return hasWallpaperEffect && reinterpret_cast<bool(*)()>(hasWallpaperEffect)();
+    return callPlatformFunction<bool, bool(*)()>(_hasWallpaperEffect);
 }
 
 /*!
@@ -613,13 +578,7 @@ bool DWindowManagerHelper::hasWallpaperEffect() const
  */
 QString DWindowManagerHelper::windowManagerNameString() const
 {
-    QFunctionPointer windowManagerName = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    windowManagerName = qApp->platformFunction(_windowManagerName);
-#endif
-
-    return windowManagerName ? reinterpret_cast<QString(*)()>(windowManagerName)() : QString();
+    return callPlatformFunction<QString, QString(*)()>(_windowManagerName);
 }
 
 /*!
@@ -650,15 +609,7 @@ DWindowManagerHelper::WMName DWindowManagerHelper::windowManagerName() const
  */
 QVector<quint32> DWindowManagerHelper::allWindowIdList() const
 {
-    QFunctionPointer wmClientList = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    wmClientList = qApp->platformFunction(_getWindows);
-#endif
-
-    if (!wmClientList) return QVector<quint32>();
-
-    return reinterpret_cast<QVector<quint32>(*)()>(wmClientList)();
+    return callPlatformFunction<QVector<quint32>, QVector<quint32>(*)()>(_getWindows);
 }
 
 /*!
@@ -669,15 +620,7 @@ QVector<quint32> DWindowManagerHelper::allWindowIdList() const
  */
 QVector<quint32> DWindowManagerHelper::currentWorkspaceWindowIdList() const
 {
-    QFunctionPointer wmClientList = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    wmClientList = qApp->platformFunction(_getCurrentWorkspaceWindows);
-#endif
-
-    if (!wmClientList) return QVector<quint32>();
-
-    return reinterpret_cast<QVector<quint32>(*)()>(wmClientList)();
+    return callPlatformFunction<QVector<quint32>, QVector<quint32>(*)()>(_getCurrentWorkspaceWindows);
 }
 
 /*!
@@ -732,16 +675,7 @@ QList<DForeignWindow *> DWindowManagerHelper::currentWorkspaceWindows() const
  */
 quint32 DWindowManagerHelper::windowFromPoint(const QPoint &p)
 {
-    QFunctionPointer winFromPoint = Q_NULLPTR;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    winFromPoint = qApp->platformFunction(_windowFromPoint);
-#endif
-
-    if (!winFromPoint)
-        return 0;
-
-    return reinterpret_cast<quint32 (*)(const QPoint &)>(winFromPoint)(p);
+    return callPlatformFunction<quint32, quint32 (*)(const QPoint &)>(_windowFromPoint, p);
 }
 
 /*!

@@ -37,7 +37,7 @@ public:
 
     bool isValid();
 
-    QHash<QString, QString> findMetaData(FREE_IMAGE_MDMODEL model, FIBITMAP *dib);
+    bool findMetaData(FREE_IMAGE_MDMODEL model, FIBITMAP *dib, QHash<QString, QString> &data);
     QHash<QString, QString> findAllMetaData(const QString &fileName);
     FIBITMAP *readFileToFIBITMAP(const QString &fileName, int flags = 0, FREE_IMAGE_FORMAT fif = FIF_UNKNOWN);
     bool writeFIBITMAPToFile(FIBITMAP *dib, const QString &fileName, int flags = 0);
