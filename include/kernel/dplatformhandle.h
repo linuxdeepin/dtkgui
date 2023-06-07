@@ -168,8 +168,10 @@ DGUI_USE_NAMESPACE
 QDebug operator<<(QDebug deg, const DPlatformHandle::WMBlurArea &area);
 QT_END_NAMESPACE
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 Q_DECLARE_METATYPE(QPainterPath)
-Q_DECLARE_METATYPE(QRegion)
 Q_DECLARE_METATYPE(QMargins)
+#endif
+Q_DECLARE_METATYPE(QRegion)
 
 #endif // DPLATFORMHANDLE_H
