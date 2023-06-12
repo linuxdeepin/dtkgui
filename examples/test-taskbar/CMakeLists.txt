@@ -1,16 +1,17 @@
-find_package(Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(BIN taskbar)
+set(TARGET_NAME ${BIN}${DTK_VERSION_MAJOR})
 
-add_executable(${BIN}
+add_executable(${TARGET_NAME}
     testtaskbarwindow.h 
     testtaskbarwindow.cpp
     main.cpp
 )
 
-target_link_libraries(${BIN} PRIVATE
-    Qt5::Widgets
-    Qt5::Gui
+target_link_libraries(${TARGET_NAME} PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Gui
     ${LIB_NAME}
-    Dtk::Core
 )
+set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME ${BIN})

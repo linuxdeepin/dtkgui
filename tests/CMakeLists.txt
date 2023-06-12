@@ -1,6 +1,6 @@
-set(BIN_NAME ut-dtkgui)
+set(BIN_NAME ut-dtk${DTK_VERSION_MAJOR}gui)
 
-find_package(Qt5 REQUIRED COMPONENTS Widgets Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
 find_package(GTest REQUIRED)
 
 include(../src/dbus/dbus.cmake)
@@ -27,13 +27,13 @@ target_compile_options(${BIN_NAME} PRIVATE -fno-access-control -fsanitize=addres
 target_link_options(${BIN_NAME} PRIVATE -fsanitize=address)
 
 target_link_libraries(${BIN_NAME} PRIVATE
-    Qt5::Gui
-    Qt5::GuiPrivate
-    Qt5::Widgets
-    Qt5::DBus
-    Qt5::Network
-    Qt5::Test
-    Dtk::Core
+    Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::GuiPrivate
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::DBus
+    Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::Test
+    Dtk${DTK_VERSION_MAJOR}::Core
     PkgConfig::librsvg
     GTest::GTest
     gmock
@@ -51,7 +51,7 @@ endif()
 
 if(NOT DTK_DISABLE_LIBXDG)
     target_link_libraries(${BIN_NAME} PRIVATE 
-        Qt5XdgIconLoader
+        Qt${QT_VERSION_MAJOR}XdgIconLoader
     )
 endif()
 

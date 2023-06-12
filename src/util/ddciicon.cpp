@@ -528,7 +528,8 @@ static inline QVector<QStringView> fromQStringList(const QStringList &list)
 DDciIconEntry *DDciIconPrivate::loadIcon(const QString &parentDir, const QString &imageDir)
 {
     // Mode-Theme
-    const QVector<QStringView> &iconProps = fromQStringList(imageDir.split(QLatin1Char('.')));
+    auto props = imageDir.split(QLatin1Char('.'));
+    const QVector<QStringView> &iconProps = fromQStringList(props);
     if (iconProps.count() != 2) // Error file name.
         return nullptr;
 
@@ -553,7 +554,8 @@ DDciIconEntry *DDciIconPrivate::loadIcon(const QString &parentDir, const QString
         scaleIcon.imagePixelRatio = scale;
         const QString &path = joinPath(stateDir, scaleString);
         for (const QString &layerPath : dciFile->list(path, true)) {
-            const QVector<QStringView> &layerProps = fromQStringList(layerPath.split(QLatin1Char('.')));
+            props = layerPath.split(QLatin1Char('.'));
+            const QVector<QStringView> &layerProps = fromQStringList(props);
             DDciIconEntry::ScalableLayer::Layer layer;
             EntryPropertyParser::doParse(&layer, layerProps);
             layer.data = dciFile->dataRef(joinPath(path, layerPath));
