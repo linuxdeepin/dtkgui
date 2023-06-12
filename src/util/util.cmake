@@ -1,7 +1,10 @@
 if(NOT DTK_DISABLE_LIBXDG)
     message("Enable libxdg!")
+#    find_package(qt${QT_VERSION_MAJOR}xdgiconloader)
+if (Qt5_FOUND)
     find_package(qt5xdgiconloader)
     add_definitions(-DXDG_ICON_VERSION_MAR=${qt5xdgiconloader_VERSION_MAJOR})
+endif()
     set(UTIL_PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/private/xdgiconproxyengine_p.h
         ${CMAKE_CURRENT_LIST_DIR}/private/xdgiconproxyengine.cpp

@@ -27,13 +27,13 @@ target_include_directories(${LIB_NAME} PUBLIC
 
 target_link_libraries(${LIB_NAME}
 PUBLIC
-    Qt5::Gui
-    Qt5::Network
-    Dtk::Core
+    Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Network
+    Dtk${DTK_VERSION_MAJOR}::Core
 PRIVATE
-    Qt5::GuiPrivate
-    Qt5::CorePrivate
-    Qt5::DBus
+    Qt${QT_VERSION_MAJOR}::GuiPrivate
+    Qt${QT_VERSION_MAJOR}::CorePrivate
+    Qt${QT_VERSION_MAJOR}::DBus
     PkgConfig::librsvg
 )
 
@@ -49,7 +49,7 @@ endif()
 
 if(NOT DTK_DISABLE_LIBXDG)
     target_link_libraries(${LIB_NAME} PRIVATE
-        Qt5XdgIconLoader
+        Qt${QT_VERSION_MAJOR}XdgIconLoader
     )
 endif()
 
@@ -67,12 +67,13 @@ target_link_directories(${LIB_NAME} INTERFACE
     $<INSTALL_INTERFACE:${LIBRARY_INSTALL_DIR}>
 )
 
-install(TARGETS ${LIB_NAME} EXPORT DtkGuiTargets DESTINATION "${LIBRARY_INSTALL_DIR}")
-install(EXPORT DtkGuiTargets NAMESPACE Dtk:: FILE DtkGuiTargets.cmake DESTINATION "${CONFIG_INSTALL_DIR}")
+install(TARGETS ${LIB_NAME} EXPORT Dtk${DTK_VERSION_MAJOR}GuiTargets DESTINATION "${LIBRARY_INSTALL_DIR}")
+install(EXPORT Dtk${DTK_VERSION_MAJOR}GuiTargets NAMESPACE Dtk${DTK_VERSION_MAJOR}:: FILE Dtk${DTK_VERSION_MAJOR}GuiTargets.cmake DESTINATION "${CONFIG_INSTALL_DIR}")
 install(DIRECTORY ../include/util/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/DtkGui/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/global/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/kernel/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/filedrag/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
-# dconfig meta file
-dconfig_meta_files(COMMONID org.deepin.dtk FILES ${PROJECT_SOURCE_DIR}/misc/org.deepin.dtk.ui.preference.json)
+
+# install dconfig meta file in dtkcommon
+# dconfig_meta_files(COMMONID org.deepin.dtk FILES ${PROJECT_SOURCE_DIR}/misc/org.deepin.dtk.ui.preference.json)
