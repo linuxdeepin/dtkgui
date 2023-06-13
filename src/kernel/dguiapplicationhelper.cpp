@@ -363,6 +363,8 @@ void DGuiApplicationHelperPrivate::setPaletteType(DGuiApplicationHelper::ColorTy
 
     D_Q(DGuiApplicationHelper);
     Q_EMIT q->paletteTypeChanged(paletteType);
+
+    _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
 }
 
 void DGuiApplicationHelperPrivate::initPaletteType() const
@@ -384,17 +386,11 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
 
     applyThemeType(false);
 
-    auto conn = QObject::connect(_d_dconfig, &DConfig::valueChanged, _d_dconfig, [applyThemeType](const QString &key){
+    QObject::connect(_d_dconfig, &DConfig::valueChanged, _d_dconfig, [applyThemeType](const QString &key){
         if (key != APP_THEME_TYPE)
             return;
 
         applyThemeType(true);
-    });
-
-    QObject::connect(qGuiApp, &QGuiApplication::aboutToQuit, _d_dconfig, [conn](){
-        QObject::disconnect(conn);
-        int paletteType = DGuiApplicationHelper::instance()->paletteType();
-        _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
     });
 }
 
