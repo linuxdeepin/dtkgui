@@ -92,7 +92,7 @@ TEST(ut_DDciIconImage, render)
 
 class ut_DDciIconPlayer : public DTest
 {
-private:
+protected:
     ut_DDciIconPlayer()
         : update_signal_spy(&player, &DDciIconPlayer::updated)
     {}
