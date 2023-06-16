@@ -11,7 +11,7 @@ DGUI_USE_NAMESPACE
 
 TEST(ut_DIcon, pixmap)
 {
-    QIcon icon = QIcon::fromTheme("dde", QIcon(":/images/logo_icon.svg"));
+    QIcon icon = QIcon::fromTheme("dde", QIcon(":/images/logo_icon.png"));
     ASSERT_FALSE(icon.isNull());
 
     DIcon dicon(icon);
@@ -23,10 +23,14 @@ TEST(ut_DIcon, pixmap)
 
     // 默认单元测试未开启 AA_UseHighDpiPixmaps， 这时 pixmap 获取的 devicePixelRatio 为 1.0
     // 图片大小也就是设置大小 32x32
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     ASSERT_FALSE(QGuiApplication::testAttribute(Qt::AA_UseHighDpiPixmaps));
+#endif
+
     ASSERT_EQ(icon.pixmap(size).size(), size);
 
     // 开启 AA_UseHighDpiPixmaps 之后 pixmap 的大小和 qApp 缩放有关
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
     ASSERT_EQ(icon.pixmap(size).size(), size * devicePixelRatio);
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, false);
@@ -36,4 +40,14 @@ TEST(ut_DIcon, pixmap)
     ASSERT_EQ(dicon.pixmap(size, 1.0).size(), size);
 
     ASSERT_EQ(dicon.pixmap(size, 1.75).size(), size * 1.75);
+#else
+    // DIcon 在 Qt6 下行为应和 QIcon 这个接口一致
+    ASSERT_EQ(dicon.pixmap(size, -1).size(), icon.pixmap(size, -1).size());
+
+    ASSERT_EQ(dicon.pixmap(size, 1.0).size(), icon.pixmap(size, 1.0).size());
+
+    ASSERT_EQ(dicon.pixmap(size, 1.75).size(), icon.pixmap(size, 1.75).size());
+#endif
+
+
 }

@@ -921,12 +921,12 @@ QImage DImageHandler::antiColorFilter(const QImage &img)
 
 QImage DImageHandler::metalColorFilter(const QImage &img)
 {
-    QImage *baseImage = new QImage(img);
+    QImage baseImage = QImage(img);
     QImage darkImage = DImageHandler::changeBrightness(img, -100);
     QImage greyImage = DImageHandler::grayScale(darkImage);
     QPainter painter;
 
-    QImage newImage = baseImage->scaled(QSize(img.width(), img.height()));
+    QImage newImage = baseImage.scaled(QSize(img.width(), img.height()));
 
     painter.begin(&newImage);
     painter.setOpacity(0.5);

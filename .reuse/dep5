@@ -53,10 +53,8 @@ Files: *.pro *.prf *.pri *.qrc *CMakeLists.txt *.cmake *.in
 Copyright: None
 License: CC0-1.0
 
-# images: svg dci webp
+# images: png svg dci webp
 Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/*
-  src/util/icons/dci/*  tests/images/logo_icon.svg
-  examples/animation-dci/dci_heart.dci tests/images/dci_heart.dci
-  tests/images/*.webp examples/animation-dci/3depict.dci
+  src/util/icons/dci/* tests/images/* examples/animation-dci/*
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later

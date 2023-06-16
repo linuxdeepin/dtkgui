@@ -285,6 +285,7 @@ public:
 
     struct ReaderData {
         ReaderData() {}
+        ~ReaderData() {}
         ReaderData(const ReaderData &other)
             : index(other.index)
             , buffer(nullptr)
@@ -305,9 +306,8 @@ public:
         }
 
         qsizetype index = 0;
-        // Use std::unique_ptr instead of QScopedPointer.
-        QScopedPointer<QBuffer> buffer;
-        QScopedPointer<QImageReader> reader;
+        std::unique_ptr<QBuffer> buffer;
+        std::unique_ptr<QImageReader> reader;
         int pastImageDelay = 0;
         QImage currentImage;
         bool currentImageIsValid = false;
@@ -729,7 +729,13 @@ void DDciIconPrivate::paint(QPainter *painter, const QRect &rect, qreal devicePi
                             const DDciIconEntry *entry, const DDciIconPalette &palette, qreal pixmapScale)
 {
     qreal pixelRatio = devicePixelRatio;
-    if (pixelRatio <= 0 && painter->device() && qApp->testAttribute(Qt::AA_UseHighDpiPixmaps))
+    bool useHighDpiPixmaps =
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            true;
+#else
+            qApp->testAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
+    if (pixelRatio <= 0 && painter->device() && useHighDpiPixmaps)
         pixelRatio = painter->device()->devicePixelRatio();
     if (pixelRatio <= 0)
         pixelRatio = 1.0;
@@ -986,7 +992,7 @@ DDciIconImage &DDciIconImage::operator=(const DDciIconImage &other) noexcept
 
 DDciIconImage::~DDciIconImage()
 {
-
+    reset();
 }
 
 DDciIconImage::DDciIconImage(DDciIconImage &&other) noexcept
@@ -1003,7 +1009,7 @@ DDciIconImage &DDciIconImage::operator=(DDciIconImage &&other) noexcept
 
 void DDciIconImage::reset()
 {
-    if (!d || d->pastImageCount == 0)
+    if (!d)
         return;
 
     qDeleteAll(d->readers);
