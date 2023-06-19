@@ -108,7 +108,7 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
 #define APP_THEME_TYPE "themeType"
-Q_GLOBAL_STATIC_WITH_ARGS(DTK_CORE_NAMESPACE::DConfig, _d_dconfig, ("org.deepin.dtk.ui.preference"));
+Q_GLOBAL_STATIC_WITH_ARGS(DTK_CORE_NAMESPACE::DConfig, _d_dconfig, ("org.deepin.dtk.preference"));
 
 /*!
  @private
