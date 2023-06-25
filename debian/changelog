@@ -1,3 +1,14 @@
+dtkgui (5.6.12) unstable; urgency=medium
+
+  * chore: Sync by https://github.com/linuxdeepin/.github/commit/2e5e092ba3f86b16d1aabbabcf0bfd2ae65b19c8(Influence: none)
+  * fix: fix build failure due to metasystem change
+  * fix(build): suport build with Qt6 && Qt5
+  * chore: Adapt Qt6 && Dtk6 compilation
+  * fix: ut failed
+  * chore: update dconfig appid
+
+ -- Deepin Packages Builder <packages@deepin.org>  Sun, 25 Jun 2023 14:43:42 +0800
+
 dtkgui (5.6.11) unstable; urgency=medium
 
   * Release 5.6.11
