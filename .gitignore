@@ -64,3 +64,6 @@ dtkgui.pc
 DtkGuiConfig.cmake
 asan.*
 Testing
+
+# Ignore Doxygen theme files
+docs/doxygen-theme/
