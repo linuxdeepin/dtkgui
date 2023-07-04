@@ -127,7 +127,7 @@ if(FreeImage_FOUND AND libraw_FOUND)
   set(EX_IMAGE_FORMAT_LIBS_FOUND ON)
 endif()
 
-set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME})
+set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(src ${OUTPUT_DIR}/src)
 if(BUILD_TESTING)
     enable_testing()
