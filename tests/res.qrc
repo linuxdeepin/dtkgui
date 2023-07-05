@@ -8,4 +8,7 @@
         <file alias="images/dci_heart.dci">../examples/animation-dci/dci_heart.dci</file>
         <file alias="images/3depict.dci">../examples/animation-dci/3depict.dci</file>
     </qresource>
+    <qresource prefix="/icons/deepin/builtin">
+        <file>actions/icon_Layout_16px.svg</file>
+    </qresource>
 </RCC>
