@@ -55,6 +55,6 @@ License: CC0-1.0
 
 # images: png svg dci webp
 Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/*
-  src/util/icons/dci/* tests/images/* examples/animation-dci/*
+  src/util/icons/dci/* tests/images/* tests/actions/* examples/animation-dci/*
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later
