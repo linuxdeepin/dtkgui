@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
-
 #include "dbuiltiniconengine_p.h"
-#include "dguiapplicationhelper.h"
+
+#include <DGuiApplicationHelper>
 
 #include <QPainter>
 #include <QPixmap>
@@ -15,8 +15,9 @@
 #include <private/qguiapplication_p.h>
 #include <QDebug>
 
-DGUI_BEGIN_NAMESPACE
 #define BUILTIN_ICON_PATH ":/icons/deepin/builtin"
+
+DGUI_BEGIN_NAMESPACE
 
 class Q_DECL_HIDDEN ImageEntry : public QIconLoaderEngineEntry
 {
@@ -162,7 +163,7 @@ DBuiltinIconEngine::~DBuiltinIconEngine()
 }
 
 QSize DBuiltinIconEngine::actualSize(const QSize &size, QIcon::Mode mode,
-                                 QIcon::State state)
+                                     QIcon::State state)
 {
     Q_UNUSED(mode);
     Q_UNUSED(state);
@@ -183,7 +184,7 @@ QSize DBuiltinIconEngine::actualSize(const QSize &size, QIcon::Mode mode,
 }
 
 QPixmap DBuiltinIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
-                               QIcon::State state)
+                                   QIcon::State state)
 {
     ensureLoaded();
 
@@ -195,16 +196,18 @@ QPixmap DBuiltinIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
 }
 
 void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
-                           QIcon::Mode mode, QIcon::State state)
+                               QIcon::Mode mode, QIcon::State state)
 {
     ensureLoaded();
 
-    QSize pixmapSize = rect.size();
-    qreal scale = 1;
-    if (painter->device())
-        scale = painter->device()->devicePixelRatioF();
-
-    pixmapSize *= scale;
+    qreal scale = 1.0;
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    if (qApp->testAttribute(Qt::AA_UseHighDpiPixmaps))
+        scale = painter->device() ? painter->device()->devicePixelRatioF() : qApp->devicePixelRatio();
+#else
+    scale = painter->device() ? painter->device()->devicePixelRatioF() : qApp->devicePixelRatio();
+#endif
+    QSize pixmapSize = rect.size() * scale;
 
     QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, pixmapSize);
     if (!entry)
@@ -218,9 +221,6 @@ void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
     }
 
     QPixmap pm = entry->pixmap(pixmapSize, mode, state);
-    if (pm.isNull())
-        return;
-
     ImageEntry::Type type = static_cast<ImageEntry *>(entry)->type;
     if (type == ImageEntry::TextType || (type == ImageEntry::ActionType && mode != QIcon::Normal)) {
         QPainter pa(&pm);
@@ -260,7 +260,6 @@ bool DBuiltinIconEngine::write(QDataStream &out) const
     out << m_iconName << m_key << m_followSystemTheme;
     return true;
 }
-
 
 QString DBuiltinIconEngine::iconName()
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
@@ -345,46 +344,45 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
     ensureLoaded();
 
     switch (id) {
-    // Get rid of Qt4 virtual hooks ?
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     case QIconEngine::AvailableSizesHook:
-        {
-            QIconEngine::AvailableSizesArgument &arg
-                    = *reinterpret_cast<QIconEngine::AvailableSizesArgument*>(data);
-            const int N = m_info.entries.size();
-            QList<QSize> sizes;
-            sizes.reserve(N);
+    {
+        QIconEngine::AvailableSizesArgument &arg
+            = *reinterpret_cast<QIconEngine::AvailableSizesArgument*>(data);
+        const int N = m_info.entries.size();
+        QList<QSize> sizes;
+        sizes.reserve(N);
 
-            // Gets all sizes from the DirectoryInfo entries
-            for (int i = 0; i < N; ++i) {
-                const QIconLoaderEngineEntry *entry = m_info.entries.at(i);
-                int size = entry->dir.size;
-                sizes.append(QSize(size, size));
-            }
-            arg.sizes.swap(sizes); // commit
+        // Gets all sizes from the DirectoryInfo entries
+        for (int i = 0; i < N; ++i) {
+            const QIconLoaderEngineEntry *entry = m_info.entries.at(i);
+            int size = entry->dir.size;
+            sizes.append(QSize(size, size));
         }
-        break;
+        arg.sizes.swap(sizes); // commit
+    }
+    break;
     case QIconEngine::IconNameHook:
-        {
-            QString &name = *reinterpret_cast<QString*>(data);
-            name = m_info.iconName;
-        }
-        break;
+    {
+        QString &name = *reinterpret_cast<QString*>(data);
+        name = m_info.iconName;
+    }
+    break;
 #endif
     case QIconEngine::IsNullHook:
-        {
-            *reinterpret_cast<bool*>(data) = m_info.entries.isEmpty();
-        }
-        break;
+    {
+        *reinterpret_cast<bool*>(data) = m_info.entries.isEmpty();
+    }
+    break;
     case QIconEngine::ScaledPixmapHook:
-        {
-            QIconEngine::ScaledPixmapArgument &arg = *reinterpret_cast<QIconEngine::ScaledPixmapArgument*>(data);
-            // QIcon::pixmap() multiplies size by the device pixel ratio.
-            const int integerScale = qCeil(arg.scale);
-            QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, arg.size / integerScale, integerScale);
-            arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state) : QPixmap();
-        }
-        break;
+    {
+        QIconEngine::ScaledPixmapArgument &arg = *reinterpret_cast<QIconEngine::ScaledPixmapArgument*>(data);
+        // QIcon::pixmap() multiplies size by the device pixel ratio.
+        const int integerScale = qCeil(arg.scale);
+        QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, arg.size / integerScale, integerScale);
+        arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state) : QPixmap();
+    }
+    break;
     default:
         QIconEngine::virtual_hook(id, data);
     }
