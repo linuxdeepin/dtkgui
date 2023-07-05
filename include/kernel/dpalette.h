@@ -56,7 +56,9 @@ public:
     inline const QBrush &brush(ColorType ct) const { return brush(Current, ct); }
     inline const QBrush &itemBackground() const { return brush(ItemBackground); }
     inline const QBrush &textTitle() const { return brush(TextTitle); }
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     D_DECL_DEPRECATED inline const QBrush &textTiele() const { return textTitle();}
+#endif
     inline const QBrush &textTips() const { return brush(TextTips); }
     inline const QBrush &textWarning() const { return brush(TextWarning); }
     inline const QBrush &textLively() const { return brush(TextLively); }

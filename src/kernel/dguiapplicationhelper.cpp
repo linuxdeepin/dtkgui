@@ -94,6 +94,12 @@ EnvReplaceGuard::~EnvReplaceGuard()
 
 DGUI_BEGIN_NAMESPACE
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
+using HelperCreator = DGuiApplicationHelper::HelperCreator;
+#else
+using HelperCreator = DGuiApplicationHelper *(*)();
+#endif
+
 #ifdef QT_DEBUG
 Q_LOGGING_CATEGORY(dgAppHelper, "dtk.dguihelper")
 #else
@@ -146,7 +152,7 @@ public:
     }
 
     QAtomicPointer<DGuiApplicationHelper> m_helper;
-    static DGuiApplicationHelper::HelperCreator creator;
+    static HelperCreator creator;
 };
 
 class LoadManualServiceWorker : public QThread
@@ -186,7 +192,7 @@ void LoadManualServiceWorker::checkManualServiceWakeUp()
     start();
 }
 
-DGuiApplicationHelper::HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
+HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
 Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
 
 int DGuiApplicationHelperPrivate::waitTime = 3000;
@@ -501,6 +507,7 @@ void DGuiApplicationHelper::initialize()
     d->init();
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 /*!
   \brief 创建 DGuiApplicationHelper 对象.
 
@@ -518,6 +525,7 @@ void DGuiApplicationHelper::registerInstanceCreator(DGuiApplicationHelper::Helpe
         _globalHelper->clear();
     }
 }
+#endif
 
 inline static int adjustColorValue(int base, qint8 increment, int max = 255)
 {
@@ -1035,6 +1043,7 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
     return base_palette;
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 /*!
   \brief 设置是否将调色板的颜色改为半透明模式.
 
@@ -1055,6 +1064,7 @@ void DGuiApplicationHelper::setColorCompositingEnabled(bool on)
 {
     DGuiApplicationHelper::setAttribute(Attribute::ColorCompositing, on);
 }
+#endif
 
 bool DGuiApplicationHelper::isXWindowPlatform()
 {
@@ -1116,6 +1126,7 @@ DPlatformTheme *DGuiApplicationHelper::applicationTheme() const
     return d->appTheme;
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 /*!
   \brief 返回窗口级别的主题, 优先级高于 windowTheme 和 systemTheme.
 
@@ -1137,6 +1148,7 @@ DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
 
     return theme;
 }
+#endif
 
 /*!
   \brief 返回应用程序调色板.
@@ -1241,6 +1253,7 @@ void DGuiApplicationHelper::setApplicationPalette(const DPalette &palette)
     d->notifyAppThemeChanged();
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 /*!
   \brief DGuiApplicationHelper::windowPalette.
 
@@ -1273,6 +1286,7 @@ DPalette DGuiApplicationHelper::windowPalette(QWindow *window) const
 
     return fetchPalette(theme);
 }
+#endif
 
 /*!
   \brief DGuiApplicationHelper::fontManager.
@@ -1506,6 +1520,7 @@ void DGuiApplicationHelper::setSingleInstanceInterval(int interval)
     DGuiApplicationHelperPrivate::waitTime = interval;
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 /*!
   \brief 设置从QLocalServer获取消息的等待时间.
 
@@ -1515,6 +1530,7 @@ void DGuiApplicationHelper::setSingelInstanceInterval(int interval)
 {
     DGuiApplicationHelperPrivate::waitTime = interval;
 }
+#endif
 
 static bool hasLocalManualFile()
 {
@@ -1701,6 +1717,7 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
     }
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 /*!
   \brief DGuiApplicationHelper::setThemeType.
   \deprecated 同 setPaletteType， 已废弃，请不要再使用。
@@ -1710,6 +1727,7 @@ void DGuiApplicationHelper::setThemeType(DGuiApplicationHelper::ColorType themeT
 {
     setPaletteType(themeType);
 }
+#endif
 
 /*!
   \brief 设置程序所应用的调色板类型.
