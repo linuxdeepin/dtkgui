@@ -143,7 +143,7 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
     D_D(DPlatformTheme);
 
     d->theme = new DNativeSettings(window, QByteArray(), this);
-
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     connect(this, &DPlatformTheme::windowChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Window, std::placeholders::_1));
     connect(this, &DPlatformTheme::windowTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::WindowText, std::placeholders::_1));
     connect(this, &DPlatformTheme::baseChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Base, std::placeholders::_1));
@@ -171,6 +171,7 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
     connect(this, &DPlatformTheme::lightLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::LightLively, std::placeholders::_1));
     connect(this, &DPlatformTheme::darkLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::DarkLively, std::placeholders::_1));
     connect(this, &DPlatformTheme::frameBorderChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::FrameBorder, std::placeholders::_1));
+#endif
     connect(d->theme, SIGNAL(propertyChanged(const QByteArray &, const QVariant &)),
             this, SLOT(_q_onThemePropertyChanged(const QByteArray &, const QVariant &)));
 }
@@ -299,7 +300,7 @@ void DPlatformTheme::setPalette(const DPalette &palette)
 {
 #define SET_PALETTE(Role) \
     set##Role(palette.color(QPalette::Normal, DPalette::Role))
-
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     SET_PALETTE(Window);
     SET_PALETTE(WindowText);
     SET_PALETTE(Base);
@@ -327,6 +328,7 @@ void DPlatformTheme::setPalette(const DPalette &palette)
     SET_PALETTE(LightLively);
     SET_PALETTE(DarkLively);
     SET_PALETTE(FrameBorder);
+#endif
 }
 
 #define FETCH_PROPERTY(Name, Function) \
@@ -465,7 +467,7 @@ bool DPlatformTheme::isValidPalette() const
 }
 
 #define GET_COLOR(Role) qvariant_cast<QColor>(getSetting(QByteArrayLiteral(#Role)))
-
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 QColor DPlatformTheme::window() const
 {
     return GET_COLOR(window);
@@ -600,6 +602,7 @@ QColor DPlatformTheme::frameBorder() const
 {
     return GET_COLOR(frameBorder);
 }
+#endif
 
 int DPlatformTheme::dotsPerInch(const QString &screenName) const
 {
@@ -742,7 +745,7 @@ void DPlatformTheme::setActiveColor(const QColor activeColor)
 }
 
 #define SET_COLOR(Role) setSetting(QByteArrayLiteral(#Role), Role)
-
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 void DPlatformTheme::setWindow(const QColor &window)
 {
     SET_COLOR(window);
@@ -877,6 +880,7 @@ void DPlatformTheme::setFrameBorder(const QColor &frameBorder)
 {
     SET_COLOR(frameBorder);
 }
+#endif
 
 void DPlatformTheme::setDotsPerInch(const QString &screenName, int dpi)
 {

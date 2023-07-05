@@ -64,8 +64,10 @@ public:
     Q_ENUM(Attribute)
     Q_DECLARE_FLAGS(Attributes, Attribute)
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     typedef DGuiApplicationHelper *(*HelperCreator)();
     D_DECL_DEPRECATED static void registerInstanceCreator(HelperCreator creator);
+#endif
     static DGuiApplicationHelper *instance();
     ~DGuiApplicationHelper();
 
@@ -79,8 +81,10 @@ public:
     static void generatePaletteColor(DPalette &base, DPalette::ColorType role, ColorType type);
     static void generatePalette(DPalette &base, ColorType type = UnknownType);
     static DPalette fetchPalette(const DPlatformTheme *theme);
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     Q_DECL_DEPRECATED_X("Use UseInactiveColorGroup enum with setAttribute.") static void setUseInactiveColorGroup(bool on);
     Q_DECL_DEPRECATED_X("Use ColorCompositing enum with setAttribute.") static void setColorCompositingEnabled(bool on);
+#endif
     static bool isXWindowPlatform();
     static bool isTabletEnvironment();
     static bool isSpecialEffectsEnvironment();
@@ -89,11 +93,15 @@ public:
 
     DPlatformTheme *systemTheme() const;
     DPlatformTheme *applicationTheme() const;
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     D_DECL_DEPRECATED DPlatformTheme *windowTheme(QWindow *window) const;
+#endif
 
     DPalette applicationPalette() const;
     void setApplicationPalette(const DPalette &palette);
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     D_DECL_DEPRECATED DPalette windowPalette(QWindow *window) const;
+#endif
 
     const DFontManager *fontManager() const;
 
@@ -104,14 +112,18 @@ public:
 
     static bool setSingleInstance(const QString &key, SingleScope singleScope = UserScope);
     static void setSingleInstanceInterval(int interval = 3000);
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     D_DECL_DEPRECATED static void setSingelInstanceInterval(int interval = 3000);
+#endif
 
     bool hasUserManual() const;
 
     static bool loadTranslator(const QString &fileName, const QList<QString> &translateDirs, const QList<QLocale> &localeFallback);
 
 public Q_SLOTS:
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     D_DECL_DEPRECATED_X("Plase use setPaletteType") void setThemeType(ColorType themeType);
+#endif
     void setPaletteType(ColorType paletteType);
     void handleHelpAction();
     static void openUrl(const QString &url);

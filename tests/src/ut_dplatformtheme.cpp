@@ -88,6 +88,7 @@ TEST_F(TDPlatformTheme, testSetFunction)
     ASSERT_EQ_BY_NAME(setGtkFontName, gtkFontName, "GtkFont");
     ASSERT_EQ_BY_VALUE(setFontPointSize, fontPointSize, TEST_DATA);
     ASSERT_EQ_BY_VALUE(setActiveColor, activeColor, TEST_COLOR);
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     ASSERT_EQ_COLOR(setWindow, window, TEST_COLOR);
     ASSERT_EQ_BY_VALUE(setWindowText, windowText, TEST_COLOR);
     ASSERT_EQ_BY_VALUE(setBase, base, TEST_COLOR);
@@ -115,4 +116,5 @@ TEST_F(TDPlatformTheme, testSetFunction)
     ASSERT_EQ_BY_VALUE(setDarkLively, darkLively, TEST_COLOR);
     ASSERT_EQ_BY_VALUE(setFrameBorder, frameBorder, TEST_COLOR);
     ASSERT_EQ_BY_VALUE(setWindowRadius, windowRadius, TEST_DATA / 10);
+#endif
 }
