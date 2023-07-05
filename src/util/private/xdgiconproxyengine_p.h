@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022-2023 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -7,22 +7,25 @@
 
 #include <dtkgui_global.h>
 
-#include <QIconEngine>
 #if XDG_ICON_VERSION_MAR >= 3
+#include <QIconEngine>
 #define private public
 #include <private/xdgiconloader/xdgiconloader_p.h>
 #undef private
-#elif XDG_ICON_VERSION_MAR == 2
-//这个版本中的xdgiconloader_p.h定义和qiconloader_p.h有冲突
-//只能通过此方式提供创建XdgIconLoaderEngine对象的接口
-#include "xdgiconenginecreator.h"
 #endif
 
-class ScalableEntry;
+namespace DEEPIN_XDG_THEME {
+enum PaletteType {
+    Text,
+    Background,
+    Highlight,
+};
+typedef QMap<PaletteType, QString> PALETTE_MAP;
+};
+
+struct ScalableEntry;
 class QIconLoaderEngineEntry;
-
 DGUI_BEGIN_NAMESPACE
-
 #if XDG_ICON_VERSION_MAR >= 3
 class Q_DECL_HIDDEN XdgIconProxyEngine : public QIconEngine
 {
@@ -48,7 +51,7 @@ public:
 
 private:
     XdgIconLoaderEngine *engine;
-    QHash<quint64, QString> entryToColorScheme;
+    QHash<quint64, DEEPIN_XDG_THEME::PALETTE_MAP> entryToColorScheme;
     QIcon::Mode lastMode;
 };
 #endif
