@@ -11,4 +11,7 @@
     <qresource prefix="/icons/deepin/builtin">
         <file>actions/icon_Layout_16px.svg</file>
     </qresource>
+    <qresource prefix="/dsg/built-in-icons">
+        <file alias="test_selected_indicator.dci">dcis/selected_indicator.dci</file>
+    </qresource>
 </RCC>
