@@ -4,6 +4,7 @@
 
 #include "dicontheme.h"
 #include "private/dbuiltiniconengine_p.h"
+#include "private/dciiconengine_p.h"
 #ifndef DTK_DISABLE_LIBXDG
 #include "private/xdgiconproxyengine_p.h"
 #else
@@ -91,6 +92,11 @@ static inline QIconEngine *createBuiltinIconEngine(const QString &iconName)
     return new DBuiltinIconEngine(iconName);
 }
 
+static inline QIconEngine *createDciIconEngine(const QString &iconName)
+{
+    return new DDciIconEngine(iconName);
+}
+
 #ifndef DTK_DISABLE_LIBXDG
 static inline QIconEngine *createXdgProxyIconEngine(const QString &iconName)
 {
@@ -100,24 +106,21 @@ static inline QIconEngine *createXdgProxyIconEngine(const QString &iconName)
 
 QIconEngine *DIconTheme::createIconEngine(const QString &iconName, Options options)
 {
-    if (Q_UNLIKELY(!options.testFlag(IgnoreBuiltinIcons))) {
-        thread_local static QSet<QString> non_builtin_icon_cache;
+    thread_local static QSet<QString> non_cache;
 
-        if (!non_builtin_icon_cache.contains(iconName)) {
-            // 记录下来此种类型的icon为内置图标
-            // 因此，此处添加的缓存不考虑更新
-            // 优先使用内置图标
-            if (QIconEngine *engine = createBuiltinIconEngine(iconName)) {
-                if (engine->isNull()) {
-                    non_builtin_icon_cache.insert(iconName);
-                    delete engine;
-                } else {
-                    return engine;
-                }
-            } else {
-                non_builtin_icon_cache.insert(iconName);
-            }
+    if (!non_cache.contains(iconName)) {
+        if (Q_UNLIKELY(!options.testFlag(IgnoreBuiltinIcons))) {
+            QScopedPointer<QIconEngine> engine(createBuiltinIconEngine(iconName));
+            if (engine && !engine->isNull())
+                return engine.take();
         }
+        if (Q_UNLIKELY(!options.testFlag(IgnoreDciIcons))) {
+            QScopedPointer<QIconEngine> engine(createDciIconEngine(iconName));
+            if (engine && !engine->isNull())
+                return engine.take();
+        }
+
+        non_cache.insert(iconName);
     }
 
 #ifdef DTK_DISABLE_LIBXDG
