@@ -49,14 +49,14 @@ public:
   \property DForeignWindow::wmClass
   \brief 窗口 WM_CLASS 的值
   \note 只读
-  \l {https://tronche.com/gui/x/icccm/sec-4.html#WM_CLASS}{WM_CLASS}
+  \ref {https://tronche.com/gui/x/icccm/sec-4.html#WM_CLASS}{WM_CLASS}
  */
 
 /*!
   \property DForeignWindow::pid
   \brief 窗口所属进程的 pid
   \note 只读
-  \l {https://specifications.freedesktop.org/wm-spec/1.3/ar01s05.html}{_NET_WM_PID}
+  \ref {https://specifications.freedesktop.org/wm-spec/1.3/ar01s05.html}{_NET_WM_PID}
  */
 
 /*!

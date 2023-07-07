@@ -1583,7 +1583,7 @@ bool DGuiApplicationHelper::hasUserManual() const
                                 "/com/deepin/Manual/Search",
                                 "com.deepin.Manual.Search");
     if (!manualSearch.isValid())
-        return hasManual = hasLocalManualFile();
+        return (hasManual = hasLocalManualFile());
 
     QDBusPendingCall call = manualSearch.asyncCall("ManualExists", qApp->applicationName());
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, const_cast<DGuiApplicationHelper *>(this));

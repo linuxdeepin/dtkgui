@@ -22,13 +22,13 @@ DGUI_BEGIN_NAMESPACE
   \enum DRegionMonitor::RegisterdFlag
   DRegionMonitor::RegisterdFlag 定义了 DRegionMonitor 监听标志。
 
-  \value Motion
+  \var Motion
   代表监听鼠标移动。
 
-  \value Button
+  \var Button
   代表监听鼠标按键。
 
-  \value Key
+  \var Key
   代表监听键盘按键。
  */
 

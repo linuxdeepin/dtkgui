@@ -573,8 +573,8 @@ bool DWindowManagerHelper::hasWallpaperEffect() const
   \brief DWindowManagerHelper::windowManagerNameString
   \return 返回窗口管理器名称。在X11平台上，此值为窗口管理器对应窗口的 _NET_WM_NAME
   的值
-  \l {https://specifications.freedesktop.org/wm-spec/1.3/ar01s03.html}{_NET_SUPPORTING_WM_CHECK}
-  \l {https://specifications.freedesktop.org/wm-spec/1.3/ar01s05.html}{_NET_WM_NAME}
+  \ref {https://specifications.freedesktop.org/wm-spec/1.3/ar01s03.html}{_NET_SUPPORTING_WM_CHECK}
+  \ref {https://specifications.freedesktop.org/wm-spec/1.3/ar01s05.html}{_NET_WM_NAME}
  */
 QString DWindowManagerHelper::windowManagerNameString() const
 {
