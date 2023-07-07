@@ -134,8 +134,6 @@ public:
     QColor frameBorder() const;
 #endif
 
-    int dotsPerInch(const QString &screenName = QString()) const;
-
     int sizeMode() const;
     int scrollBarPolicy() const;
 
@@ -184,6 +182,7 @@ public Q_SLOTS:
     void setFrameBorder(const QColor &frameBorder);
 #endif
 
+    int dotsPerInch(const QString &screenName = QString()) const;
     void setDotsPerInch(const QString &screenName, int dpi);
     void setWindowRadius(int windowRadius);
 
