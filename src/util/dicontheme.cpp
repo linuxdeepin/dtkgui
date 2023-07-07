@@ -5,6 +5,7 @@
 #include "dicontheme.h"
 #include "private/dbuiltiniconengine_p.h"
 #include "private/dciiconengine_p.h"
+#include "private/diconproxyengine_p.h"
 #ifndef DTK_DISABLE_LIBXDG
 #include "private/xdgiconproxyengine_p.h"
 #else
@@ -87,55 +88,9 @@ static QString findDciIconFromPath(const QString &iconName, const QString &theme
     return nullptr;
 }
 
-static inline QIconEngine *createBuiltinIconEngine(const QString &iconName)
-{
-    return new DBuiltinIconEngine(iconName);
-}
-
-static inline QIconEngine *createDciIconEngine(const QString &iconName)
-{
-    return new DDciIconEngine(iconName);
-}
-
-#ifndef DTK_DISABLE_LIBXDG
-static inline QIconEngine *createXdgProxyIconEngine(const QString &iconName)
-{
-    return new XdgIconProxyEngine(new XdgIconLoaderEngine(iconName));
-}
-#endif
-
 QIconEngine *DIconTheme::createIconEngine(const QString &iconName, Options options)
 {
-    thread_local static QSet<QString> non_cache;
-
-    if (!non_cache.contains(iconName)) {
-        if (Q_UNLIKELY(!options.testFlag(IgnoreBuiltinIcons))) {
-            QScopedPointer<QIconEngine> engine(createBuiltinIconEngine(iconName));
-            if (engine && !engine->isNull())
-                return engine.take();
-        }
-        if (Q_UNLIKELY(!options.testFlag(IgnoreDciIcons))) {
-            QScopedPointer<QIconEngine> engine(createDciIconEngine(iconName));
-            if (engine && !engine->isNull())
-                return engine.take();
-        }
-
-        non_cache.insert(iconName);
-    }
-
-#ifdef DTK_DISABLE_LIBXDG
-    if (options.testFlag(DontFallbackToQIconFromTheme))
-        return nullptr; // QIconLoaderEngine not export
-
-    // Warning : do not call from qplatformTheme createIconEngine (stackoverflow)
-    if (QPlatformTheme * const platformTheme = QGuiApplicationPrivate::platformTheme())
-        return platformTheme->createIconEngine(iconName);
-
-    return nullptr;
-#else
-    Q_UNUSED(options)
-    return createXdgProxyIconEngine(iconName);
-#endif
+    return new DIconProxyEngine(iconName, options);
 }
 
 QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
