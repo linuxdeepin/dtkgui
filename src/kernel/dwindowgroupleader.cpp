@@ -102,7 +102,7 @@ bool DWindowGroupLeaderPrivate::setWindowGroupLeader(quint32 window, quint32 gro
   \image wa_wb_topWindow.gif
   如果一个组内同时存在多个未设置过 QWindow::setTransientParent 的 Qt::Dialog（其它会自动设置 WM_TRANSIENT_FOR
   属性的窗口也成立）类型的窗口，这些窗口之间不会互相影响显示顺序，具体的规则和 X11 ICCCM 标准一致。
-  \l {https://tronche.com/gui/x/icccm/sec-4.html#WM_TRANSIENT_FOR}
+  \ref {https://tronche.com/gui/x/icccm/sec-4.html#WM_TRANSIENT_FOR}
   \sa DWindowGroupLeader::clientLeaderId
   \sa Dtk::Widget::DApplication::loadDXcbPlugin
  */

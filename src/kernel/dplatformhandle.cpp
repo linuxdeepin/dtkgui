@@ -122,8 +122,8 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
   </pre>
   \endraw
 
-  \l {http://doc.qt.io/qt-5/qpa.html}{QPA}
-  \l {https://github.com/linuxdeepin/qt5dxcb-plugin/}{dxcb插件}
+  \ref {http://doc.qt.io/qt-5/qpa.html}{QPA}
+  \ref {https://github.com/linuxdeepin/qt5dxcb-plugin/}{dxcb插件}
   \sa Dtk::Gui::DPlatformHandle::isDXcbPlatform
   \sa QGuiApplication::platformNativeInterface
   \sa Dtk::Widget::DMainWindow
@@ -355,17 +355,17 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
 
   \brief 描述窗口背景模糊区域的数据结构，包含位置、大小、圆角半径等信息.
 
-  \value x
+  \var x
   水平方向的坐标
-  \value y
+  \var y
   竖直方向的坐标
-  \value width
+  \var width
   区域的宽度
-  \value height
+  \var height
   区域的高度
-  \value xRadius
+  \var xRadius
   水平方向的圆角半径
-  \value yRaduis
+  \var yRaduis
   竖直方向的圆角半径
 */
 
@@ -549,7 +549,7 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window)
   绘制的内容不受dxcb插件的控制，它的绘制内容可能会超过 Sub Window 的有效区域，这种
   情况下，应该使用此接口，并将 redirectContent 指定为 true。
 
-  \l {https://www.x.org/releases/X11R7.5/doc/damageproto/damageproto.txt}{X11 Damage}
+  \ref {https://www.x.org/releases/X11R7.5/doc/damageproto/damageproto.txt}{X11 Damage}
  */
 void DPlatformHandle::enableDXcbForWindow(QWindow *window, bool redirectContent)
 {
