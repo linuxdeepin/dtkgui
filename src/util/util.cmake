@@ -25,6 +25,8 @@ else()
         ${CMAKE_CURRENT_LIST_DIR}/private/dimagehandlerlibs_p.h
         ${CMAKE_CURRENT_LIST_DIR}/private/dciiconengine_p.h
         ${CMAKE_CURRENT_LIST_DIR}/private/dciiconengine.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/private/diconproxyengine_p.h
+        ${CMAKE_CURRENT_LIST_DIR}/private/diconproxyengine.cpp
     )
 endif()
 

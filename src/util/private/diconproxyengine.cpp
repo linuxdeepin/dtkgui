@@ -19,7 +19,7 @@
 
 #include <private/qiconloader_p.h>
 #include <private/qguiapplication_p.h>
-
+#include <qpa/qplatformtheme.h>
 DGUI_BEGIN_NAMESPACE
 
 static inline QString iconThemeName()
@@ -235,7 +235,7 @@ void DIconProxyEngine::ensureEngine()
 #ifdef DTK_DISABLE_LIBXDG
     if (!m_iconEngine && Q_UNLIKELY(!m_option.testFlag(DIconTheme::DontFallbackToQIconFromTheme)) && QGuiApplicationPrivate::platformTheme() ) {
         // Warning : do not call from qplatformTheme createIconEngine (stackoverflow)
-        m_iconEngine = QGuiApplicationPrivate::platformTheme()->createIconEngine(iconName);
+        m_iconEngine = QGuiApplicationPrivate::platformTheme()->createIconEngine(m_iconName);
     }
 #else
     if (!m_iconEngine ) {
