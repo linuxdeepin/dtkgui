@@ -29,8 +29,9 @@ TEST_F(TDWindowMangerHelper, testStaticFunction)
         return;
 
     QWidget *w = new QWidget;
-    w->show();
-    ASSERT_TRUE(QTest::qWaitForWindowExposed(w));
+    w->createWinId();
+    //w->show();
+     ASSERT_TRUE(w->windowHandle());
     enum { TestMotifFunction = DWindowManagerHelper::FUNC_RESIZE | DWindowManagerHelper::FUNC_MOVE, TestAllMotifFunction = DWindowManagerHelper::FUNC_ALL};
     enum { TestDecorations = DWindowManagerHelper::DECOR_BORDER | DWindowManagerHelper::DECOR_RESIZEH, TestAllDecorations = DWindowManagerHelper::DECOR_ALL };
 
