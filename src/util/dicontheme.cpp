@@ -113,7 +113,11 @@ bool DIconTheme::isBuiltinIcon(const QIcon &icon)
 {
     if (icon.isNull())
         return false;
-    return typeid(*const_cast<QIcon&>(icon).data_ptr()->engine) == typeid(DBuiltinIconEngine);
+    QIconEngine *engine = const_cast<QIcon &>(icon).data_ptr()->engine;
+    if (auto proxyEngine = dynamic_cast<DIconProxyEngine *>(engine))
+        return !proxyEngine->proxyKey().compare("DBuiltinIconEngine");
+
+    return dynamic_cast<DBuiltinIconEngine *>(engine);
 }
 
 bool DIconTheme::isXdgIcon(const QIcon &icon)
@@ -123,7 +127,12 @@ bool DIconTheme::isXdgIcon(const QIcon &icon)
 #else
     if (icon.isNull())
         return false;
-    return typeid(*const_cast<QIcon&>(icon).data_ptr()->engine) == typeid(XdgIconProxyEngine);
+
+    QIconEngine *engine = const_cast<QIcon &>(icon).data_ptr()->engine;
+    if (auto proxyEngine = dynamic_cast<DIconProxyEngine *>(engine))
+        return !proxyEngine->proxyKey().compare("XdgIconProxyEngine");
+
+    return dynamic_cast<XdgIconProxyEngine *>(engine);
 #endif
 }
 
