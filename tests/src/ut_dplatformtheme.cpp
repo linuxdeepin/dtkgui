@@ -45,7 +45,7 @@ TEST_F(TDPlatformTheme, testFunction)
 {
     ASSERT_TRUE(theme_d->theme);
     ASSERT_EQ(theme->parentTheme(), theme_d->parent);
-    ASSERT_FALSE(theme->isValid());
+    ASSERT_TRUE(theme->isValid());
 
     DPalette tPalette = theme->palette();
     ASSERT_EQ(theme->fetchPalette(tPalette), tPalette);
@@ -120,4 +120,36 @@ TEST_F(TDPlatformTheme, testSetFunction)
     ASSERT_EQ_BY_VALUE(setFrameBorder, frameBorder, TEST_COLOR);
     ASSERT_EQ_BY_VALUE(setWindowRadius, windowRadius, TEST_DATA / 10);
 #endif
+}
+
+TEST_F(TDPlatformTheme, palette)
+{
+    DPalette pa = theme->palette();
+    ASSERT_EQ(theme->window(), pa.window().color());
+    ASSERT_EQ(theme->windowText(), pa.windowText().color());
+    ASSERT_EQ(theme->base(), pa.base().color());
+    ASSERT_EQ(theme->alternateBase(), pa.alternateBase().color());
+    ASSERT_EQ(theme->toolTipBase(), pa.toolTipBase().color());
+    ASSERT_EQ(theme->toolTipText(), pa.toolTipText().color());
+    ASSERT_EQ(theme->text(), pa.text().color());
+    ASSERT_EQ(theme->button(), pa.button().color());
+    ASSERT_EQ(theme->buttonText(), pa.buttonText().color());
+    ASSERT_EQ(theme->brightText(), pa.brightText().color());
+    ASSERT_EQ(theme->light(), pa.light().color());
+    ASSERT_EQ(theme->midlight(), pa.midlight().color());
+    ASSERT_EQ(theme->dark(), pa.dark().color());
+    ASSERT_EQ(theme->mid(), pa.mid().color());
+    ASSERT_EQ(theme->shadow(), pa.shadow().color());
+    ASSERT_EQ(theme->highlight(), pa.highlight().color());
+    ASSERT_EQ(theme->highlightedText(), pa.highlightedText().color());
+    ASSERT_EQ(theme->link(), pa.link().color());
+    ASSERT_EQ(theme->linkVisited(), pa.linkVisited().color());
+    ASSERT_EQ(theme->itemBackground(), pa.itemBackground().color());
+    ASSERT_EQ(theme->textTitle(), pa.textTitle().color());
+    ASSERT_EQ(theme->textTips(), pa.textTips().color());
+    ASSERT_EQ(theme->textWarning(), pa.textWarning().color());
+    ASSERT_EQ(theme->textLively(), pa.textLively().color());
+    ASSERT_EQ(theme->lightLively(), pa.lightLively().color());
+    ASSERT_EQ(theme->darkLively(), pa.darkLively().color());
+    ASSERT_EQ(theme->frameBorder(), pa.frameBorder().color());
 }

@@ -1,4 +1,4 @@
-set(BIN_NAME ut-dtk${DTK_VERSION_MAJOR}gui)
+set(BIN_NAME ut-DtkGui)
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
 find_package(GTest REQUIRED)
@@ -19,6 +19,9 @@ if(DTK_DISABLE_LIBXDG)
     list(REMOVE_ITEM test_SRC "${CMAKE_CURRENT_LIST_DIR}/src/ut_xdgiconproxyengine.cpp")
 endif()
 
+set(test-plugin "minimal-plugin")
+add_subdirectory(platform-plugin-test)
+
 add_executable(${BIN_NAME}
     ${dbus_SRC}
     ${kernel_SRC}
@@ -27,6 +30,8 @@ add_executable(${BIN_NAME}
     ${filedrag_SRC}
     ${test_SRC}
 )
+
+add_dependencies(${BIN_NAME} ${test-plugin})
 
 target_compile_options(${BIN_NAME} PRIVATE -fno-access-control -fsanitize=address)
 target_link_options(${BIN_NAME} PRIVATE -fsanitize=address)
