@@ -74,7 +74,7 @@ TEST(ut_DFileDrag, filedrag)
         QSignalSpy spy(c, &DFileDragClient::serverDestroyed);
         s->deleteLater();
         s = nullptr;
-        while(!spy.wait(10));
+        waitforSpy(spy, 1000);
         ASSERT_TRUE(spy.count() > 0);
     }
 }
