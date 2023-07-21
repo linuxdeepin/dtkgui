@@ -50,7 +50,7 @@ static inline QIconEngine *createDciIconEngine(const QString &iconName)
 #ifndef DTK_DISABLE_LIBXDG
 static inline QIconEngine *createXdgProxyIconEngine(const QString &iconName)
 {
-    QIconEngine *iconEngine = new XdgIconLoaderEngine(iconName);
+    QIconEngine *iconEngine = new XdgIconProxyEngine(new XdgIconLoaderEngine(iconName));
     if (iconEngine->isNull()) {
         delete iconEngine;
         return nullptr;
@@ -170,6 +170,12 @@ const
 #endif
 {
     return m_iconName;
+}
+
+QString DIconProxyEngine::proxyKey()
+{
+    ensureEngine();
+    return m_iconEngine ? m_iconEngine->key() : QString();
 }
 
 void DIconProxyEngine::virtual_hook(int id, void *data)

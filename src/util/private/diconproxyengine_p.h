@@ -33,6 +33,8 @@ public:
     QString iconName() const override;
 #endif
     inline QString themeName() const { return m_iconThemeName; }
+
+    QString proxyKey();
 private:
     void virtual_hook(int id, void *data) override;
 
