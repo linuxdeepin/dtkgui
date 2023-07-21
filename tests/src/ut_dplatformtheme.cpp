@@ -7,8 +7,10 @@
 #include <QTest>
 
 #include "dguiapplicationhelper.h"
+#define private public
 #include "dplatformtheme.h"
 #include "dplatformtheme_p.h"
+#undef private
 
 DGUI_USE_NAMESPACE
 
@@ -26,10 +28,11 @@ protected:
 void TDPlatformTheme::SetUp()
 {
     widget = new QWidget;
-    widget->show();
-    ASSERT_TRUE(QTest::qWaitForWindowExposed(widget));
+    widget->createWinId();
+    //widget->show();
+    ASSERT_TRUE(widget->windowHandle());
 
-    theme = new DPlatformTheme(widget->windowHandle()->winId(), widget);
+    theme = new DPlatformTheme(quint32(widget->windowHandle()->winId()), widget);
     theme_d = theme->d_func();
 }
 
