@@ -102,6 +102,7 @@ DFileDragServer::DFileDragServer(QObject *parent)
 DFileDragServer::~DFileDragServer()
 {
     D_D(DFileDragServer);
+    Q_EMIT d->dbusif->serverDestroyed(d->uuid.toString());
     DFileDragServerPrivate::servermap.remove(d->uuid.toString());
 }
 
@@ -165,7 +166,6 @@ DFileDragServerPrivate::DFileDragServerPrivate(DFileDragServer *q)
 
 DFileDragServerPrivate::~DFileDragServerPrivate()
 {
-    Q_EMIT dbusif->serverDestroyed(uuid.toString());
 }
 
 void DFileDragServerPrivate::writeMimeData(QMimeData *dest)

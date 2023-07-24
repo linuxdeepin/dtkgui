@@ -7,6 +7,7 @@ include(../src/dbus/dbus.cmake)
 include(../src/kernel/kernel.cmake)
 include(../src/util/util.cmake)
 include(../src/private/private.cmake)
+include(../src/filedrag/dfiledrag.cmake)
 
 file(GLOB test_SRC
     res.qrc
@@ -20,6 +21,7 @@ add_executable(${BIN_NAME}
     ${kernel_SRC}
     ${util_SRC}
     ${private_SRC}
+    ${filedrag_SRC}
     ${test_SRC}
 )
 

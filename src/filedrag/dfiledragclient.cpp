@@ -68,6 +68,7 @@ void DDndClientSignalRelay::stateChanged(QString uuid, int state)
 void DDndClientSignalRelay::serverDestroyed(QString uuid)
 {
     if (DFileDragClientPrivate::connectionmap.contains(uuid)) {
+        Q_EMIT DFileDragClientPrivate::connectionmap[uuid]->serverDestroyed();
         DFileDragClientPrivate::connectionmap[uuid]->deleteLater();
         DFileDragClientPrivate::connectionmap.remove(uuid);
     }
