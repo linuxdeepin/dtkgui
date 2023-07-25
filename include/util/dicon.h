@@ -15,6 +15,8 @@ public:
     explicit DIcon(const QIcon &other);
     virtual ~DIcon();
     QPixmap pixmap(const QSize &size, qreal devicePixelRatio, Mode mode = Normal, State state = Off);
+
+    static QPixmap loadNxPixmap(const QString &fileName);
 };
 
 DGUI_END_NAMESPACE
