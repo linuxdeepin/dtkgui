@@ -267,7 +267,7 @@ DPalette DPlatformTheme::fetchPalette(const DPalette &base, bool *ok) const
 
     DPalette palette = base;
 
-    if (isValidPalette()) {
+    if (isValidPalette() && d->palette) {
         if (ok) {
             *ok = true;
         }
