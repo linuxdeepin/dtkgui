@@ -6,6 +6,7 @@
 #include "private/dguiapplicationhelper_p.h"
 #include "dplatformhandle.h"
 #include <DFontManager>
+#include <DStandardPaths>
 
 #include <QHash>
 #include <QColor>
@@ -22,6 +23,7 @@
 #include <QLockFile>
 #include <QDirIterator>
 #include <QDesktopServices>
+#include <QLibraryInfo>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
@@ -37,7 +39,6 @@
 #include <QLockFile>
 #include <QDirIterator>
 #include <QDesktopServices>
-#include <DStandardPaths>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
@@ -1652,6 +1653,30 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
         qWarning() << fileName << "can not find qm files" << missingQmfiles;
     }
     return false;
+}
+
+bool DGuiApplicationHelper::loadTranslator(const QList<QLocale> &localeFallback)
+{
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    auto qTranslationsPath = QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+#else
+    auto qTranslationsPath = QLibraryInfo::path(QLibraryInfo::TranslationsPath);
+#endif
+    loadTranslator("qt", {qTranslationsPath}, localeFallback);
+    loadTranslator("qtbase", {qTranslationsPath}, localeFallback);
+
+    DCORE_USE_NAMESPACE
+    QList<QString> translateDirs;
+    auto appName = qApp->applicationName();
+    //("/home/user/.local/share", "/usr/local/share", "/usr/share")
+    auto dataDirs = DStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+    for (const auto &path : dataDirs) {
+        DPathBuf DPathBuf(path);
+        translateDirs << (DPathBuf / appName / "translations").toString();
+    }
+
+    // ${translateDir}/${appName}_${localeName}.qm
+    return loadTranslator(appName, translateDirs, localeFallback);
 }
 
 DGuiApplicationHelper::SizeMode DGuiApplicationHelper::sizeMode() const
