@@ -3,10 +3,13 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "test.h"
-#include "dguiapplicationhelper.h"
+#define private public
 #include "dguiapplicationhelper_p.h"
+#include "dguiapplicationhelper.h"
+#undef private
 
 #include <QMap>
+#include <QProcess>
 
 DGUI_BEGIN_NAMESPACE
 
@@ -116,6 +119,17 @@ TEST_F(TDGuiApplicationHelper, AttributeReadOnly)
         helper->setAttribute(attribute, !oldData[attribute]);
         EXPECT_EQ(helper->testAttribute(attribute), oldData[attribute]);
     }
+}
+
+TEST_F(TDGuiApplicationHelper, loadTranslator)
+{
+    EXPECT_EQ(QProcess::tr("No program defined"), "No program defined");
+
+    DGuiApplicationHelper::loadTranslator({QLocale("zh_CN")});
+
+    EXPECT_EQ(QProcess::tr("No program defined"), "没有定义程序");
+
+    qInfo() << QCoreApplication::translate("TDGuiApplicationHelper", "test-translation");
 }
 
 DGUI_END_NAMESPACE
