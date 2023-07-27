@@ -1,3 +1,34 @@
+dtkgui (5.6.14) unstable; urgency=medium
+
+  * chore: ignore doxygen-theme folder
+    Thanks to syn(Task: 99)
+  * chore: change OUTPUT_DIR variable in cmake (#163)
+    Thanks to WangFei
+  * chore: adjust builtiniconengine (#164)
+    Thanks to WangFei
+  * chore: adjust xdgiconproxyengine (#167)
+    Thanks to WangFei
+  * chore: add unit test about builtinengine
+  * refactor!: deprecate some interfaces in dtk6
+  * chore: add dciiconengine
+  * chore: adjust icontheme
+  * chore: add unit test about dciiconengine
+  * chore: reduce compilation warnings
+    Thanks to SPUER(Issue: #96)
+  * chore: Sync by https://github.com/linuxdeepin/.github/commit/559e91167d4919644f37bbcf123eb0651c1528ea(Influence: none)
+  * chore: add proxyiconengine
+  * refactor: Move dotsPerInch from normal function to slots
+  * chore: remove unused pro files
+  * fix: build failed in qt6 due to proxyengine
+  * feat: DIconTheme::findQIcon add fallback icon
+  * fix(build): DIconTheme ut failed
+  * fix: DFileDragClient::serverDestroyed nerver emit
+  * feat: add helper for high dpi pixmap
+  * fix: dplatformtheme fetchPalette crash
+  * feat: load app and qt Translation files
+
+ -- Deepin Packages Builder <packages@deepin.org>  Thu, 27 Jul 2023 06:56:34 +0000
+
 dtkgui (5.6.12) unstable; urgency=medium
 
   * chore: Sync by https://github.com/linuxdeepin/.github/commit/2e5e092ba3f86b16d1aabbabcf0bfd2ae65b19c8(Influence: none)
