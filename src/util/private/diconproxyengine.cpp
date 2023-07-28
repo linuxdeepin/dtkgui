@@ -18,6 +18,11 @@
 #include <QDir>
 
 #include <private/qiconloader_p.h>
+#if XDG_ICON_VERSION_MAR >= 3
+#define private public
+#include <private/xdgiconloader/xdgiconloader_p.h>
+#undef private
+#endif
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformtheme.h>
 DGUI_BEGIN_NAMESPACE
@@ -151,10 +156,8 @@ QIconEngine *DIconProxyEngine::clone() const
 
 bool DIconProxyEngine::read(QDataStream &in)
 {
-    // read m_iconName and m_iconThemeName first
+    // ensureEngine, will changed themeName if not the same
     in >> m_iconName >> m_iconThemeName;
-
-    ensureEngine();
     return m_iconEngine ? m_iconEngine->read(in) : false;
 }
 
@@ -260,3 +263,4 @@ void DIconProxyEngine::ensureEngine()
 }
 
 DGUI_END_NAMESPACE
+
