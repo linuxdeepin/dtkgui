@@ -15,10 +15,33 @@
 
 #include <cxxabi.h>
 #include <qmath.h>
+#if XDG_ICON_VERSION_MAR >= 3
+#define private public
+#include <private/xdgiconloader/xdgiconloader_p.h>
+#undef private
 
 static inline bool XdgIconFollowColorScheme()
 {
     return XdgIconLoader::instance()->followColorScheme();
+}
+
+static inline QString rgba(const QColor &c)
+{
+    // Hex-r-g-b-a
+    return c.name(QColor::HexRgb).append(QString::number(c.alpha(), 16));
+}
+
+static inline QPalette palette(QPaintDevice *paintDevice)
+{
+    QPalette pa;
+
+    if (QObject *obj = dynamic_cast<QObject *>(paintDevice)) {
+        pa = qvariant_cast<QPalette>(obj->property("palette"));
+    } else {
+        pa = qApp->palette();
+    }
+
+    return pa;
 }
 
 static inline QPixmap entryPixmap(ScalableEntry *color_entry, const QSize &size, QIcon::Mode mode, QIcon::State state)
@@ -35,11 +58,6 @@ static inline QPixmap entryPixmap(ScalableEntry *color_entry, const QSize &size,
 
 static const QString STYLE = QStringLiteral(".ColorScheme-Text, .ColorScheme-NeutralText{color:%1;}\
 \n.ColorScheme-Highlight{color:%2;}");
-
-#if XDG_ICON_VERSION_MAR >= 3
-#define private public
-#include <private/xdgiconloader/xdgiconloader_p.h>
-#undef private
 
 namespace DEEPIN_XDG_THEME {
 static QThreadStorage<PALETTE_MAP> colorScheme; // <type, color>
@@ -174,10 +192,10 @@ QPixmap XdgIconProxyEngine::pixmapByEntry(QIconLoaderEngineEntry *entry, const Q
 
     if (type_name == QByteArrayLiteral("ScalableFollowsColorEntry")) {
         if (DEEPIN_XDG_THEME::colorScheme.localData().isEmpty()) {
-            const QPalette &pal = qApp->palette();
+            const QPalette &pal = palette(&pixmap);
             DEEPIN_XDG_THEME::colorScheme.setLocalData(DEEPIN_XDG_THEME::PALETTE_MAP({
-                { DEEPIN_XDG_THEME::Text, mode == QIcon::Selected ? pal.highlightedText().color().name() : pal.windowText().color().name() },
-                { DEEPIN_XDG_THEME::Highlight, pal.highlight().color().name() }
+                { DEEPIN_XDG_THEME::Text, mode == QIcon::Selected ? rgba(pal.highlightedText().color()) : rgba(pal.windowText().color()) },
+                { DEEPIN_XDG_THEME::Highlight, rgba(pal.highlight().color()) }
             }));
         }
 
@@ -197,10 +215,10 @@ void XdgIconProxyEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode
     if (painter->device()->devType() == QInternal::Widget
         && XdgIconFollowColorScheme()
         && DEEPIN_XDG_THEME::colorScheme.localData().isEmpty()) {
-        const QPalette &pal = qvariant_cast<QPalette>(dynamic_cast<QObject *>(painter->device())->property("palette"));
+        const QPalette &pal = palette(painter->device());
         DEEPIN_XDG_THEME::colorScheme.setLocalData(DEEPIN_XDG_THEME::PALETTE_MAP({
-            { DEEPIN_XDG_THEME::Text, mode == QIcon::Selected ? pal.highlightedText().color().name() : pal.windowText().color().name() },
-            { DEEPIN_XDG_THEME::Highlight, pal.highlight().color().name() }
+            { DEEPIN_XDG_THEME::Text, mode == QIcon::Selected ? rgba(pal.highlightedText().color()) : rgba(pal.windowText().color()) },
+            { DEEPIN_XDG_THEME::Highlight, rgba(pal.highlight().color()) }
         }));
     }
 

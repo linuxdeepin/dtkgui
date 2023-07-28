@@ -15,6 +15,9 @@ file(GLOB test_SRC
     main.cpp
     src/*.cpp
 )
+if(DTK_DISABLE_LIBXDG)
+    list(REMOVE_ITEM test_SRC "${CMAKE_CURRENT_LIST_DIR}/src/ut_xdgiconproxyengine.cpp")
+endif()
 
 add_executable(${BIN_NAME}
     ${dbus_SRC}

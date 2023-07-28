@@ -9,9 +9,7 @@
 
 #if XDG_ICON_VERSION_MAR >= 3
 #include <QIconEngine>
-#define private public
-#include <private/xdgiconloader/xdgiconloader_p.h>
-#undef private
+
 #endif
 
 namespace DEEPIN_XDG_THEME {
@@ -25,6 +23,7 @@ typedef QMap<PaletteType, QString> PALETTE_MAP;
 
 struct ScalableEntry;
 class QIconLoaderEngineEntry;
+class XdgIconLoaderEngine;
 DGUI_BEGIN_NAMESPACE
 #if XDG_ICON_VERSION_MAR >= 3
 class Q_DECL_HIDDEN XdgIconProxyEngine : public QIconEngine
