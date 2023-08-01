@@ -133,7 +133,7 @@ QVector<QStringView> EntryPropertyParser::PriorStep::parse(DDciIconEntry::Scalab
 {
     bool ok = false;
     QVector<QStringView> ps = properties;
-    layer->prior = ps.takeFirst().toInt(&ok);
+    layer->prior = ps.takeFirst().toString().toInt(&ok);
     if (!ok)
         return {};  // error priority.
     return ps;
@@ -164,7 +164,7 @@ QVector<QStringView> EntryPropertyParser::PaddingStep::parse(DDciIconEntry::Scal
     });
 
     if (it != ps.cend()) {
-        layer->padding = it->left(it->length() - 1).toShort();
+        layer->padding = it->left(it->length() - 1).toString().toShort();
         ps.removeOne(*it);
     }
 
@@ -176,31 +176,39 @@ QVector<QStringView> EntryPropertyParser::PaletteStep::parse(DDciIconEntry::Scal
     QVector<QStringView> ps = properties;
     QStringView palettes = ps.takeFirst();
     // `role_hue_saturation_lightness_red_green_blue_alpha` or `role`
-    if (palettes.contains(QLatin1Char('_'))) {
+    if (palettes.toString().contains(QLatin1Char('_'))) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         // QVector is an alias for QList in Qt6
         const QVector<QStringView> paletteProps = palettes.split(QLatin1Char('_'));
-#else
+#elif QT_VERSION >= QT_VERSION_CHECK(5, 15, 2)
+        // QStringView::split() has been added in 5.12.2.
         const QVector<QStringView> paletteProps = QVector<QStringView>::fromList(palettes.split(QLatin1Char('_')));
+#else
+        QStringList strList = palettes.toString().split(QLatin1Char('_'));
+        QList<QStringView> viewList;
+        for (auto str : strList) {
+            viewList.append(QStringView(str));
+        }
+        const QVector<QStringView> paletteProps = QVector<QStringView>::fromList(viewList);
 #endif
         if (paletteProps.length() != 8)
             return ps;
 
-        int role = paletteProps.at(0).toInt();
+        int role = paletteProps.at(0).toString().toInt();
         if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
             role = DDciIconPalette::NoPalette;
 
         layer->role = DDciIconPalette::PaletteRole(role);
-        layer->hue = static_cast<qint8>(paletteProps.at(1).toShort());
-        layer->saturation = static_cast<qint8>(paletteProps.at(2).toShort());
-        layer->lightness = static_cast<qint8>(paletteProps.at(3).toShort());
-        layer->red = static_cast<qint8>(paletteProps.at(4).toShort());
-        layer->green = static_cast<qint8>(paletteProps.at(5).toShort());
-        layer->blue = static_cast<qint8>(paletteProps.at(6).toShort());
-        layer->alpha = static_cast<qint8>(paletteProps.at(7).toShort());
+        layer->hue = static_cast<qint8>(paletteProps.at(1).toString().toShort());
+        layer->saturation = static_cast<qint8>(paletteProps.at(2).toString().toShort());
+        layer->lightness = static_cast<qint8>(paletteProps.at(3).toString().toShort());
+        layer->red = static_cast<qint8>(paletteProps.at(4).toString().toShort());
+        layer->green = static_cast<qint8>(paletteProps.at(5).toString().toShort());
+        layer->blue = static_cast<qint8>(paletteProps.at(6).toString().toShort());
+        layer->alpha = static_cast<qint8>(paletteProps.at(7).toString().toShort());
     } else {
         // only palette
-        int role = palettes.toInt();
+        int role = palettes.toString().toInt();
         if (role < DDciIconPalette::NoPalette || role > DDciIconPalette::PaletteCount)
             role = DDciIconPalette::NoPalette;
         layer->role = DDciIconPalette::PaletteRole(role);

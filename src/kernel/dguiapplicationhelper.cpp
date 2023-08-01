@@ -1732,7 +1732,7 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
         return QString(typeid(*QGuiApplicationPrivate::platform_theme).name()).contains("QDeepinTheme");
     case IsDeepinEnvironment: {
         const auto &de = QGuiApplicationPrivate::instance()->platformIntegration()->services()->desktopEnvironment();
-        return de.toLower().contains("deepin") || !de.compare("DDE");
+        return de.toLower().contains("deepin") || de == "DDE";
     }
     case IsSpecialEffectsEnvironment: {
         return qgetenv("DTK_DISABLED_SPECIAL_EFFECTS").toInt() != 1;
