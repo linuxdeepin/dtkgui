@@ -116,6 +116,8 @@ public:
     D_DECL_DEPRECATED static void setSingelInstanceInterval(int interval = 3000);
 #endif
 
+    // 获取帮助手册目录
+    static QStringList userManualPaths(const QString &appName);
     bool hasUserManual() const;
 
     static bool loadTranslator(const QString &fileName, const QList<QString> &translateDirs, const QList<QLocale> &localeFallback);
