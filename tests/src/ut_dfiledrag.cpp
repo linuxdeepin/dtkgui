@@ -12,29 +12,24 @@
 #include <QtDBus>
 #include <QSignalSpy>
 #include <QTest>
-#include <QScopeGuard>
+
+#include <QScopedPointer>
+
 DGUI_USE_NAMESPACE
 
 TEST(ut_DFileDrag, filedrag)
 {
     qRegisterMetaType<DFileDragState>("DFileDragState");
     QObject source;
-    auto s = new DFileDragServer();
-    QMimeData *m = new QMimeData();
-    DFileDrag *drag = new DFileDrag(&source, s);
-    drag->setMimeData(m);
+    QScopedPointer<DFileDragServer> s(new DFileDragServer());
+    QScopedPointer<QMimeData> m(new QMimeData());
+    QScopedPointer<DFileDrag> drag(new DFileDrag(&source, s.data()));
+    drag->setMimeData(m.data());
 
-    QScopeGuard guard([&](){
-        if (s)
-            s->deleteLater();
-        drag->deleteLater();
-        m->deleteLater();
-    });
-
-    ASSERT_TRUE(DFileDragClient::checkMimeData(m));
+    ASSERT_TRUE(DFileDragClient::checkMimeData(m.data()));
     {
-        QSignalSpy spy(s, &DFileDragServer::targetDataChanged);
-        DFileDragClient::setTargetData(m, "Key0", "Value0");
+        QSignalSpy spy(s.data(), &DFileDragServer::targetDataChanged);
+        DFileDragClient::setTargetData(m.data(), "Key0", "Value0");
         ASSERT_TRUE(QTest::qWaitFor([&spy](){
             return spy.count() > 0;
         }, 1000));
@@ -42,8 +37,8 @@ TEST(ut_DFileDrag, filedrag)
     }
     {
         QUrl url = QUrl::fromLocalFile("/tmp/xxx");
-        QSignalSpy spy(drag, &DFileDrag::targetUrlChanged);
-        DFileDragClient::setTargetUrl(m, url);
+        QSignalSpy spy(drag.data(), &DFileDrag::targetUrlChanged);
+        DFileDragClient::setTargetUrl(m.data(), url);
         ASSERT_TRUE(QTest::qWaitFor([&spy](){
             return spy.count() > 0;
         }, 1000));
@@ -51,7 +46,7 @@ TEST(ut_DFileDrag, filedrag)
     }
 
     // client will delete on serverDestroyed
-    DFileDragClient *c = new DFileDragClient(m);
+    DFileDragClient *c = new DFileDragClient(m.data());
     {
         ASSERT_EQ(c->progress(), 0);
         QSignalSpy spy(c, &DFileDragClient::progressChanged);
@@ -72,8 +67,6 @@ TEST(ut_DFileDrag, filedrag)
     }
     {
         QSignalSpy spy(c, &DFileDragClient::serverDestroyed);
-        s->deleteLater();
-        s = nullptr;
         waitforSpy(spy, 1000);
         ASSERT_TRUE(spy.count() > 0);
     }
