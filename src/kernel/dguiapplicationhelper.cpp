@@ -1525,48 +1525,38 @@ static bool hasLocalManualFile()
 }
 
 /*!
+  \brief 获取帮助手册目录
+  \return 帮助手册目录
+ */
+QStringList DGuiApplicationHelper::userManualPaths(const QString &appName)
+{
+    Q_ASSERT(!appName.isEmpty());
+
+    // 获取主目录
+    DCORE_USE_NAMESPACE
+    QStringList manualPaths;
+    const auto &pathlist = DStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+
+    // 获取所有已存在的帮助手册目录
+    for (int i = 0; i < pathlist.size(); ++i) {
+        QString strAssetPath = QStringList{pathlist[i], "deepin-manual/manual-assets"}.join(QDir::separator());
+        for (const QString &type : QDir(strAssetPath).entryList(QDir::NoDotAndDotDot | QDir::Dirs)) {
+            QString appDirPath = QStringList{strAssetPath, type, appName}.join(QDir::separator());
+            if (QDir(appDirPath).exists())
+                manualPaths.push_back(appDirPath);
+        }
+    }
+
+    return manualPaths;
+}
+
+/*!
  * \brief Determine whether it's a user manual for this application.
  * \return
  */
 bool DGuiApplicationHelper::hasUserManual() const
 {
-#ifdef Q_OS_LINUX
-    static qint8 hasManual = -1;
-    if (hasManual >= 0)
-        return hasManual;
-
-    QDBusConnection conn = QDBusConnection::sessionBus();
-    if (!conn.isConnected()) {
-        static LoadManualServiceWorker *manualWorker = new LoadManualServiceWorker;
-        manualWorker->checkManualServiceWakeUp();
-
-        // 可能存在 dbus 服务有问题，但是文件存在，这时不更新缓存
-        return /*hasManual = */hasLocalManualFile();
-    }
-
-    QDBusInterface manualSearch("com.deepin.Manual.Search",
-                                "/com/deepin/Manual/Search",
-                                "com.deepin.Manual.Search");
-    if (!manualSearch.isValid())
-        return hasManual = hasLocalManualFile();
-
-    QDBusPendingCall call = manualSearch.asyncCall("ManualExists", qApp->applicationName());
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, const_cast<DGuiApplicationHelper *>(this));
-    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher *pWatcher) {
-        QDBusPendingReply<bool> reply = *pWatcher;
-        if (reply.isError()) {
-            qWarning() << reply.error();
-        } else {
-            hasManual = reply.value();
-        }
-
-        pWatcher->deleteLater();
-    });
-
-    return hasManual >= 0 ? hasManual : false;
-#else
-    return false;
-#endif
+    return userManualPaths(qApp->applicationName()).size() > 0;
 }
 
 bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<QString> &translateDirs, const QList<QLocale> &localeFallback)
