@@ -1,3 +1,13 @@
+dtkgui (5.6.15) unstable; urgency=medium
+
+  * chore: iconengine tweak and uint test
+  * chore: do not show ui in ut
+  * chore: add unit test
+  * chore: Adaptation for Qt5.11
+  * refator: rewrite hasUserManual function
+
+ -- Yixue Wang <wangyixue@deepin.org>  Fri, 11 Aug 2023 13:57:02 +0800
+
 dtkgui (5.6.14) unstable; urgency=medium
 
   * chore: ignore doxygen-theme folder
