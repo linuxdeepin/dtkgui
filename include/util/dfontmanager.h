@@ -9,6 +9,7 @@
 #include <dtkgui_global.h>
 
 #include <QFont>
+#include <QObject>
 
 DGUI_BEGIN_NAMESPACE
 
