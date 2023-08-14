@@ -158,8 +158,10 @@ DBuiltinIconEngine::DBuiltinIconEngine(const DBuiltinIconEngine &other)
 
 DBuiltinIconEngine::~DBuiltinIconEngine()
 {
-    if (!m_info.entries.isEmpty())
+#if QT_VERSION <= QT_VERSION_CHECK(6, 2, 4)
+    if (hasIcon())
         qDeleteAll(m_info.entries);
+#endif
 }
 
 QSize DBuiltinIconEngine::actualSize(const QSize &size, QIcon::Mode mode,
@@ -322,11 +324,15 @@ QThemeIconInfo DBuiltinIconEngine::loadIcon(const QString &iconName, uint key)
             entry->dir.path = icon_file_info.absolutePath();
             entry->dir.size = size;
             entry->dir.type = icon_file_info.suffix().startsWith("svg") ? QIconDirInfo::Scalable : QIconDirInfo::Fixed;
+#if QT_VERSION <= QT_VERSION_CHECK(6, 2, 4)
             info.entries.append(entry);
+#else
+            info.entries.push_back(std::unique_ptr<QIconLoaderEngineEntry>(entry));
+#endif
         }
 
         // 已经找到图标时不再继续
-        if (!info.entries.isEmpty()) {
+        if (info.entries.size() > 0) {
             break;
         }
     }
@@ -336,7 +342,7 @@ QThemeIconInfo DBuiltinIconEngine::loadIcon(const QString &iconName, uint key)
 
 bool DBuiltinIconEngine::hasIcon() const
 {
-    return !m_info.entries.isEmpty();
+    return m_info.entries.size() > 0;
 }
 
 void DBuiltinIconEngine::virtual_hook(int id, void *data)
@@ -371,7 +377,7 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
 #endif
     case QIconEngine::IsNullHook:
     {
-        *reinterpret_cast<bool*>(data) = m_info.entries.isEmpty();
+        *reinterpret_cast<bool*>(data) = !hasIcon();
     }
     break;
     case QIconEngine::ScaledPixmapHook:
@@ -402,7 +408,9 @@ void DBuiltinIconEngine::ensureLoaded()
     // 标记为已初始化
     m_initialized = true;
 
+#if QT_VERSION <= QT_VERSION_CHECK(6, 2, 4)
     qDeleteAll(m_info.entries);
+#endif
     m_info.entries.clear();
     m_info.iconName.clear();
 
