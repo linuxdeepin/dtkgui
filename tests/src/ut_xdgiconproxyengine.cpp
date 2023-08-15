@@ -68,7 +68,8 @@ TEST_F(ut_XdgIconProxyEngine, entryCacheKey)
 void testHighlightColor(const QPalette &pa, const QImage &img)
 {
     EXPECT_FALSE(img.isNull());
-    EXPECT_EQ(pa.highlight().color(), img.pixelColor(QPoint(16, 16)));
+    // QColor(AHSL) && QColor(ARGB) ?
+    EXPECT_EQ(pa.highlight().color().toRgb(), img.pixelColor(QPoint(16, 16)).name());
 }
 
 void testWindowTextColor(const QPalette &pa, const QImage &img)

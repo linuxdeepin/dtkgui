@@ -8,7 +8,9 @@
 #include <QPainter>
 #include <QIODevice>
 
+#define private public
 #include "dbuiltiniconengine_p.h"
+#undef private
 
 DGUI_USE_NAMESPACE
 

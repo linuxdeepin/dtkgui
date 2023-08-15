@@ -3,12 +3,6 @@ set(BIN_NAME ut-DtkGui)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
 find_package(GTest REQUIRED)
 
-include(../src/dbus/dbus.cmake)
-include(../src/kernel/kernel.cmake)
-include(../src/util/util.cmake)
-include(../src/private/private.cmake)
-include(../src/filedrag/dfiledrag.cmake)
-
 file(GLOB test_SRC
     res.qrc
     test.h
@@ -22,13 +16,11 @@ endif()
 set(test-plugin "minimal-plugin")
 add_subdirectory(platform-plugin-test)
 
+include(../src/util/util.cmake)
+
 add_executable(${BIN_NAME}
-    ${dbus_SRC}
-    ${kernel_SRC}
-    ${util_SRC}
-    ${private_SRC}
-    ${filedrag_SRC}
     ${test_SRC}
+    ${UTIL_PRIVATE}
 )
 
 add_dependencies(${BIN_NAME} ${test-plugin})
@@ -46,15 +38,15 @@ target_link_libraries(${BIN_NAME} PRIVATE
     Dtk${DTK_VERSION_MAJOR}::Core
     PkgConfig::librsvg
     GTest::GTest
+    ${LIB_NAME}
     gmock
     pthread
     m
-    gcov
 )
 
 if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND) 
 target_link_libraries(${BIN_NAME} PRIVATE
-	PkgConfig::libraw
+    PkgConfig::libraw
     FreeImage::FreeImage
 )
 endif()
@@ -76,12 +68,5 @@ target_include_directories(${BIN_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/src/dbus
     ${PROJECT_SOURCE_DIR}/src/util/private
 )
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  target_compile_options(${BIN_NAME} PRIVATE -fprofile-instr-generate -ftest-coverage)
-endif()
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(${BIN_NAME} PRIVATE -fprofile-arcs -ftest-coverage)
-endif()
 
 add_test(NAME ${BIN_NAME} COMMAND ${BIN_NAME})

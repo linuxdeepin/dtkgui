@@ -22,14 +22,15 @@ TEST(ut_DFileDrag, filedrag)
     qRegisterMetaType<DFileDragState>("DFileDragState");
     QObject source;
     QScopedPointer<DFileDragServer> s(new DFileDragServer());
-    QScopedPointer<QMimeData> m(new QMimeData());
+    QMimeData *m = new QMimeData();
+    // QMimeData will delete on ~DFileDrag~QDrag
     QScopedPointer<DFileDrag> drag(new DFileDrag(&source, s.data()));
-    drag->setMimeData(m.data());
+    drag->setMimeData(m);
 
-    ASSERT_TRUE(DFileDragClient::checkMimeData(m.data()));
+    ASSERT_TRUE(DFileDragClient::checkMimeData(m));
     {
         QSignalSpy spy(s.data(), &DFileDragServer::targetDataChanged);
-        DFileDragClient::setTargetData(m.data(), "Key0", "Value0");
+        DFileDragClient::setTargetData(m, "Key0", "Value0");
         ASSERT_TRUE(QTest::qWaitFor([&spy](){
             return spy.count() > 0;
         }, 1000));
@@ -38,7 +39,7 @@ TEST(ut_DFileDrag, filedrag)
     {
         QUrl url = QUrl::fromLocalFile("/tmp/xxx");
         QSignalSpy spy(drag.data(), &DFileDrag::targetUrlChanged);
-        DFileDragClient::setTargetUrl(m.data(), url);
+        DFileDragClient::setTargetUrl(m, url);
         ASSERT_TRUE(QTest::qWaitFor([&spy](){
             return spy.count() > 0;
         }, 1000));
@@ -46,7 +47,7 @@ TEST(ut_DFileDrag, filedrag)
     }
 
     // client will delete on serverDestroyed
-    DFileDragClient *c = new DFileDragClient(m.data());
+    DFileDragClient *c = new DFileDragClient(m);
     {
         ASSERT_EQ(c->progress(), 0);
         QSignalSpy spy(c, &DFileDragClient::progressChanged);
@@ -67,6 +68,8 @@ TEST(ut_DFileDrag, filedrag)
     }
     {
         QSignalSpy spy(c, &DFileDragClient::serverDestroyed);
+        // destroy server to emit serverDestroyed
+        s.reset();
         waitforSpy(spy, 1000);
         ASSERT_TRUE(spy.count() > 0);
     }

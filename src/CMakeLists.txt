@@ -75,5 +75,8 @@ install(DIRECTORY ../include/global/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_
 install(DIRECTORY ../include/kernel/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 install(DIRECTORY ../include/filedrag/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 
-# install dconfig meta file in dtkcommon
-# dconfig_meta_files(COMMONID org.deepin.dtk FILES ${PROJECT_SOURCE_DIR}/misc/org.deepin.dtk.ui.preference.json)
+set(EnableCov CACHE BOOL OFF)
+if (EnableCov)
+    dtk_setup_code_coverage(${LIB_NAME})
+endif()
+
