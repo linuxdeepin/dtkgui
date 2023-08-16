@@ -29,7 +29,7 @@ Description: Deepin Tool Kit Gui Utilities
 
 Package: libdtkgui-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libdtkgui5( =${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libdtkgui5( =${binary:Version}), libdtkcommon-dev(>=5.6.16)
 Description: Deepin Tool Kit Gui Devel library
  DtkGui is base devel library of Deepin Qt/C++ applications.
  .
