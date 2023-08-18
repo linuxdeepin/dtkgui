@@ -41,6 +41,7 @@ void TDPlatformTheme::TearDown()
     delete widget;
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 TEST_F(TDPlatformTheme, testFunction)
 {
     ASSERT_TRUE(theme_d->theme);
@@ -50,6 +51,7 @@ TEST_F(TDPlatformTheme, testFunction)
     DPalette tPalette = theme->palette();
     ASSERT_EQ(theme->fetchPalette(tPalette), tPalette);
 }
+#endif
 
 #define TEST_THEME_NAME(TYPE) \
     QByteArrayLiteral("Test_Name_About_").append(TYPE)
@@ -121,7 +123,7 @@ TEST_F(TDPlatformTheme, testSetFunction)
     ASSERT_EQ_BY_VALUE(setWindowRadius, windowRadius, TEST_DATA / 10);
 #endif
 }
-
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 TEST_F(TDPlatformTheme, palette)
 {
     DPalette pa = theme->palette();
@@ -153,3 +155,4 @@ TEST_F(TDPlatformTheme, palette)
     ASSERT_EQ(theme->darkLively(), pa.darkLively().color());
     ASSERT_EQ(theme->frameBorder(), pa.frameBorder().color());
 }
+#endif
