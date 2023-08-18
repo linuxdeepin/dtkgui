@@ -36,13 +36,24 @@ void ut_DBuiltinIconEngine::TearDown()
     delete mIconEngine;
 }
 
+QIconLoaderEngineEntry *firstEntry(const QThemeIconEntries &entries)
+{
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+    QIconLoaderEngineEntry *entry = entries.first();
+#else
+    QIconLoaderEngineEntry *entry = entries.begin()->get();
+#endif
+    return entry;
+}
+
+
 TEST_F(ut_DBuiltinIconEngine, loadIcon)
 {
     const QThemeIconInfo &themeInfo = mIconEngine->loadIcon(ICONNAME, DGuiApplicationHelper::instance()->themeType());
 
     ASSERT_EQ(themeInfo.iconName, ICONNAME);
 
-    QIconLoaderEngineEntry *entry = themeInfo.entries.first();
+    QIconLoaderEngineEntry *entry = firstEntry(themeInfo.entries);
     QString builtinActionPath = ":/icons/deepin/builtin/actions";
 
     ASSERT_TRUE(entry->filename.contains(ICONNAME));
@@ -51,9 +62,11 @@ TEST_F(ut_DBuiltinIconEngine, loadIcon)
     ASSERT_EQ(entry->dir.type, QIconDirInfo::Scalable);
     ASSERT_FALSE(entry->pixmap(QSize(ICONSIZE, ICONSIZE), QIcon::Normal, QIcon::On).isNull());
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
     for (auto item : themeInfo.entries) {
         delete item;
     }
+#endif
 }
 
 TEST_F(ut_DBuiltinIconEngine, actualSize)
@@ -62,7 +75,8 @@ TEST_F(ut_DBuiltinIconEngine, actualSize)
 
     QSize iconSize = mIconEngine->actualSize(size, QIcon::Normal, QIcon::On);
     ASSERT_FALSE(iconSize.isEmpty());
-    if (mIconEngine->m_info.entries.first()->dir.type == QIconDirInfo::Scalable) {
+    QIconLoaderEngineEntry *entry = firstEntry(mIconEngine->m_info.entries);
+    if (entry->dir.type == QIconDirInfo::Scalable) {
         ASSERT_EQ(iconSize, size);
     } else {
         bool isTrue = (iconSize.width() <= qMin(iconSize.width(), iconSize.height())) && (iconSize.height() <= qMin(iconSize.width(), iconSize.height()));
@@ -146,7 +160,7 @@ TEST_F(ut_DBuiltinIconEngine, ensureLoaded)
     ASSERT_TRUE(mIconEngine->m_initialized);
 
     ASSERT_EQ(mIconEngine->m_info.iconName, ICONNAME);
-    QIconLoaderEngineEntry *entry = mIconEngine->m_info.entries.first();
+    QIconLoaderEngineEntry *entry = firstEntry(mIconEngine->m_info.entries);
     QString builtinActionPath = ":/icons/deepin/builtin/actions";
 
     ASSERT_TRUE(entry->filename.contains(ICONNAME));
