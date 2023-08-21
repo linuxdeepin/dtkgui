@@ -99,7 +99,7 @@ QPixmap DDciIconEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::State
     const DDciIcon::Theme theme = dciTheme();
     const DDciIconPalette pa = dciPalettle();
 
-    QString key = QLatin1String("dci_") + m_iconName +
+    QString key = QLatin1String("dci_") + m_iconName + m_iconThemeName +
             DDciIconPalette::convertToString(pa)
             % HexString<uint>(mode)
             % HexString<int>(theme)
