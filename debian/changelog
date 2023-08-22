@@ -1,3 +1,13 @@
+dtkgui (5.6.16) unstable; urgency=medium
+
+  * chore: ut build without source
+  * fix: Compiling error in qt6.4
+  * chore: add DtkBuildHelper depends
+  * fix(build): ut failed on Qt6.4
+  * fix: dci icon cache key miss theme name(Issue: https://github.com/linuxdeepin/developer-center/issues/4517)
+
+ -- Deepin Packages Builder <packages@deepin.org>  Tue, 22 Aug 2023 06:13:45 +0000
+
 dtkgui (5.6.15) unstable; urgency=medium
 
   * chore: iconengine tweak and uint test
