@@ -1,3 +1,9 @@
+dtkgui (5.6.17) unstable; urgency=medium
+
+  * Release 5.6.17
+
+ -- Deepin Packages Builder <packages@deepin.org>  Fri, 08 Sep 2023 15:15:39 +0800
+
 dtkgui (5.6.16) unstable; urgency=medium
 
   * chore: ut build without source
