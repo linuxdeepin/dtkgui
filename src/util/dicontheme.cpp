@@ -95,6 +95,9 @@ QIconEngine *DIconTheme::createIconEngine(const QString &iconName, Options optio
 
 QIcon DIconTheme::findQIcon(const QString &iconName, Options options)
 {
+    if (QDir::isAbsolutePath(iconName)) {
+        return QIcon(iconName);
+    }
     auto engine = createIconEngine(iconName, options);
     // fallback to QIcon::fromTheme
     if (!options.testFlag(DontFallbackToQIconFromTheme) && !engine)
