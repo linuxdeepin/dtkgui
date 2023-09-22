@@ -49,6 +49,11 @@ static inline QPixmap entryPixmap(ScalableEntry *color_entry, const QSize &size,
     if (!color_entry)
         return QPixmap();
 
+    // init svgIcon with svg  absolute path
+    // force to use svg iconengine
+    if (color_entry->svgIcon.isNull())
+        color_entry->svgIcon = QIcon(color_entry->filename);
+
     if (auto d = color_entry->svgIcon.data_ptr())
         if (d->engine)
             return d->engine->pixmap(size, mode, state);
@@ -99,7 +104,7 @@ QPixmap XdgIconProxyEngine::followColorPixmap(ScalableEntry *color_entry, const 
 
     // 当size为1时表示此svg文件不需要处理ColorScheme标签
     if (!cache_color_scheme.isEmpty() && cache_color_scheme[DEEPIN_XDG_THEME::Text].size() == 1)
-        return color_entry->pixmap(size, mode, state);
+        return entryPixmap(color_entry, size, mode, state);
 
     const DEEPIN_XDG_THEME::PALETTE_MAP &color_scheme = DEEPIN_XDG_THEME::colorScheme.localData();
     QPixmap pm = color_scheme == cache_color_scheme ? entryPixmap(color_entry, size, mode, state) : QPixmap();
@@ -144,7 +149,7 @@ QPixmap XdgIconProxyEngine::followColorPixmap(ScalableEntry *color_entry, const 
         if (invalidBuffers) {
             // 此svg图标无ColorScheme标签时不应该再下面的操作，且应该记录下来，避免后续再处理svg文件内容
             entryToColorScheme[cache_key] = DEEPIN_XDG_THEME::PALETTE_MAP({ {DEEPIN_XDG_THEME::Text, "#"} });
-            return color_entry->pixmap(size, mode, state);
+            return entryPixmap(color_entry, size, mode, state);
         }
 
         // use the QSvgIconEngine

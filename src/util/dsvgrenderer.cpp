@@ -145,7 +145,10 @@ QImage DSvgRendererPrivate::getImage(const QSize &size, const QString &elementId
     QImage image(size, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::transparent);
     QPainter pa(&image);
-    qRenderer->render(&pa, elementId);
+    if (elementId.isEmpty())
+        qRenderer->render(&pa);
+    else
+        qRenderer->render(&pa, elementId);
     return image;
 #endif
 }
