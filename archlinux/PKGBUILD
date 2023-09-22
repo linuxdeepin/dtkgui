@@ -25,7 +25,6 @@ build() {
     cmake -GNinja \
     -DMKSPECS_INSTALL_DIR=lib/qt/mkspecs/modules/ \
     -DBUILD_DOCS=ON \
-    -DDTK_DISABLE_LIBRSVG=ON \
     -DQCH_INSTALL_DESTINATION=share/doc/qt \
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_INSTALL_PREFIX=/usr \
