@@ -34,8 +34,14 @@ PRIVATE
     Qt${QT_VERSION_MAJOR}::GuiPrivate
     Qt${QT_VERSION_MAJOR}::CorePrivate
     Qt${QT_VERSION_MAJOR}::DBus
-    PkgConfig::librsvg
 )
+
+if(DTK_DISABLE_LIBRSVG)
+    find_package(Qt${QT_VERSION_MAJOR}Svg REQUIRED)
+    target_link_libraries(${LIB_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Svg)
+else()
+    target_link_libraries(${LIB_NAME} PRIVATE PkgConfig::librsvg)
+endif()
 
 if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
     target_link_libraries(${LIB_NAME} PRIVATE
@@ -79,4 +85,3 @@ set(EnableCov CACHE BOOL OFF)
 if (EnableCov)
     dtk_setup_code_coverage(${LIB_NAME})
 endif()
-
