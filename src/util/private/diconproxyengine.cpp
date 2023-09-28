@@ -172,7 +172,7 @@ QString DIconProxyEngine::iconName()
 const
 #endif
 {
-    return m_iconName;
+    return m_iconEngine ? m_iconEngine->iconName() : QString();
 }
 
 QString DIconProxyEngine::proxyKey()
