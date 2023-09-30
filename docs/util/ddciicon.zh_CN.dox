@@ -223,7 +223,7 @@ cmake --build build
     | Light | 0 |
     | Dark  | 1 |
 
-@enum Dtk::Gui::DDciIcon::IconAttibute
+@enum Dtk::Gui::DDciIcon::IconAttribute
 @brief DCI图标属性
 @details
     | 键     | 值 |
@@ -282,7 +282,7 @@ cmake --build build
 @param[in] theme 图标主题
 @param[in] mode 图标模式，默认为Normal
 
-@fn bool Dtk::Gui::DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttibute attr)
+@fn bool Dtk::Gui::DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttribute attr)
 @brief 判断DCI图标是否支持指定属性
 @param[in] result DCI图标匹配结果
 @param[in] attr 图标属性

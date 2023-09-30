@@ -77,9 +77,10 @@ public:
         Light = 0,
         Dark = 1
     };
-    enum IconAttibute {
+    D_DECL_DEPRECATED enum IconAttibute {
         HasPalette = 0x001
     };
+    using IconAttribute = DDciIcon::IconAttibute;
     enum IconMatchedFlag {
         None = 0,
         DontFallbackMode = 0x01,
@@ -106,8 +107,8 @@ public:
     int actualSize(int size, Theme theme, Mode mode = Normal) const;
 
     QList<int> availableSizes(Theme theme, Mode mode = Normal) const;
-    bool isSupportedAttribute(DDciIconMatchResult result, IconAttibute attr) const;
-    static bool isSupportedAttribute(const DDciIconImage &image, IconAttibute attr);
+    bool isSupportedAttribute(DDciIconMatchResult result, IconAttribute attr) const;
+    static bool isSupportedAttribute(const DDciIconImage &image, IconAttribute attr);
 
     QPixmap pixmap(qreal devicePixelRatio, int iconSize, Theme theme, Mode mode = Normal,
                    const DDciIconPalette &palette = DDciIconPalette()) const;
