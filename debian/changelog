@@ -1,3 +1,14 @@
+dtkgui (5.6.18) unstable; urgency=medium
+
+  * fix: Wrong value of DPalette::TextLively
+  * chore: find qhelpgenerator from property
+  * fix: svg with filter attribute rendering exception
+  * fix: when iconName is absolute path
+  * fix: missing link when disable librsvg
+  * fix: Wrong IconName for DIconEngine(Issue: https://github.com/linuxdeepin/developer-center/issues/5760)
+
+ -- Deepin Packages Builder <packages@deepin.org>  Wed, 18 Oct 2023 06:01:44 +0000
+
 dtkgui (5.6.17) unstable; urgency=medium
 
   * Release 5.6.17
