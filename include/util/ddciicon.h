@@ -8,6 +8,7 @@
 #include <dtkgui_global.h>
 
 #include <QPixmap>
+#include <QSharedPointer>
 
 DCORE_BEGIN_NAMESPACE
 class DDciFile;
