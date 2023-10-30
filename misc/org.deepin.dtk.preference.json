@@ -1,0 +1,26 @@
+{
+    "magic": "dsg.config.meta",
+    "version": "1.0",
+    "contents": {
+        "underlineShortcut": {
+            "value": false,
+            "serial": 0,
+            "flags": [],
+            "name": "Whether shortcuts are underlined.",
+            "name[zh_CN]": "快捷键是否显示下划线",
+            "description": "Configure whether shortcuts are underlined",
+            "permissions": "readwrite",
+            "visibility": "public"
+        },
+        "keyboardsearchDisabled": {
+            "value": false,
+            "serial": 0,
+            "flags": [],
+            "name": "Whether disable the typing to search for menu items",
+            "name[zh_CN]": "配置是否禁用菜单通过按键搜索菜单项",
+            "description": "Configures whether disable the typing to search for menu items, which would otherwise require pressing Shift or Alt to trigger the menu item directly.",
+            "permissions": "readwrite",
+            "visibility": "public"
+        }
+    }
+}
