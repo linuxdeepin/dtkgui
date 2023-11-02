@@ -76,3 +76,4 @@ install(DIRECTORY ../include/kernel/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_
 install(DIRECTORY ../include/filedrag/ DESTINATION "${INCLUDE_INSTALL_DIR}" FILES_MATCHING PATTERN "*")
 # dconfig meta file
 dconfig_meta_files(COMMONID org.deepin.dtk FILES ${PROJECT_SOURCE_DIR}/misc/org.deepin.dtk.ui.preference.json)
+dconfig_meta_files(COMMONID org.deepin.dtk FILES ${PROJECT_SOURCE_DIR}/misc/org.deepin.dtk.preference.json)
