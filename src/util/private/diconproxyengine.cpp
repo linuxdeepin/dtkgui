@@ -18,7 +18,7 @@
 #include <QDir>
 
 #include <private/qiconloader_p.h>
-#if XDG_ICON_VERSION_MAR >= 3
+#if (XDG_ICON_VERSION_MAR >= 3)
 #define private public
 #include <private/xdgiconloader/xdgiconloader_p.h>
 #undef private

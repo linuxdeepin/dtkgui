@@ -89,8 +89,11 @@ TEST_F(ut_XdgIconProxyEngine, pixmapByEntry)
     QPalette pa = qApp->palette();
     // ensureLoaded
     EXPECT_EQ(s64, mIconEngine->actualSize(s64, QIcon::Normal, QIcon::On));
-
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QIconLoaderEngineEntry *entry = mIconEngine->engine->entryForSize(s64);
+#else
+    QIconLoaderEngineEntry *entry = mIconEngine->engine->entryForSize(mIconEngine->engine->m_info, s64);
+#endif
     ASSERT_TRUE(entry);
 
     QPixmap normalPix = mIconEngine->pixmapByEntry(entry, s64, QIcon::Normal, QIcon::On);
