@@ -6,6 +6,7 @@
 #define XDGICONPROXYENGINE_H
 
 #include <dtkgui_global.h>
+#include <QHash>
 
 #if XDG_ICON_VERSION_MAR >= 3
 #include <QIconEngine>
@@ -25,7 +26,8 @@ struct ScalableEntry;
 class QIconLoaderEngineEntry;
 class XdgIconLoaderEngine;
 DGUI_BEGIN_NAMESPACE
-#if XDG_ICON_VERSION_MAR >= 3
+
+#if (XDG_ICON_VERSION_MAR >= 3)
 class Q_DECL_HIDDEN XdgIconProxyEngine : public QIconEngine
 {
 public:

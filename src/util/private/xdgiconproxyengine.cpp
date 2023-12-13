@@ -243,8 +243,11 @@ void XdgIconProxyEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode
 QPixmap XdgIconProxyEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)
 {
     engine->ensureLoaded();
-
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QIconLoaderEngineEntry *entry = engine->entryForSize(size);
+#else
+    QIconLoaderEngineEntry *entry = engine->entryForSize(engine->m_info ,size);
+#endif
 
     if (!entry) {
         DEEPIN_XDG_THEME::colorScheme.setLocalData(DEEPIN_XDG_THEME::PALETTE_MAP());
@@ -299,7 +302,12 @@ void XdgIconProxyEngine::virtual_hook(int id, void *data)
         QIconEngine::ScaledPixmapArgument &arg = *reinterpret_cast<QIconEngine::ScaledPixmapArgument *>(data);
         // QIcon::pixmap() multiplies size by the device pixel ratio.
         const int integerScale = qCeil(arg.scale);
+        
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QIconLoaderEngineEntry *entry = engine->entryForSize(arg.size / integerScale, integerScale);
+#else
+        QIconLoaderEngineEntry *entry = engine->entryForSize(engine->m_info, arg.size / integerScale, integerScale);
+#endif
         // 先禁用缩放，因为此size是已经缩放过的
         bool useHighDpiPixmap = qGuiApp->testAttribute(Qt::AA_UseHighDpiPixmaps);
         qGuiApp->setAttribute(Qt::AA_UseHighDpiPixmaps, false);
