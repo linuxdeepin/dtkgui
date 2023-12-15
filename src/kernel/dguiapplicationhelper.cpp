@@ -39,6 +39,7 @@
 #include <QLockFile>
 #include <QDirIterator>
 #include <QDesktopServices>
+#include <QTimer>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
@@ -494,7 +495,10 @@ DGuiApplicationHelper::DGuiApplicationHelper()
     : QObject(nullptr)
     , DObject(*new DGuiApplicationHelperPrivate(this))
 {
-
+    // load qt/qtbase translation for qt app which load dtk ?
+    QTimer::singleShot(0, [](){
+        DGuiApplicationHelper::loadTranslator();
+    });
 }
 
 void DGuiApplicationHelper::initialize()
