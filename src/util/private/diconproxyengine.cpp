@@ -242,9 +242,13 @@ void DIconProxyEngine::ensureEngine()
         m_iconEngine = createDBuiltinIconEngine(m_iconName);
     }
 #ifdef DTK_DISABLE_LIBXDG
-    if (!m_iconEngine && Q_UNLIKELY(!m_option.testFlag(DIconTheme::DontFallbackToQIconFromTheme)) && QGuiApplicationPrivate::platformTheme() ) {
-        // Warning : do not call from qplatformTheme createIconEngine (stackoverflow)
-        m_iconEngine = QGuiApplicationPrivate::platformTheme()->createIconEngine(m_iconName);
+    if (!m_iconEngine && Q_UNLIKELY(!m_option.testFlag(DIconTheme::DontFallbackToQIconFromTheme))) {
+        // fallback to QPlatformTheme::createIconEngine ==> QIconLoaderEngine
+        QPlatformTheme * const platformTheme = QGuiApplicationPrivate::platformTheme();
+        bool hasUserTheme = QIconLoader::instance()->hasUserTheme();
+        if (platformTheme && !hasUserTheme) {
+            m_iconEngine = platformTheme->QPlatformTheme::createIconEngine(m_iconName);
+        }
     }
 #else
     if (!m_iconEngine ) {
