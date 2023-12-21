@@ -1,6 +1,6 @@
 Name:           dtkgui
-Version:        5.5.17
-Release:        1%{?dist}
+Version:        5.6.8.4
+Release:        3%{?dist}
 Summary:        Deepin dtkgui
 License:        LGPLv3+
 URL:            https://github.com/linuxdeepin/dtkgui
@@ -25,6 +25,13 @@ BuildRequires:  qt5-qtbase-private-devel
 %{?_qt5:Requires: %{_qt5}%{?_isa} = %{_qt5_version}}
 %endif
 BuildRequires:  make
+BuildRequires:  cmake
+BuildRequires:  doxygen
+BuildRequires:  LibRaw-devel
+BuildRequires:  qt5-qtimageformats
+BuildRequires:  libqtxdg-devel
+BuildRequires:  freeimage-devel
+Requires:       qt5-qtimageformats
 %description
 Dtkgui is the GUI module for DDE look and feel.
 
@@ -68,5 +75,20 @@ export PATH=%{_qt5_bindir}:$PATH
 %{_libdir}/lib%{name}.so
 
 %changelog
-* Thu Jun 09 2020 uoser <uoser@uniontech.com> - 5.2.2.1-1
-- Update to 5.2.2.1
+* Thu Dec 21 2023 mahailiang <mahailiang@uniontech.com> - 5.6.8.4-3
+- fix: add requires qt5-qtimageformats(bugid:226895)
+
+* Wed Oct 11 2023 liweigang <liweiganga@uniontech.com> - 5.6.8.4-2
+- spec: change DGui path
+
+* Mon Oct 09 2023 liweigang <liweiganga@uniontech.com> - 5.6.8.4-1
+- update: update to version 5.6.8.4
+
+* Wed Aug 16 2023 liuzhilin <liuzhilin@uniontech.com> - 5.6.8.3-1
+- update: update to 5.6.8.3
+
+* Fri Dec 23 2022 liweiganga <liweiganga@uniontech.com> - 5.5.27-1
+- update: update to 5.5.27
+
+* Mon Jun 13 2022 uoser <uoser@uniontech.com> - 5.5.18-1.01
+- update: update to 5.5.18-1.01
