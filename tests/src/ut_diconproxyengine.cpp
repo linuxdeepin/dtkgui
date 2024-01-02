@@ -6,6 +6,7 @@
 
 #include <QPainter>
 #include <QIODevice>
+#include <private/qicon_p.h>
 
 #include <DGuiApplicationHelper>
 #include <DPlatformTheme>
@@ -115,18 +116,21 @@ TEST_F(ut_DIconProxyEngine, read_write)
         ASSERT_EQ(iconName, mIconEngine->iconName());
     }
 
-    iconName = "test_icon_name";
-    themeName = "test_theme_name";
     {
+        auto engine = new DIconProxyEngine("selected_indicator" ,DIconTheme::DontFallbackToQIconFromTheme);
+        QIcon icon_write(engine);
         QDataStream out(&data, QIODevice::WriteOnly);
-        out << iconName << themeName;
-    }
-    {
-        QDataStream in(&data, QIODevice::ReadOnly);
-        mIconEngine->read(in);
+        out << icon_write;
 
-        ASSERT_EQ(themeName, mIconEngine->themeName());
-        ASSERT_EQ(iconName, mIconEngine->iconName());
+        QIcon icon_read;
+        QDataStream in(&data, QIODevice::ReadOnly);
+        in >> icon_read;
+
+        ASSERT_TRUE(icon_read.data_ptr()->engine);
+        EXPECT_EQ(icon_read.data_ptr()->engine->key(),
+                  engine->key());
+        EXPECT_EQ(icon_read.data_ptr()->engine->iconName(),
+                    engine->iconName());
     }
 }
 

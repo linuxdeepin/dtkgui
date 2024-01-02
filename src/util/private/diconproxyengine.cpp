@@ -156,8 +156,9 @@ QIconEngine *DIconProxyEngine::clone() const
 
 bool DIconProxyEngine::read(QDataStream &in)
 {
-    // ensureEngine, will changed themeName if not the same
     in >> m_iconName >> m_iconThemeName;
+
+    ensureEngine();
     return m_iconEngine ? m_iconEngine->read(in) : false;
 }
 
