@@ -19,7 +19,6 @@ Description: Deepin Tool Kit Gui library
  This package contains the shared libraries.
 
 Package: libdtkgui5-bin
-Build-Profiles: <!nobin>
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
  libdtkgui5( =${binary:Version})
