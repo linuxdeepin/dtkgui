@@ -591,10 +591,17 @@ static void initWindowRadius(QWindow *window)
     int radius = theme->windowRadius(18); //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
 
     setWindowProperty(window, _windowRadius, radius);
-    window->connect(theme, &DPlatformTheme::windowRadiusChanged, window, [=] (int radius) {
-        if (!resolved(window, PropRole::WindowRadius))
-            setWindowProperty(window, _windowRadius, radius);
-    }, Qt::UniqueConnection);
+    // Qt::UniqueConnection will report a warning
+    // to `unique connections require a pointer to member function of a QObject subclass`.
+    const char *uniqueueConnectionFlag("_d_uniqueueConnectionFlag");
+    bool connected = window->property(uniqueueConnectionFlag).toBool();
+    if (!connected) {
+        window->setProperty(uniqueueConnectionFlag, true);
+        window->connect(theme, &DPlatformTheme::windowRadiusChanged, window, [window] (int radius) {
+            if (!resolved(window, PropRole::WindowRadius))
+                setWindowProperty(window, _windowRadius, radius);
+        });
+    }
 }
 
 class Q_DECL_HIDDEN CreatorWindowEventFile : public QObject {
