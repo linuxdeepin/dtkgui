@@ -1,3 +1,13 @@
+dtkgui (5.6.21) unstable; urgency=medium
+
+  * chore: update cmake version
+  * fix: xdg icon loading failed with qt6(Issue: https://github.com/linuxdeepin/developer-center/issues/6459)
+  * fix: debian build failed
+  * fix: DIconProxyEngine read not ensureEngine
+  * chore: fix ut_dciiconengine failed on dark theme
+
+ -- Deepin Packages Builder <packages@deepin.org>  Tue, 09 Jan 2024 01:45:43 +0000
+
 dtkgui (5.6.20) unstable; urgency=medium
 
   * chore: add synchronization workflow
