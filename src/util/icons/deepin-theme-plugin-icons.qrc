@@ -41,13 +41,13 @@
         <file>texts/checked_20px.svg</file>
         <file>texts/next_indicator_24px.svg</file>
         <file>texts/prev_indicator_24px.svg</file>
-        <file>actions/edit-select-all_16px.svg</file>
-        <file>actions/edit-copy_16px.svg</file>
-        <file>actions/edit-cut_16px.svg</file>
-        <file>actions/edit-delete_16px.svg</file>
-        <file>actions/edit-paste_16px.svg</file>
-        <file>actions/edit-redo_16px.svg</file>
-        <file>actions/edit-undo_16px.svg</file>
+        <file alias="texts/edit-select-all_16px.svg">actions/edit-select-all_16px.svg</file>
+        <file alias="texts/edit-copy_16px.svg">actions/edit-copy_16px.svg</file>
+        <file alias="texts/edit-cut_16px.svg">actions/edit-cut_16px.svg</file>
+        <file alias="texts/edit-delete_16px.svg">actions/edit-delete_16px.svg</file>
+        <file alias="texts/edit-paste_16px.svg">actions/edit-paste_16px.svg</file>
+        <file alias="texts/edit-redo_16px.svg">actions/edit-redo_16px.svg</file>
+        <file alias="texts/edit-undo_16px.svg">actions/edit-undo_16px.svg</file>
     </qresource>
     <qresource prefix="/icons/deepin/builtin/light">
         <file alias="icons/button_edit-clear_30px.svg/normal.svg">icons/light/edit-clear_30px.svg</file>
