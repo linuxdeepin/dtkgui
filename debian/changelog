@@ -1,3 +1,11 @@
+dtkgui (5.6.22) unstable; urgency=medium
+
+  * fix: menu icon incorrect in dark mode(Issue: https://github.com/linuxdeepin/developer-center/issues/6624)
+  * feat: enable xdgIconLoader under Qt6
+  * chore: warning for connect
+
+ -- Deepin Packages Builder <packages@deepin.org>  Wed, 10 Jan 2024 02:30:59 +0000
+
 dtkgui (5.6.21) unstable; urgency=medium
 
   * chore: update cmake version
