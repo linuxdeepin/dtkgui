@@ -176,7 +176,8 @@ void DIconTheme::Cached::clear()
 
 QIcon DIconTheme::Cached::findQIcon(const QString &iconName, Options options, const QIcon &fallback)
 {
-    const QString cacheKey = iconName + QChar('/') + QString::number(static_cast<int>(options));
+    const QString themeName = QIcon::themeName();
+    const QString cacheKey = themeName + QChar('/') + iconName + QChar('/') + QString::number(static_cast<int>(options));
     if (data->cache.contains(cacheKey)) {
         auto cacheIcon = data->cache.object(cacheKey);
         if (cacheIcon->isNull())
