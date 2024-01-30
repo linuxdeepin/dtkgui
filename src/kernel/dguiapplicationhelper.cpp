@@ -678,7 +678,7 @@ QColor DGuiApplicationHelper::blendColor(const QColor &substrate, const QColor &
 }
 
 static QColor light_qpalette[QPalette::NColorRoles] {
-    QColor(0, 0, 0, 0.7 * 255),         //WindowText
+    QColor(0, 0, 0, 255),         //WindowText
     QColor("#e5e5e5"),                  //Button
     QColor("#e6e6e6"),                  //Light
     QColor("#e5e5e5"),                  //Midlight
