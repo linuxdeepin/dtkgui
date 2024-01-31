@@ -193,6 +193,36 @@ void LoadManualServiceWorker::checkManualServiceWakeUp()
     start();
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+class Q_DECL_HIDDEN GuiApplicationEventFilter : public QObject
+{
+public:
+    explicit GuiApplicationEventFilter(DGuiApplicationHelperPrivate *transmitter,
+                                       QObject *parent = nullptr)
+        : QObject(parent)
+        , m_transmitter(transmitter)
+    {
+    }
+    virtual bool eventFilter(QObject *watched, QEvent *event) override
+    {
+        switch(event->type()) {
+        case QEvent::ApplicationFontChange: {
+            const QFont font(qGuiApp->font());
+            m_transmitter->q_func()->fontChanged(font);
+        } break;
+        case QEvent::ApplicationPaletteChange: {
+            m_transmitter->onApplicationPaletteChanged();
+        } break;
+        default:
+            break;
+        }
+        return QObject::eventFilter(watched, event);
+    }
+private:
+    DGuiApplicationHelperPrivate *m_transmitter = nullptr;
+};
+#endif
+
 HelperCreator _DGuiApplicationHelper::creator = _DGuiApplicationHelper::defaultCreator;
 Q_GLOBAL_STATIC(_DGuiApplicationHelper, _globalHelper)
 
@@ -234,18 +264,15 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
     // 跟随application销毁
     qAddPostRoutine(staticCleanApplication);
 
-    q->connect(app, &QGuiApplication::paletteChanged, q, [q, this, app] {
-        // 如果用户没有自定义颜色类型, 则应该通知程序的颜色类型发送变化
-        if (Q_LIKELY(!isCustomPalette())) {
-            Q_EMIT q->themeTypeChanged(q->toColorType(app->palette()));
-            Q_EMIT q->applicationPaletteChanged();
-        } else {
-            qWarning() << "DGuiApplicationHelper: Don't use QGuiApplication::setPalette on DTK application.";
-        }
-    });
-
     // 转发程序自己变化的信号
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    app->installEventFilter(new GuiApplicationEventFilter(this, app));
+#else
     q->connect(app, &QGuiApplication::fontChanged, q, &DGuiApplicationHelper::fontChanged);
+    q->connect(app, &QGuiApplication::paletteChanged, q, [this] {
+        onApplicationPaletteChanged();
+    });
+#endif
 
     if (Q_UNLIKELY(!appTheme)) { // 此时说明appTheme可能已经被初始化为了systemtheme
         if (QGuiApplicationPrivate::is_app_running) {
@@ -347,6 +374,18 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChangedByEvent()
     // 此事件会促使QGuiApplication重新从QPlatformTheme中获取系统级别的QPalette.
     // 而在deepin平台下, 系统级别的QPalette来源自 \a applicationPalette()
     QGuiApplicationPrivate::processThemeChanged(&event);
+}
+
+void DGuiApplicationHelperPrivate::onApplicationPaletteChanged()
+{
+    D_Q(DGuiApplicationHelper);
+    // 如果用户没有自定义颜色类型, 则应该通知程序的颜色类型发送变化
+    if (Q_LIKELY(!isCustomPalette())) {
+        Q_EMIT q->themeTypeChanged(q->toColorType(qGuiApp->palette()));
+        Q_EMIT q->applicationPaletteChanged();
+    } else {
+        qWarning() << "DGuiApplicationHelper: Don't use QGuiApplication::setPalette on DTK application.";
+    }
 }
 
 bool DGuiApplicationHelperPrivate::isCustomPalette() const
