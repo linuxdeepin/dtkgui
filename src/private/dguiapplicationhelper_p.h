@@ -35,6 +35,7 @@ public:
     DGuiApplicationHelper::SizeMode fetchSizeMode(bool *isSystemSizeMode = nullptr) const;
     void notifyAppThemeChanged();
     void notifyAppThemeChangedByEvent();
+    void onApplicationPaletteChanged();
     // 返回程序是否自定义了调色板
     inline bool isCustomPalette() const;
     void setPaletteType(DGuiApplicationHelper::ColorType ct, bool emitSignal);
