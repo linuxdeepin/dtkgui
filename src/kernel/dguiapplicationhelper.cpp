@@ -210,9 +210,6 @@ public:
             const QFont font(qGuiApp->font());
             m_transmitter->q_func()->fontChanged(font);
         } break;
-        case QEvent::ApplicationPaletteChange: {
-            m_transmitter->onApplicationPaletteChanged();
-        } break;
         default:
             break;
         }
@@ -269,10 +266,11 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
     app->installEventFilter(new GuiApplicationEventFilter(this, app));
 #else
     q->connect(app, &QGuiApplication::fontChanged, q, &DGuiApplicationHelper::fontChanged);
+#endif
+    // TODO handle event in qt6.
     q->connect(app, &QGuiApplication::paletteChanged, q, [this] {
         onApplicationPaletteChanged();
     });
-#endif
 
     if (Q_UNLIKELY(!appTheme)) { // 此时说明appTheme可能已经被初始化为了systemtheme
         if (QGuiApplicationPrivate::is_app_running) {
