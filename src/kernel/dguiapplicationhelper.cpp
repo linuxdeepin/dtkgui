@@ -413,8 +413,6 @@ void DGuiApplicationHelperPrivate::setPaletteType(DGuiApplicationHelper::ColorTy
 
     D_Q(DGuiApplicationHelper);
     Q_EMIT q->paletteTypeChanged(paletteType);
-
-    _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
 }
 
 void DGuiApplicationHelperPrivate::initPaletteType() const
@@ -1773,6 +1771,7 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
 
     d->initPaletteType();
     d->setPaletteType(paletteType, true);
+    _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
 }
 
 /*!
