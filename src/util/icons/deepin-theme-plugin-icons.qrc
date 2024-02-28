@@ -36,7 +36,6 @@
         <file>texts/unlock_indicator_24px.svg</file>
         <file>texts/unselected_indicator_16px.svg</file>
         <file>texts/window-close_round_30px.svg</file>
-        <file>texts/search_indicator_20px.svg</file>
         <file>texts/unchecked_20px.svg</file>
         <file>texts/checked_20px.svg</file>
         <file>texts/next_indicator_24px.svg</file>
@@ -59,6 +58,7 @@
         <file alias="icons/list_add_16px.svg">icons/light/list_add_16px.svg</file>
         <file alias="icons/window-close_round_30px.svg/normal.svg">icons/light/window-close_round_30px.svg</file>
         <file alias="icons/window-close_round_30px.svg/selected.svg">icons/light/window-close_round_press_30px.svg</file>
+        <file alias="texts/search_indicator_20px.svg">icons/light/search_indicator_20px.svg</file>
     </qresource>
     <qresource prefix="/icons/deepin/builtin/dark">
         <file alias="icons/button_edit-clear_30px.svg/normal.svg">icons/dark/edit-clear_30px.svg</file>
@@ -70,6 +70,7 @@
         <file alias="icons/list_add_16px.svg">icons/dark/list_add_16px.svg</file>
         <file alias="icons/window-close_round_30px.svg/normal.svg">icons/dark/window-close_round_30px.svg</file>
         <file alias="icons/window-close_round_30px.svg/selected.svg">icons/dark/window-close_round_press_30px.svg</file>
+        <file alias="texts/search_indicator_20px.svg">icons/dark/search_indicator_20px.svg</file>
     </qresource>
     <qresource prefix="/dsg/built-in-icons">
         <file alias="sp_ok.dci">dci/sp_ok.dci</file>
