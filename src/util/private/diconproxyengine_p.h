@@ -32,6 +32,16 @@ public:
 #else
     QString iconName() const override;
 #endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QList<QSize> availableSizes(QIcon::Mode mode = QIcon::Normal, QIcon::State state = QIcon::Off) override;
+#else
+    QList<QSize> availableSizes(QIcon::Mode mode = QIcon::Normal, QIcon::State state = QIcon::Off) const override;
+#endif
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    bool isNull() override;
+#endif
     inline QString themeName() const { return m_iconThemeName; }
 
     QString proxyKey();
