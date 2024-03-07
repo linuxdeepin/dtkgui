@@ -176,6 +176,21 @@ const
     return m_iconEngine ? m_iconEngine->iconName() : QString();
 }
 
+QList<QSize> DIconProxyEngine::availableSizes(QIcon::Mode mode, QIcon::State state)
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    const
+#endif
+{
+    return m_iconEngine ? m_iconEngine->availableSizes(mode, state) : QIconEngine::availableSizes(mode, state);
+}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+bool DIconProxyEngine::isNull()
+{
+    return m_iconEngine ? m_iconEngine->isNull() : QIconEngine::isNull();
+}
+#endif
+
 QString DIconProxyEngine::proxyKey()
 {
     ensureEngine();
