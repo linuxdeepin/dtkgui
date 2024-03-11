@@ -1,3 +1,13 @@
+dtkgui (5.6.25) unstable; urgency=medium
+
+  * fix: icon doesn't update when iconTheme changed
+  * fix: font can't follow changes in qt6
+  * fix: app refresh slowly
+  * fix: changed paletteType's config value
+  * fix: search icon can't change with theme change(Issue: #6230)
+
+ -- Deepin Packages Builder <packages@deepin.org>  Mon, 11 Mar 2024 01:16:27 +0000
+
 dtkgui (5.6.22) unstable; urgency=medium
 
   * fix: menu icon incorrect in dark mode(Issue: https://github.com/linuxdeepin/developer-center/issues/6624)
