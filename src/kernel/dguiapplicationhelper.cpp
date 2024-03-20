@@ -805,9 +805,7 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
         if (role == QPalette::PlaceholderText) {
-            // 5.15新添加此颜色 这里使用5.11的颜色保证效果与5.11对齐
             color = dcolor_list[DPalette::PlaceholderText];
-            continue;
         }
 #endif
         // 处理半透明色
