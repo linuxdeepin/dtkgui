@@ -98,6 +98,7 @@ public:
 #endif
 
     DPalette applicationPalette() const;
+    DPalette applicationPalette(ColorType paletteType) const;
     void setApplicationPalette(const DPalette &palette);
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
     D_DECL_DEPRECATED DPalette windowPalette(QWindow *window) const;
