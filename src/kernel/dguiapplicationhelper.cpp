@@ -1195,7 +1195,7 @@ DPlatformTheme *DGuiApplicationHelper::windowTheme(QWindow *window) const
   \warning 不应该在DTK程序中使用QGuiApplication/QApplication::setPalette
   \return 应用程序调色板
  */
-DPalette DGuiApplicationHelper::applicationPalette() const
+DPalette DGuiApplicationHelper::applicationPalette(ColorType paletteType) const
 {
     D_DC(DGuiApplicationHelper);
 
@@ -1203,7 +1203,7 @@ DPalette DGuiApplicationHelper::applicationPalette() const
         return *d->appPalette;
     }
 
-    ColorType type = d->paletteType;
+    ColorType type = paletteType;
     bool aa_setPalette = qGuiApp && qGuiApp->testAttribute(Qt::AA_SetPalette);
     // 此时appTheme可能还未初始化, 因此先使用systemTheme, 待appTheme初始化之后会
     // 通知程序调色板发生改变
@@ -1236,6 +1236,13 @@ DPalette DGuiApplicationHelper::applicationPalette() const
     }
 
     return pa;
+}
+
+DPalette DGuiApplicationHelper::applicationPalette() const
+{
+    D_DC(DGuiApplicationHelper);
+
+    return applicationPalette(d->paletteType);
 }
 
 /*!
