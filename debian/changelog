@@ -1,3 +1,11 @@
+dtkgui (5.6.26) unstable; urgency=medium
+
+  * fix: wrong availableSizes for DIconProxyEngine
+  * fix: PlaceholderText color tweak(Issue: https://github.com/linuxdeepin/developer-center/issues/7554)
+  * feat: support to get specified palette
+
+ -- Deepin Packages Builder <packages@deepin.org>  Tue, 26 Mar 2024 05:47:35 +0000
+
 dtkgui (5.6.25) unstable; urgency=medium
 
   * fix: icon doesn't update when iconTheme changed
