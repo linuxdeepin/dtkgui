@@ -1,10 +1,27 @@
+if("${QT_VERSION_MAJOR}" STREQUAL "6")
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets WaylandClient)
+endif()
+
 add_library(${LIB_NAME} SHARED)
+
+if("${QT_VERSION_MAJOR}" STREQUAL "6")
+    qt6_generate_wayland_protocol_client_sources(${LIB_NAME} FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/wayland/protocol/treeland-personalization-manager-v1.xml
+    )
+endif()
 
 include(dbus/dbus.cmake)
 include(filedrag/dfiledrag.cmake)
 include(kernel/kernel.cmake)
 include(private/private.cmake)
 include(util/util.cmake)
+ 
+if("${QT_VERSION_MAJOR}" STREQUAL "6")
+    include(wayland/wayland.cmake)
+    target_sources(${LIB_NAME} PRIVATE
+        ${wayland_SRC}
+    )
+endif()
 
 target_sources(${LIB_NAME} PRIVATE
     ${dbus_SRC}
@@ -41,6 +58,16 @@ if(DTK_DISABLE_LIBRSVG)
     target_link_libraries(${LIB_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Svg)
 else()
     target_link_libraries(${LIB_NAME} PRIVATE PkgConfig::librsvg)
+endif()
+
+if("${QT_VERSION_MAJOR}" STREQUAL "6")
+    target_link_libraries(${LIB_NAME} PUBLIC
+    PUBLIC
+        Qt::Core
+        Qt::Widgets
+    PRIVATE
+        Qt::WaylandClientPrivate
+    )
 endif()
 
 if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
