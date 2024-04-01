@@ -30,8 +30,8 @@ class DPlatformHandle : public QObject
     Q_PROPERTY(int shadowRadius READ shadowRadius WRITE setShadowRadius NOTIFY shadowRadiusChanged)
     Q_PROPERTY(QPoint shadowOffset READ shadowOffset WRITE setShadowOffset NOTIFY shadowOffsetChanged)
     Q_PROPERTY(QColor shadowColor READ shadowColor WRITE setShadowColor NOTIFY shadowColorChanged)
-    Q_PROPERTY(EffectScene effectScene READ effectScene WRITE setEffectScene NOTIFY effectSceneChanged)
-    Q_PROPERTY(EffectType effectType READ effectType WRITE setEffectType NOTIFY effectTypeChanged)
+    Q_PROPERTY(EffectScene windowEffect READ windowEffect WRITE setWindowEffect NOTIFY windowEffectChanged)
+    Q_PROPERTY(EffectType windowStartUpEffect READ windowStartUpEffect WRITE setWindowStartUpEffect NOTIFY windowStartUpEffectChanged)
     Q_PROPERTY(QPainterPath clipPath READ clipPath WRITE setClipPath NOTIFY clipPathChanged)
     Q_PROPERTY(QRegion frameMask READ frameMask WRITE setFrameMask NOTIFY frameMaskChanged)
     Q_PROPERTY(QMargins frameMargins READ frameMargins NOTIFY frameMarginsChanged)
@@ -118,8 +118,8 @@ public:
     QPoint shadowOffset() const;
     QColor shadowColor() const;
 
-    EffectScene effectScene();
-    EffectType effectType();
+    EffectScene windowEffect();
+    EffectType windowStartUpEffect();
 
     QPainterPath clipPath() const;
     QRegion frameMask() const;
@@ -139,8 +139,8 @@ public Q_SLOTS:
     void setBorderWidth(int borderWidth);
     void setBorderColor(const QColor &borderColor);
 
-    void setEffectScene(EffectScenes effectScene);
-    void setEffectType(EffectTypes effectType);
+    void setWindowEffect(EffectScenes effectScene);
+    void setWindowStartUpEffect(EffectTypes effectType);
 
     void setShadowRadius(int shadowRadius);
     void setShadowOffset(const QPoint &shadowOffset);
@@ -163,8 +163,8 @@ Q_SIGNALS:
     void shadowRadiusChanged();
     void shadowOffsetChanged();
     void shadowColorChanged();
-    void effectSceneChanged();
-    void effectTypeChanged();
+    void windowEffectChanged();
+    void windowStartUpEffectChanged();
     void clipPathChanged();
     void frameMaskChanged();
     void translucentBackgroundChanged();

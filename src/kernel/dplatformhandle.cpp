@@ -25,8 +25,8 @@ DEFINE_CONST_CHAR(netWmStates);
 DEFINE_CONST_CHAR(windowRadius);
 DEFINE_CONST_CHAR(borderWidth);
 DEFINE_CONST_CHAR(borderColor);
-DEFINE_CONST_CHAR(effectScene);
-DEFINE_CONST_CHAR(effectType);
+DEFINE_CONST_CHAR(windowEffect);
+DEFINE_CONST_CHAR(windowStartUpEffect);
 DEFINE_CONST_CHAR(shadowRadius);
 DEFINE_CONST_CHAR(shadowOffset);
 DEFINE_CONST_CHAR(shadowColor);
@@ -1081,14 +1081,14 @@ QColor DPlatformHandle::shadowColor() const
     return qvariant_cast<QColor>(m_window->property(_shadowColor));
 }
 
-DPlatformHandle::EffectScene DPlatformHandle::effectScene()
+DPlatformHandle::EffectScene DPlatformHandle::windowEffect()
 {
-    return qvariant_cast<EffectScene>(m_window->property(_effectScene));
+    return qvariant_cast<EffectScene>(m_window->property(_windowEffect));
 }
 
-DPlatformHandle::EffectType DPlatformHandle::effectType()
+DPlatformHandle::EffectType DPlatformHandle::windowStartUpEffect()
 {
-    return qvariant_cast<EffectType>(m_window->property(_effectType));
+    return qvariant_cast<EffectType>(m_window->property(_windowStartUpEffect));
 }
 
 QPainterPath DPlatformHandle::clipPath() const
@@ -1167,14 +1167,14 @@ void DPlatformHandle::setBorderColor(const QColor &borderColor)
     setWindowProperty(m_window, _borderColor, QVariant::fromValue(borderColor));
 }
 
-void DPlatformHandle::setEffectScene(DPlatformHandle::EffectScenes effectScene)
+void DPlatformHandle::setWindowEffect(DPlatformHandle::EffectScenes effectScene)
 {
-    setWindowProperty(m_window, _effectScene, static_cast<quint32>(effectScene));
+    setWindowProperty(m_window, _windowEffect, static_cast<quint32>(effectScene));
 }
 
-void DPlatformHandle::setEffectType(DPlatformHandle::EffectTypes effectType)
+void DPlatformHandle::setWindowStartUpEffect(DPlatformHandle::EffectTypes effectType)
 {
-    setWindowProperty(m_window, _effectType, static_cast<quint32>(effectType));
+    setWindowProperty(m_window, _windowStartUpEffect, static_cast<quint32>(effectType));
 }
 
 void DPlatformHandle::setShadowRadius(int shadowRadius)
