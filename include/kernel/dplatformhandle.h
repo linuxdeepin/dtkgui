@@ -30,6 +30,8 @@ class DPlatformHandle : public QObject
     Q_PROPERTY(int shadowRadius READ shadowRadius WRITE setShadowRadius NOTIFY shadowRadiusChanged)
     Q_PROPERTY(QPoint shadowOffset READ shadowOffset WRITE setShadowOffset NOTIFY shadowOffsetChanged)
     Q_PROPERTY(QColor shadowColor READ shadowColor WRITE setShadowColor NOTIFY shadowColorChanged)
+    Q_PROPERTY(EffectScene windowEffect READ windowEffect WRITE setWindowEffect NOTIFY windowEffectChanged)
+    Q_PROPERTY(EffectType windowStartUpEffect READ windowStartUpEffect WRITE setWindowStartUpEffect NOTIFY windowStartUpEffectChanged)
     Q_PROPERTY(QPainterPath clipPath READ clipPath WRITE setClipPath NOTIFY clipPathChanged)
     Q_PROPERTY(QRegion frameMask READ frameMask WRITE setFrameMask NOTIFY frameMaskChanged)
     Q_PROPERTY(QMargins frameMargins READ frameMargins NOTIFY frameMarginsChanged)
@@ -72,6 +74,30 @@ public:
         PreserveAspectFit = 0x00000001
     };
 
+    enum EffectScene {
+        EffectNoRadius   = 0x01,       // 取消窗口圆角
+        EffectNoShadow   = 0x02,       // 取消窗口阴影
+        EffectNoBorder   = 0x04,       // 取消窗口边框
+        EffectNoStart    = 0x10,       // 取消启动场景动效
+        EffectNoClose    = 0x20,       // 取消关闭场景动效
+        EffectNoMaximize = 0x40,       // 取消最大化场景动效
+        EffectNoMinimize = 0x80        // 取消最小化场景动效
+    };
+
+    enum EffectType {
+      EffectNormal = 0x01,        // 标准缩放动效
+      EffectCursor = 0x02,        // 鼠标位置展开动效
+      EffectTop    = 0x04,        // 从上往下展开
+      EffectBottom = 0x08         // 从下往上展开
+    };
+
+    Q_ENUM(EffectScene)
+    Q_ENUM(EffectType)
+    Q_DECLARE_FLAGS(EffectScenes, EffectScene)
+    Q_DECLARE_FLAGS(EffectTypes, EffectType)
+    Q_ENUM(EffectScenes)
+    Q_ENUM(EffectTypes)
+
     static bool setWindowBlurAreaByWM(QWindow *window, const QVector<WMBlurArea> &area);
     static bool setWindowBlurAreaByWM(QWindow *window, const QList<QPainterPath> &paths);
     static bool setWindowWallpaperParaByWM(QWindow *window, const QRect &area, WallpaperScaleMode sMode, WallpaperFillMode fMode);
@@ -92,6 +118,9 @@ public:
     QPoint shadowOffset() const;
     QColor shadowColor() const;
 
+    EffectScene windowEffect();
+    EffectType windowStartUpEffect();
+
     QPainterPath clipPath() const;
     QRegion frameMask() const;
     QMargins frameMargins() const;
@@ -107,9 +136,11 @@ public:
 
 public Q_SLOTS:
     void setWindowRadius(int windowRadius);
-
     void setBorderWidth(int borderWidth);
     void setBorderColor(const QColor &borderColor);
+
+    void setWindowEffect(EffectScenes effectScene);
+    void setWindowStartUpEffect(EffectTypes effectType);
 
     void setShadowRadius(int shadowRadius);
     void setShadowOffset(const QPoint &shadowOffset);
@@ -132,6 +163,8 @@ Q_SIGNALS:
     void shadowRadiusChanged();
     void shadowOffsetChanged();
     void shadowColorChanged();
+    void windowEffectChanged();
+    void windowStartUpEffectChanged();
     void clipPathChanged();
     void frameMaskChanged();
     void translucentBackgroundChanged();
@@ -173,5 +206,7 @@ Q_DECLARE_METATYPE(QPainterPath)
 Q_DECLARE_METATYPE(QMargins)
 #endif
 Q_DECLARE_METATYPE(QRegion)
+Q_DECLARE_OPERATORS_FOR_FLAGS(DPlatformHandle::EffectScenes)
+Q_DECLARE_OPERATORS_FOR_FLAGS(DPlatformHandle::EffectTypes)
 
 #endif // DPLATFORMHANDLE_H

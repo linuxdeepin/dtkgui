@@ -25,6 +25,8 @@ DEFINE_CONST_CHAR(netWmStates);
 DEFINE_CONST_CHAR(windowRadius);
 DEFINE_CONST_CHAR(borderWidth);
 DEFINE_CONST_CHAR(borderColor);
+DEFINE_CONST_CHAR(windowEffect);
+DEFINE_CONST_CHAR(windowStartUpEffect);
 DEFINE_CONST_CHAR(shadowRadius);
 DEFINE_CONST_CHAR(shadowOffset);
 DEFINE_CONST_CHAR(shadowColor);
@@ -1088,6 +1090,16 @@ QColor DPlatformHandle::shadowColor() const
     return qvariant_cast<QColor>(m_window->property(_shadowColor));
 }
 
+DPlatformHandle::EffectScene DPlatformHandle::windowEffect()
+{
+    return qvariant_cast<EffectScene>(m_window->property(_windowEffect));
+}
+
+DPlatformHandle::EffectType DPlatformHandle::windowStartUpEffect()
+{
+    return qvariant_cast<EffectType>(m_window->property(_windowStartUpEffect));
+}
+
 QPainterPath DPlatformHandle::clipPath() const
 {
     return qvariant_cast<QPainterPath>(m_window->property(_clipPath));
@@ -1162,6 +1174,16 @@ void DPlatformHandle::setBorderWidth(int borderWidth)
 void DPlatformHandle::setBorderColor(const QColor &borderColor)
 {
     setWindowProperty(m_window, _borderColor, QVariant::fromValue(borderColor));
+}
+
+void DPlatformHandle::setWindowEffect(DPlatformHandle::EffectScenes effectScene)
+{
+    setWindowProperty(m_window, _windowEffect, static_cast<quint32>(effectScene));
+}
+
+void DPlatformHandle::setWindowStartUpEffect(DPlatformHandle::EffectTypes effectType)
+{
+    setWindowProperty(m_window, _windowStartUpEffect, static_cast<quint32>(effectType));
 }
 
 void DPlatformHandle::setShadowRadius(int shadowRadius)
