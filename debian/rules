@@ -7,11 +7,14 @@ DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 VERSION = $(DEB_VERSION_UPSTREAM)
 _PACK_VER = $(shell echo $(VERSION) | awk -F'[+_~-]' '{print $$1}')
-_BUILD_VER = $(shell echo $(VERSION) | awk -F'[+_~-]' '{print $$2}' | sed 's/[^0-9]//g' | awk '{print int($$1)}')
-ifeq ($(_BUILD_VER),)
-	CONFIG_VERSION = $(_PACK_VER)
-else
-	CONFIG_VERSION = $(_PACK_VER).$(_BUILD_VER)
+
+# Calculate build version:
+# 5.6.8 -> 0; 5.6.8.7 -> 7; 5.6.8+u001 -> 1; 5.6.8.7+u001 -> 7; 5.6.8.0+u001 -> 0
+BUILD_VER = $(shell echo $(VERSION) | awk -F'[+_~-]' '{print $$1}' | awk -F'.' '{print $$4}' | sed 's/[^0-9]//g' | awk '{print int($$1)}')
+ifeq ($(BUILD_VER), 0)
+ifeq ($(shell expr $(shell echo "$(VERSION)" | awk -F. '{print NF-1}') '<' 3), 1)
+        BUILD_VER=$(shell echo $(VERSION) | awk -F'[+_~-]' '{print $$2}'  | sed 's/[^0-9]//g' | awk '{print int($$1)}')
+endif
 endif
 
 %:

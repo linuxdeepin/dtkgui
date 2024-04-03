@@ -47,8 +47,17 @@ else ()
 endif ()
 
 set(CONFIGNAME include/global/dtkgui_config.h)
-file(WRITE ${CONFIGNAME} 
-  "// This is an auto-generated header, please don't modify it.\n"
+if(NOT BUILD_VERSION)
+    set(BUILD_VERSION 0)
+endif()
+file(WRITE ${CONFIGNAME}
+  "// it is auto make config\n"
+  "#define DTKGUI_VERSION_MAJOR ${PROJECT_VERSION_MAJOR}\n"
+  "#define DTKGUI_VERSION_MINOR ${PROJECT_VERSION_MINOR}\n"
+  "#define DTKGUI_VERSION_PATCH ${PROJECT_VERSION_PATCH}\n"
+  "#define DTKGUI_VERSION_BUILD ${BUILD_VERSION}\n"
+  "#define DTKGUI_VERSION_STR \"${PROJECT_VERSION}\"\n"
+  "\n"
 )
 file(GLOB CONFIGSOURCE include/DtkGui/*)
 
