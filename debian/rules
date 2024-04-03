@@ -21,7 +21,7 @@ endif
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DBUILD_TESTING=OFF -DBUILD_DOCS=ON -DDVERSION=$(_PACK_VER)
+	dh_auto_configure -- -DBUILD_TESTING=OFF -DBUILD_DOCS=ON -DBUILD_VERSION=$(BUILD_VER) -DDVERSION=$(_PACK_VER)
 #override_dh_auto_test:
 #	echo "skip auto test"
 
