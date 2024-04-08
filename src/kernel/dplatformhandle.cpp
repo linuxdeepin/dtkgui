@@ -754,8 +754,10 @@ bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QVector<DPlat
     }
 
     if (isEnabledDXcb(window)) {
-        setWindowProperty(window, _windowBlurAreas, QVariant::fromValue(*(reinterpret_cast<const QVector<quint32>*>(&area))));
-
+        QVector<quint32> areas;
+        for (auto item : area)
+            areas << item.x << item.y << item.width << item.height << item.xRadius << item.yRaduis;
+        setWindowProperty(window, _windowBlurAreas, QVariant::fromValue(areas));
         return true;
     }
 
