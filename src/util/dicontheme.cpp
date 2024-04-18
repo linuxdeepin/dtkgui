@@ -186,10 +186,12 @@ QIcon DIconTheme::Cached::findQIcon(const QString &iconName, Options options, co
     }
 
     auto newIcon = new QIcon(DIconTheme::findQIcon(iconName, options));
-    data->cache.insert(cacheKey, newIcon);
 
-    if (newIcon->isNull())
+    if (newIcon->isNull()) {
         return fallback;
+    } else {
+        data->cache.insert(cacheKey, newIcon);
+    }
 
     return *newIcon;
 }
