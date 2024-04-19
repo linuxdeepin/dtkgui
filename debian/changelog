@@ -1,3 +1,9 @@
+dtkgui (5.6.27) unstable; urgency=medium
+
+  * fix: setWindowBlurAreaByWM only work once in qt6
+
+ -- Deepin Packages Builder <packages@deepin.org>  Fri, 19 Apr 2024 08:55:34 +0000
+
 dtkgui (5.6.26) unstable; urgency=medium
 
   * fix: wrong availableSizes for DIconProxyEngine
