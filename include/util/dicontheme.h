@@ -17,7 +17,8 @@ namespace DIconTheme
     enum Option {
         DontFallbackToQIconFromTheme = 1 << 0,
         IgnoreBuiltinIcons = 1 << 1,
-        IgnoreDciIcons = 1 << 2
+        IgnoreDciIcons = 1 << 2,
+        IgnoreIconCache = 1 << 3
     };
     Q_DECLARE_FLAGS(Options, Option)
 
