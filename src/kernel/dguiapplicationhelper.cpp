@@ -1336,6 +1336,8 @@ const DFontManager *DGuiApplicationHelper::fontManager() const
 {
     // 为对象初始化信号链接
     if (!_globalFM.exists()) {
+        // fontManager's base font is update from qGuiApp.
+        _globalFM->setBaseFont(qGuiApp->font());
         connect(this, &DGuiApplicationHelper::fontChanged, _globalFM, &DFontManager::setBaseFont);
     }
 
