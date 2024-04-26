@@ -25,9 +25,9 @@ static inline void initQuality() {
         quality4Scaled[i] = INVALIDE_QUALITY;
 }
 
-static inline void dciChecker(bool result) {
+static inline void dciChecker(bool result, std::function<const QString()> cb) {
     if (!result) {
-        qWarning() << "Failed on writing dci file";
+        qWarning() << "Failed on writing dci file" << cb();
         exit(-6);
     }
 }
@@ -37,7 +37,7 @@ static inline QByteArray webpImageData(const QImage &image, int quality) {
     QBuffer buffer(&data);
     bool ok = buffer.open(QIODevice::WriteOnly);
     Q_ASSERT(ok);
-    dciChecker(image.save(&buffer, "webp", quality));
+    dciChecker(image.save(&buffer, "webp", quality), []{return "failed to save webp image";});
     return data;
 }
 
@@ -54,11 +54,11 @@ static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QStr
         image.setScaledSize(QSize(size, size));
     }
 
-    dciChecker(dci.mkdir(targetDir + QString("/%1").arg(scale)));
+    dciChecker(dci.mkdir(targetDir + QString("/%1").arg(scale)), [&]{return dci.lastErrorString();});
     const QImage &img = image.read().scaledToWidth(size, Qt::SmoothTransformation);
     int quality =  quality4Scaled[scale - 1];
     const QByteArray &data = webpImageData(img, quality);
-    dciChecker(dci.writeFile(targetDir + QString("/%1/1.webp").arg(scale), data));
+    dciChecker(dci.writeFile(targetDir + QString("/%1/1.webp").arg(scale), data), [&]{return dci.lastErrorString();});
 
     return true;
 }
@@ -181,13 +181,13 @@ void doFixDarkTheme(const QFileInfo &file, const QDir &outputDir, const QMultiHa
             const QString darkDir(j.left(j.size() - 5) + "dark");
             Q_ASSERT(darkDir.endsWith(".dark"));
             if (!dciFile.exists(darkDir)) {
-                dciChecker(dciFile.mkdir(darkDir));
-                dciChecker(recursionLink(dciFile, j, darkDir));
+                dciChecker(dciFile.mkdir(darkDir), [&]{return dciFile.lastErrorString();});
+                dciChecker(recursionLink(dciFile, j, darkDir), [&]{return dciFile.lastErrorString();});
             }
         }
     }
 
-    dciChecker(dciFile.writeToFile(newFile));
+    dciChecker(dciFile.writeToFile(newFile), [&]{return dciFile.lastErrorString();});
 
     makeLink(file, outputDir, newFile, symlinksMap);
 }
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
-    a.setApplicationVersion("0.0.4");
+    a.setApplicationVersion("0.0.5");
 
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
@@ -345,8 +345,8 @@ int main(int argc, char *argv[])
             while (di.hasNext()) {
                 di.next();
                 QFileInfo file = di.fileInfo();
-                 if (!file.isSymLink())
-                     continue;
+                if (!file.isSymLink())
+                    continue;
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 13, 0)
         auto link = file.symLinkTarget();
@@ -383,29 +383,44 @@ int main(int argc, char *argv[])
                 continue;
             }
 
+            QString dirName = file.absoluteDir().dirName();
+            bool isNum = false;
+            dirName.toInt(&isNum);
+            dirName.prepend("/");
+
+            QScopedPointer<DDciFile> dciFile;
             const QString dciFilePath(outputDir.absoluteFilePath(file.completeBaseName()) + surfix + ".dci");
-            if (QFile::exists(dciFilePath)) {
-                qWarning() << "Skip exists dci file:" << dciFilePath;
-                continue;
+            if (QFileInfo::exists(dciFilePath)) {
+                dciFile.reset(new DDciFile(dciFilePath));
+                if (dciFile->isValid() && dciFile->exists(dirName)) {
+                     qWarning() << "Skip exists dci file:" << dciFilePath << dirName << dciFile->list(dirName);
+                     continue;
+                }
             }
-            DDciFile dciFile;
 
-            qInfo() << "Writing to dci file:" << dciFilePath;
+            qInfo() << "Writing to dci file:" << file.absoluteFilePath() << "==>" << dciFilePath;
 
-            dciChecker(dciFile.mkdir("/256"));
-            dciChecker(dciFile.mkdir("/256/normal.light"));
-            if (!writeImage(dciFile, file.filePath(), "/256/normal.light"))
+            if (dciFile.isNull() || !dciFile->isValid())
+                dciFile.reset(new DDciFile);
+
+            QString sizeDir = isNum ? dirName : "/256";  // "/256"
+            QString normalLight = sizeDir + "/normal.light";         //  "/256/normal.light"
+            QString normalDark = sizeDir + "/normal.dark";          //   "/256/normal.dark"
+
+            dciChecker(dciFile->mkdir(sizeDir), [&]{return dciFile->lastErrorString();});
+            dciChecker(dciFile->mkdir(normalLight), [&]{return dciFile->lastErrorString();});
+            if (!writeImage(*dciFile, file.filePath(), normalLight))
                 continue;
 
-            dciChecker(dciFile.mkdir("/256/normal.dark"));
+            dciChecker(dciFile->mkdir(normalDark), [&]{return dciFile->lastErrorString();});
             QFileInfo darkIcon(file.dir().absoluteFilePath("dark/" + file.fileName()));
             if (darkIcon.exists()) {
-                writeImage(dciFile, darkIcon.filePath(), "/256/normal.dark");
+                writeImage(*dciFile, darkIcon.filePath(), normalDark);
             } else {
-                dciChecker(recursionLink(dciFile, "/256/normal.light", "/256/normal.dark"));
+                dciChecker(recursionLink(*dciFile, normalLight, normalDark), [&]{return dciFile->lastErrorString();});
             }
 
-            dciChecker(dciFile.writeToFile(dciFilePath));
+            dciChecker(dciFile->writeToFile(dciFilePath), [&]{return dciFile->lastErrorString();});
 
             makeLink(file, outputDir, dciFilePath, symlinksMap);
         }
