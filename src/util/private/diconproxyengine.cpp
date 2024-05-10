@@ -261,12 +261,12 @@ void DIconProxyEngine::ensureEngine()
         m_iconEngine = createDBuiltinIconEngine(m_iconName);
     }
 #ifdef DTK_DISABLE_LIBXDG
-    if (!m_iconEngine && Q_UNLIKELY(!m_option.testFlag(DIconTheme::DontFallbackToQIconFromTheme))) {
-        // fallback to QPlatformTheme::createIconEngine ==> QIconLoaderEngine
+    if (!m_iconEngine) {
         QPlatformTheme * const platformTheme = QGuiApplicationPrivate::platformTheme();
-        bool hasUserTheme = QIconLoader::instance()->hasUserTheme();
-        if (platformTheme && !hasUserTheme) {
+        if (platformTheme) {
             m_iconEngine = platformTheme->QPlatformTheme::createIconEngine(m_iconName);
+        } else {
+            qWarning() << "PlatformTheme not found!";
         }
     }
 #else
@@ -275,7 +275,7 @@ void DIconProxyEngine::ensureEngine()
     }
 #endif
     if (!m_iconEngine && !nonCache[theme].contains(m_iconName)) {
-        qErrnoWarning("create icon [%s] engine failed.[theme:%s] nonCache[theme].size[%d]",
+        qWarning("create icon [%s] engine failed.[theme:%s] nonCache[theme].size[%d]",
                       m_iconName.toUtf8().data(),
                       theme.toUtf8().data(), nonCache[theme].size());
         nonCache[theme].insert(m_iconName);
