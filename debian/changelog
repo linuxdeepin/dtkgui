@@ -1,3 +1,10 @@
+dtkgui (5.6.29) unstable; urgency=medium
+
+  [ root ]
+  * UNRELEASED
+
+ -- Deepin Packages Builder <packages@deepin.org>  Mon, 13 May 2024 03:02:53 +0000
+
 dtkgui (5.6.28) unstable; urgency=medium
 
   * chore: insert to cache when icon is not null
