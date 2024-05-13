@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-set(DTK_VERSION "5.6.11" CACHE STRING "define project version")
+set(DTK_VERSION "5.6.29" CACHE STRING "define project version")
 project(DtkGui
   VERSION ${DTK_VERSION}
   DESCRIPTION "DTK Gui module"
