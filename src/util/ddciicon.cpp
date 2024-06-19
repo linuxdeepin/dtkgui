@@ -729,7 +729,8 @@ void DDciIconPrivate::paint(QPainter *painter, const QRectF &rect, Qt::Alignment
         if (rect.width() < targetRect.width())
             targetRect = rect;
 
-        painter->drawImage(targetRect, layer);
+        auto scaleImage = layer.scaled(targetRect.size().toSize(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        painter->drawImage(targetRect, scaleImage);
     }
 }
 
