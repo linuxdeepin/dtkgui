@@ -1,3 +1,9 @@
+dtkgui (5.6.31) unstable; urgency=medium
+
+  * fix: jagged edges on ddciicon(Issue: https://github.com/linuxdeepin/developer-center/issues/8691)
+
+ -- Deepin Packages Builder <packages@deepin.org>  Thu, 27 Jun 2024 09:11:34 +0000
+
 dtkgui (5.6.30) unstable; urgency=medium
 
   [ root ]
