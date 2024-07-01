@@ -43,7 +43,13 @@ static inline QByteArray webpImageData(const QImage &image, int quality) {
 
 static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QString &targetDir, int scale/* = 2*/)
 {
-    int size = scale * 256;
+    QString sizeDir = targetDir.mid(1, targetDir.indexOf("/", 1) - 1);
+    bool ok = false;
+    int baseSize = sizeDir.toInt(&ok);
+    if (!ok)
+        baseSize = 256;
+
+    int size = scale * baseSize;
     QImageReader image(imageFile);
     if (!image.canRead()) {
         qWarning() << "Ignore the null image file:" << imageFile;
@@ -224,7 +230,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication a(argc, argv);
     a.setApplicationName("dci-icon-theme");
-    a.setApplicationVersion("0.0.5");
+    a.setApplicationVersion("0.0.6");
 
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
