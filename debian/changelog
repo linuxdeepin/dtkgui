@@ -1,3 +1,10 @@
+dtkgui (5.6.32) unstable; urgency=medium
+
+  * Revert "fix: jagged edges on ddciicon"(Issue: https://github.com/linuxdeepin/developer-center/issues/9443)
+  * chore: dci-icon-theme tool tweak
+
+ -- Deepin Packages Builder <packages@deepin.org>  Mon, 08 Jul 2024 02:29:21 +0000
+
 dtkgui (5.6.31) unstable; urgency=medium
 
   * fix: jagged edges on ddciicon(Issue: https://github.com/linuxdeepin/developer-center/issues/8691)
