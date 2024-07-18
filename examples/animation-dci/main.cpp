@@ -16,9 +16,12 @@
 #include <QMenuBar>
 #include <QPushButton>
 #include <QHBoxLayout>
+#include <QFileDialog>
 
 #include <DDciIcon>
 #include <DDciIconPlayer>
+#include <QDropEvent>
+#include <QMimeData>
 
 DGUI_USE_NAMESPACE
 
@@ -46,6 +49,7 @@ public:
     IconWidget(const QString &iconName)
     {
         setCentralWidget(label = new QLabel(this));
+        label->setAcceptDrops(true);
         centralWidget()->setAttribute(Qt::WA_MouseTracking);
         centralWidget()->installEventFilter(this);
         statusBar()->addWidget(message = new QLabel());
@@ -66,12 +70,21 @@ public:
         connect(disabled, &QPushButton::clicked, this, [this] {
             player.setMode(DDciIcon::Disabled);
         });
+
+        auto open = new QPushButton("...");
+        connect(open, &QPushButton::clicked, this, [this] {
+            QString dciFile = QFileDialog::getOpenFileName(this, "select a dci icon file", "", "*.dci");
+            player.setIcon(DDciIcon(dciFile));
+            player.setMode(DDciIcon::Normal);
+        });
+
         QWidget *menuWidget = new QWidget(this);
         QHBoxLayout *layout = new QHBoxLayout(menuWidget);
         layout->addWidget(normal);
         layout->addWidget(hover);
         layout->addWidget(pressed);
         layout->addWidget(disabled);
+        layout->addWidget(open);
         setMenuWidget(menuWidget);
 
         icon = DDciIcon::fromTheme(iconName);
@@ -112,6 +125,20 @@ private:
             player.setMode(DDciIcon::Pressed);
         } else if (event->type() == QEvent::MouseButtonRelease) {
             player.setMode(label->hasMouseTracking() ? DDciIcon::Hover : DDciIcon::Normal);
+        } else if (event->type() == QEvent::DragEnter) {
+            event->accept();
+        } else if (event->type() == QEvent::Drop) {
+            auto de = static_cast<QDropEvent *>(event);
+            if (de->mimeData()->hasFormat("text/uri-list")) {
+                QString uris = de->mimeData()->data("text/uri-list");
+                QUrl url(uris.split("\r\n").value(0));
+
+                DDciIcon icon(url.path());
+                if (!icon.isNull()) {
+                    player.setIcon(icon);
+                    player.setMode(DDciIcon::Normal);
+                }
+            }
         } else {
             return false;
         }
