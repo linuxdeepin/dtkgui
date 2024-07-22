@@ -692,7 +692,7 @@ bool DDciIconPlayerPrivate::ensureHoverModeLastImage()
     }
     if (!image.atEnd())
         return false;
-    Q_ASSERT(!player);
+    Q_ASSERT(player);
     hoverModeLastImage = image.toImage(player->palette());
     return !hoverModeLastImage.isNull();
 }
