@@ -77,5 +77,6 @@
         <file alias="sp_alert.dci">dci/sp_alert.dci</file>
         <file alias="sp_waiting.dci">dci/sp_waiting.dci</file>
         <file alias="sp_warning.dci">dci/sp_warning.dci</file>
+        <file alias="close.dci">dci/close.dci</file>
     </qresource>
 </RCC>
