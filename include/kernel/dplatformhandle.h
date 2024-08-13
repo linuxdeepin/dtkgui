@@ -88,7 +88,8 @@ public:
       EffectNormal = 0x01,        // 标准缩放动效
       EffectCursor = 0x02,        // 鼠标位置展开动效
       EffectTop    = 0x04,        // 从上往下展开
-      EffectBottom = 0x08         // 从下往上展开
+      EffectBottom = 0x08,        // 从下往上展开
+      EffectOut    = 0x10         // 由外向内
     };
 
     Q_ENUM(EffectScene)
