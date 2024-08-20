@@ -1,3 +1,14 @@
+dtkgui (5.6.34) unstable; urgency=medium
+
+  * feat: add close.dci
+    Thanks to Yixue Wang
+  * chore: animation-dci supports custom icon
+  * fix: wrong judgment conditions
+  * feat: support to change window effects(Bug: 244347)
+  * feat: add window startup effect Type(Issue: https://github.com/linuxdeepin/developer-center/issues/10322)
+
+ -- Deepin Packages Builder <packages@deepin.org>  Tue, 20 Aug 2024 05:03:52 +0000
+
 dtkgui (5.6.32) unstable; urgency=medium
 
   * Revert "fix: jagged edges on ddciicon"(Issue: https://github.com/linuxdeepin/developer-center/issues/9443)
