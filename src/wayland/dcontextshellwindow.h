@@ -16,8 +16,8 @@ class DContextShellWindow : public QObject
 public:
     ~DContextShellWindow() override;
 
-    int noTitlebar();
-    void setNoTitlebar(const int value);
+    bool noTitlebar();
+    void setNoTitlebar(bool value);
 
     static DContextShellWindow *get(QWindow *window);
     static DContextShellWindow *qmlAttachedProperties(QObject *object);
