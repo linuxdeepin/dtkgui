@@ -642,10 +642,13 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
     auto isDWaylandPlatform = [] {
         return qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
     };
-    if (!(isDXcbPlatform() || isDWaylandPlatform()))
+    auto isTreeLand = [] {
+        return qEnvironmentVariable("DDE_CURRENT_COMPOSITOR") == "TreeLand";
+    };
+    if (!(isDXcbPlatform() || isDWaylandPlatform() || isTreeLand()))
         return false;
 
-    if (window && isDWaylandPlatform()) {
+    if (window && isTreeLand()) {
         DContextShellWindow *contextWindow = DContextShellWindow::get(window);
         if (contextWindow->noTitlebar() == enable)
             return true;

@@ -11,12 +11,13 @@
 
 #include <QtWaylandClient/private/qwaylandshellsurface_p.h>
 
+class QWaylandPersonalizationShellIntegration;
 class QWaylandWindowContextSurface : public QtWaylandClient::QWaylandShellSurface,
-                                     public QtWayland::treeland_window_context_v1
+                                     public QtWayland::personalization_window_context_v1
 {
     Q_OBJECT
 public:
-    QWaylandWindowContextSurface(QtWayland::treeland_personalization_manager_v1 *shell,
+    QWaylandWindowContextSurface(QWaylandPersonalizationShellIntegration *shell,
                                  QtWaylandClient::QWaylandWindow *window);
     ~QWaylandWindowContextSurface() override;
 

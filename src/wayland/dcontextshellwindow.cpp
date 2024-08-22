@@ -16,20 +16,21 @@ public:
     }
 
     QWindow *parentWindow = nullptr;
-    int noTitlebar = -1;
+    bool noTitlebar = false;
 };
 
-int DContextShellWindow::noTitlebar()
+bool DContextShellWindow::noTitlebar()
 {
     return d->noTitlebar;
 }
 
-void DContextShellWindow::setNoTitlebar(const int value)
+void DContextShellWindow::setNoTitlebar(bool value)
 {
     if (value == d->noTitlebar) {
         return;
     }
     d->noTitlebar = value;
+    Q_EMIT noTitlebarChanged();
 }
 
 static QMap<QWindow *, DContextShellWindow *> s_map;
@@ -57,7 +58,11 @@ DContextShellWindow::DContextShellWindow(QWindow *window)
                 return;
             }
         }
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        shellIntegration->createShellSurface(waylandWindow);
+#else
         waylandWindow->setShellIntegration(shellIntegration);
+#endif
     } else {
         qWarning() << "not a wayland window, will not create zwlr_layer_surface";
     }
