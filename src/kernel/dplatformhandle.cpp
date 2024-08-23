@@ -7,6 +7,7 @@
 #include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
 #include "wayland/dcontextshellwindow.h"
+#include <private/qwaylandwindow_p.h>
 
 #include <QWindow>
 #include <QGuiApplication>
@@ -608,6 +609,7 @@ static void initWindowRadius(QWindow *window)
 }
 
 class Q_DECL_HIDDEN CreatorWindowEventFile : public QObject {
+    bool m_windowMoving = false;
 public:
     CreatorWindowEventFile(QObject *par= nullptr): QObject(par){}
 
@@ -618,6 +620,32 @@ public:
             if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {  // 若收到此信号， 则 WinID 已被创建
                 initWindowRadius(qobject_cast<QWindow *>(watched));
                 deleteLater();
+            }
+        }
+
+        if (auto *w = qobject_cast<QWindow *>(watched)) {
+            if(DContextShellWindow *window = DContextShellWindow::get(qobject_cast<QWindow *>(watched))) {
+                bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
+
+                if (event->type() == QEvent::MouseButtonRelease) {
+                    m_windowMoving = false;
+                }
+
+                // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
+                // which makes app hang in windowMoving state. when a press happens, there's no sense of
+                // keeping the moving state, we can just reset ti back to normal.
+                if (event->type() == QEvent::MouseButtonPress) {
+                    m_windowMoving = false;
+                }
+
+                if (is_mouse_move && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
+                    if (!m_windowMoving && window->noTitlebar()) {
+                        m_windowMoving = true;
+
+                        event->accept();
+                        static_cast<QtWaylandClient::QWaylandWindow *>(w->handle())->startSystemMove();
+                    }
+                }
             }
         }
 
@@ -653,6 +681,7 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
         if (contextWindow->noTitlebar() == enable)
             return true;
         contextWindow->setNoTitlebar(enable);
+        window->installEventFilter(new CreatorWindowEventFile(window));
         return true;
     }
 
