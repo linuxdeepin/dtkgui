@@ -12,7 +12,7 @@ license=('LGPL3')
 depends=('dtkcore-git' 'dtkcommon-git' 'qt5-svg' 'libqtxdg' 'freeimage' 'librsvg' 'qt5-wayland')
 # INFO: you can disable freeimage not to support RAW images
 # Then set DTK_DISABLE_EX_IMAGE_FORMAT=OFF
-makedepends=('git' 'qt5-tools' 'gtest' 'gmock' 'ninja' 'cmake' 'doxygen')
+makedepends=('git' 'qt5-tools' 'gtest' 'gmock' 'ninja' 'cmake' 'doxygen' 'extra-cmake-modules')
 conflicts=('dtkgui')
 provides=('dtkgui')
 groups=('deepin-git')
