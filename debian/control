@@ -2,10 +2,10 @@ Source: dtkgui
 Section: libdevel
 Priority: optional
 Maintainer: Deepin Packages Builder <packages@deepin.com>
-Build-Depends: debhelper-compat (= 12), pkg-config, 
+Build-Depends: debhelper-compat (= 12), pkg-config,
  qtbase5-private-dev, qtbase5-dev-tools, doxygen, graphviz, qttools5-dev,
  libdtkcore-dev, librsvg2-dev, libfreeimage-dev, libraw-dev, libgtest-dev, libgmock-dev,
- libqt5xdg-dev, libqt5xdgiconloader-dev, cmake, qt5-image-formats-plugins
+ libqt5xdg-dev, libqt5xdgiconloader-dev, cmake, qt5-image-formats-plugins, libqt5waylandclient5-dev
 Standards-Version: 3.9.8
 
 Package: libdtkgui5
