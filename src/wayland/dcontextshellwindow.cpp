@@ -8,6 +8,7 @@
 
 #include <QtWaylandClient/private/qwaylandwindow_p.h>
 
+DGUI_BEGIN_NAMESPACE
 class DContextShellWindowPrivate
 {
 public:
@@ -86,3 +87,4 @@ DContextShellWindow *DContextShellWindow::qmlAttachedProperties(QObject *object)
     qWarning() << "not a qwindow unable to create DContextShellWindow";
     return nullptr;
 }
+DGUI_END_NAMESPACE

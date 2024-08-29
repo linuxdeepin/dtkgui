@@ -6,6 +6,7 @@
 #include "qwaylandwindowcontextshellsurface_p.h"
 #include "wayland-treeland-personalization-manager-v1-client-protocol.h"
 
+DGUI_BEGIN_NAMESPACE
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 QWaylandPersonalizationShellIntegration::QWaylandPersonalizationShellIntegration()
     : QWaylandShellIntegration()
@@ -62,3 +63,4 @@ void QWaylandPersonalizationShellIntegration::registryPluginManager(void *data,
     }
 }
 #endif
+DGUI_END_NAMESPACE
