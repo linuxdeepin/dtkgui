@@ -4,10 +4,11 @@
 
 #pragma once
 
+#include <dtkgui_global.h>
 #include <private/qwaylandshellintegration_p.h>
-
 #include <qwayland-treeland-personalization-manager-v1.h>
 
+DGUI_BEGIN_NAMESPACE
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 class QWaylandWindowContextSurface;
 class QWaylandPersonalizationShellIntegration : public QtWaylandClient::QWaylandShellIntegration
@@ -42,3 +43,4 @@ private:
     QScopedPointer<QtWayland::treeland_personalization_manager_v1> m_manager;
 #endif
 };
+DGUI_END_NAMESPACE

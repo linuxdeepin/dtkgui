@@ -6,11 +6,13 @@
 
 #include "dcontextshellwindow.h"
 
+#include <dtkgui_global.h>
 #include <private/qwaylandwindow_p.h>
 #include <qwayland-treeland-personalization-manager-v1.h>
 
 #include <QtWaylandClient/private/qwaylandshellsurface_p.h>
 
+DGUI_BEGIN_NAMESPACE
 class QWaylandPersonalizationShellIntegration;
 class QWaylandWindowContextSurface : public QtWaylandClient::QWaylandShellSurface,
                                      public QtWayland::personalization_window_context_v1
@@ -24,3 +26,4 @@ public:
 private:
     DContextShellWindow *m_dcontextShellWindow;
 };
+DGUI_END_NAMESPACE

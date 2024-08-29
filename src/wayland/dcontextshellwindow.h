@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <dtkgui_global.h>
 #include <QWindow>
 
+DGUI_BEGIN_NAMESPACE
 class DContextShellWindowPrivate;
 
 class DContextShellWindow : public QObject
@@ -29,3 +31,4 @@ private:
     DContextShellWindow(QWindow *window);
     QScopedPointer<DContextShellWindowPrivate> d;
 };
+DGUI_END_NAMESPACE

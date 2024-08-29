@@ -11,6 +11,7 @@
 
 Q_LOGGING_CATEGORY(layershellsurface, "dde.shell.layershell.surface")
 
+DGUI_BEGIN_NAMESPACE
 QWaylandWindowContextSurface::QWaylandWindowContextSurface(
     QWaylandPersonalizationShellIntegration *shell, QtWaylandClient::QWaylandWindow *window)
     : QtWaylandClient::QWaylandShellSurface(window)
@@ -39,3 +40,4 @@ QWaylandWindowContextSurface::~QWaylandWindowContextSurface()
 {
     destroy();
 }
+DGUI_END_NAMESPACE
