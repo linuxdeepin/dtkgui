@@ -97,6 +97,11 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
     reinterpret_cast<void(*)(QWindow *, const char *, const QVariant &)>(setWindowProperty)(window, name, value);
 }
 
+static bool isTreeLand()
+{
+    return qEnvironmentVariable("DDE_CURRENT_COMPOSITOR") == "TreeLand";
+};
+
 /*!
   \class Dtk::Gui::DPlatformHandle
   \inmodule dtkgui
@@ -623,7 +628,7 @@ public:
             }
         }
 
-        if (auto *w = qobject_cast<QWindow *>(watched)) {
+        if (auto *w = qobject_cast<QWindow *>(watched); w && isTreeLand()) {
             if(DContextShellWindow *window = DContextShellWindow::get(qobject_cast<QWindow *>(watched))) {
                 bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
 
@@ -673,9 +678,6 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
 {
     auto isDWaylandPlatform = [] {
         return qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
-    };
-    auto isTreeLand = [] {
-        return qEnvironmentVariable("DDE_CURRENT_COMPOSITOR") == "TreeLand";
     };
     if (!(isDXcbPlatform() || isDWaylandPlatform() || isTreeLand()))
         return false;
