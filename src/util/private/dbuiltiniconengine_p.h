@@ -33,6 +33,7 @@ public:
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     QString iconName() override;
+    QList<QSize> availableSizes(QIcon::Mode mode = QIcon::Normal, QIcon::State state = QIcon::Off) override;
 #else
     QString iconName() const override;
 #endif
