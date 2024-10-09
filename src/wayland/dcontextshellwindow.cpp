@@ -4,6 +4,7 @@
 
 #include "dcontextshellwindow.h"
 
+
 #include "qwaylandpersonalizationshellintegration_p.h"
 
 #include <QtWaylandClient/private/qwaylandwindow_p.h>
