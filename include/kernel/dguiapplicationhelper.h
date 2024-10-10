@@ -59,7 +59,8 @@ public:
         IsXWindowPlatform        = ReadOnlyLimit << 2,
         IsTableEnvironment       = ReadOnlyLimit << 3,
         IsDeepinEnvironment      = ReadOnlyLimit << 4,
-        IsSpecialEffectsEnvironment = ReadOnlyLimit << 5
+        IsSpecialEffectsEnvironment = ReadOnlyLimit << 5,
+        IsTreelandPlatform       = ReadOnlyLimit << 6
     };
     Q_ENUM(Attribute)
     Q_DECLARE_FLAGS(Attributes, Attribute)

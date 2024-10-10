@@ -87,6 +87,7 @@ TEST_F(TDPlatformTheme, testSetFunction)
     ASSERT_EQ_BY_VALUE(setDndDragThreshold, dndDragThreshold, TEST_DATA);
     ASSERT_EQ_BY_NAME(setThemeName, themeName, "Theme");
     ASSERT_EQ_BY_NAME(setIconThemeName, iconThemeName, "Icon");
+    ASSERT_EQ_BY_NAME(setCursorThemeName, cursorThemeName, "Cursor");
     ASSERT_EQ_BY_NAME(setSoundThemeName, soundThemeName, "Sound");
     ASSERT_EQ_BY_NAME(setFontName, fontName, "Font");
     ASSERT_EQ_BY_NAME(setMonoFontName, monoFontName, "MonoFont");

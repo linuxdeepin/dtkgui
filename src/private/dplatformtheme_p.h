@@ -5,6 +5,7 @@
 #ifndef DPLATFORMTHEME_P_H
 #define DPLATFORMTHEME_P_H
 
+#include "plugins/dplatforminterface.h"
 #include "dplatformtheme.h"
 #include "dnativesettings_p.h"
 
@@ -34,6 +35,8 @@ public:
     DPalette *palette = nullptr;
     // 减少调色板changed信号的通知频率
     QTimer *notifyPaletteChangeTimer = nullptr;
+
+    DPlatformInterface *platformInterface = nullptr;
 };
 
 DGUI_END_NAMESPACE

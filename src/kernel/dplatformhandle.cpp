@@ -6,7 +6,7 @@
 #include "dplatformhandle.h"
 #include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
-#include "wayland/dcontextshellwindow.h"
+#include "plugins/dplatforminterface.h"
 #include <private/qwaylandwindow_p.h>
 
 #include <QWindow>
@@ -96,11 +96,6 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
 
     reinterpret_cast<void(*)(QWindow *, const char *, const QVariant &)>(setWindowProperty)(window, name, value);
 }
-
-static bool isTreeLand()
-{
-    return qEnvironmentVariable("DDE_CURRENT_COMPOSITOR") == "TreeLand";
-};
 
 /*!
   \class Dtk::Gui::DPlatformHandle
@@ -591,77 +586,6 @@ bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
     return window->property(_useDxcb).toBool();
 }
 
-static void initWindowRadius(QWindow *window)
-{
-    if (window->property(_windowRadius).isValid())
-        return;
-
-    auto theme = DGuiApplicationHelper::instance()->systemTheme();
-    int radius = theme->windowRadius(18); //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
-
-    setWindowProperty(window, _windowRadius, radius);
-    // Qt::UniqueConnection will report a warning
-    // to `unique connections require a pointer to member function of a QObject subclass`.
-    const char *uniqueueConnectionFlag("_d_uniqueueConnectionFlag");
-    bool connected = window->property(uniqueueConnectionFlag).toBool();
-    if (!connected) {
-        window->setProperty(uniqueueConnectionFlag, true);
-        window->connect(theme, &DPlatformTheme::windowRadiusChanged, window, [window] (int radius) {
-            if (!resolved(window, PropRole::WindowRadius))
-                setWindowProperty(window, _windowRadius, radius);
-        });
-    }
-}
-
-class Q_DECL_HIDDEN CreatorWindowEventFile : public QObject {
-    bool m_windowMoving = false;
-public:
-    CreatorWindowEventFile(QObject *par= nullptr): QObject(par){}
-
-public:
-    bool eventFilter(QObject *watched, QEvent *event) override {
-        if (event->type() == QEvent::PlatformSurface) {
-            QPlatformSurfaceEvent *se = static_cast<QPlatformSurfaceEvent*>(event);
-            if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {  // 若收到此信号， 则 WinID 已被创建
-                initWindowRadius(qobject_cast<QWindow *>(watched));
-                deleteLater();
-            }
-        }
-
-        if (auto *w = qobject_cast<QWindow *>(watched); w && isTreeLand()) {
-            if(DContextShellWindow *window = DContextShellWindow::get(qobject_cast<QWindow *>(watched))) {
-                bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
-
-                if (event->type() == QEvent::MouseButtonRelease) {
-                    m_windowMoving = false;
-                }
-
-                // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
-                // which makes app hang in windowMoving state. when a press happens, there's no sense of
-                // keeping the moving state, we can just reset ti back to normal.
-                if (event->type() == QEvent::MouseButtonPress) {
-                    m_windowMoving = false;
-                }
-
-                // FIXME: We need to check whether the event is accepted.
-                //        Only when the upper control does not accept the event,
-                //        the window should be moved through the window.
-                //        But every event here has been accepted. I don't know what happened.
-                if (is_mouse_move && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
-                    if (!m_windowMoving && window->noTitlebar()) {
-                        m_windowMoving = true;
-
-                        event->accept();
-                        static_cast<QtWaylandClient::QWaylandWindow *>(w->handle())->startSystemMove();
-                    }
-                }
-            }
-        }
-
-        return QObject::eventFilter(watched, event);
-    }
-};
-
 /*!
   \brief DPlatformHandle::setEnabledNoTitlebarForWindow.
 
@@ -679,41 +603,10 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
     auto isDWaylandPlatform = [] {
         return qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
     };
-    if (!(isDXcbPlatform() || isDWaylandPlatform() || isTreeLand()))
+    if (!(isDXcbPlatform() || isDWaylandPlatform() || DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)))
         return false;
 
-    if (window && isTreeLand()) {
-        DContextShellWindow *contextWindow = DContextShellWindow::get(window);
-        if (contextWindow->noTitlebar() == enable)
-            return true;
-        contextWindow->setNoTitlebar(enable);
-        window->installEventFilter(new CreatorWindowEventFile(window));
-        return true;
-    }
-
-    if (isEnabledNoTitlebar(window) == enable)
-        return true;
-
-    QFunctionPointer enable_no_titlear = nullptr;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    enable_no_titlear = qApp->platformFunction(_setEnableNoTitlebar);
-#endif
-
-    if (enable_no_titlear) {
-        bool ok = (*reinterpret_cast<bool(*)(QWindow*, bool)>(enable_no_titlear))(window, enable);
-        if (ok && enable) {
-            if (window->handle()) {
-                initWindowRadius(window);
-            } else {
-                window->installEventFilter(new CreatorWindowEventFile(window));
-            }
-        }
-
-        return ok;
-    }
-
-    return false;
+    return DPlatformInterface::self(window)->setEnabledNoTitlebar(window, enable);
 }
 
 /*!
@@ -724,17 +617,8 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
  */
 bool DPlatformHandle::isEnabledNoTitlebar(const QWindow *window)
 {
-    QFunctionPointer is_enable_no_titlebar = nullptr;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    is_enable_no_titlebar = qApp->platformFunction(_isEnableNoTitlebar);
-#endif
-
-    if (is_enable_no_titlebar) {
-        return (*reinterpret_cast<bool(*)(const QWindow*)>(is_enable_no_titlebar))(window);
-    }
-
-    return false;
+    QWindow *w = const_cast<QWindow *>(window);
+    return DPlatformInterface::self(w)->isEnabledNoTitlebar(w);
 }
 
 inline DPlatformHandle::WMBlurArea operator *(const DPlatformHandle::WMBlurArea &area, qreal scale)
