@@ -25,7 +25,7 @@ public:
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     bool initialize(QtWaylandClient::QWaylandDisplay *display) override;
-    struct personalization_window_context_v1 *get_window_context(struct ::wl_surface *surface);
+    struct treeland_personalization_window_context_v1 *get_window_context(struct ::wl_surface *surface);
 
     struct treeland_personalization_manager_v1 *object() { return m_manager->object(); }
 #endif

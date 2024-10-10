@@ -9,21 +9,21 @@
 #include <QtWaylandClient/private/qwaylandsurface_p.h>
 #include <QtWaylandClient/private/qwaylandwindow_p.h>
 
-Q_LOGGING_CATEGORY(layershellsurface, "dde.shell.layershell.surface")
+// Q_LOGGING_CATEGORY(layershellsurface, "dde.shell.layershell.surface")
 
 DGUI_BEGIN_NAMESPACE
 QWaylandWindowContextSurface::QWaylandWindowContextSurface(
     QWaylandPersonalizationShellIntegration *shell, QtWaylandClient::QWaylandWindow *window)
     : QtWaylandClient::QWaylandShellSurface(window)
-    , QtWayland::personalization_window_context_v1()
+    , QtWayland::treeland_personalization_window_context_v1()
     , m_dcontextShellWindow(DContextShellWindow::get(window->window()))
 {
     init(shell->get_window_context(window->waylandSurface()->object()));
     auto onNoTitlebarChanged = [this, window] {
         if (m_dcontextShellWindow->noTitlebar()) {
-            set_no_titlebar(PERSONALIZATION_WINDOW_CONTEXT_V1_ENABLE_MODE_ENABLE);
+            set_no_titlebar(TREELAND_PERSONALIZATION_WINDOW_CONTEXT_V1_ENABLE_MODE_ENABLE );
         } else {
-            set_no_titlebar(PERSONALIZATION_WINDOW_CONTEXT_V1_ENABLE_MODE_DISABLE);
+            set_no_titlebar(TREELAND_PERSONALIZATION_WINDOW_CONTEXT_V1_ENABLE_MODE_DISABLE );
         }
         window->waylandSurface()->commit();
     };

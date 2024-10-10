@@ -15,7 +15,7 @@
 DGUI_BEGIN_NAMESPACE
 class QWaylandPersonalizationShellIntegration;
 class QWaylandWindowContextSurface : public QtWaylandClient::QWaylandShellSurface,
-                                     public QtWayland::personalization_window_context_v1
+                                     public QtWayland::treeland_personalization_window_context_v1
 {
     Q_OBJECT
 public:

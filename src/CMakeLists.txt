@@ -4,6 +4,8 @@ else()
     find_package(Qt5 REQUIRED COMPONENTS WaylandClient XkbCommonSupport)
 endif()
 
+find_package(TreeLandProtocols REQUIRED)
+
 add_library(${LIB_NAME} SHARED)
 
 include(dbus/dbus.cmake)
@@ -14,7 +16,7 @@ include(util/util.cmake)
 
 if("${QT_VERSION_MAJOR}" STREQUAL "6")
     qt6_generate_wayland_protocol_client_sources(${LIB_NAME} FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/wayland/protocol/treeland-personalization-manager-v1.xml
+        ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
     )
 else()
 # ECM setup
@@ -23,7 +25,7 @@ else()
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
     find_package(QtWaylandScanner)
     ecm_add_qtwayland_client_protocol(${LIB_NAME}
-        PROTOCOL ${CMAKE_CURRENT_SOURCE_DIR}/wayland/protocol/treeland-personalization-manager-v1.xml
+        PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
         BASENAME treeland-personalization-manager-v1
     )
     target_sources(${LIB_NAME} PRIVATE
