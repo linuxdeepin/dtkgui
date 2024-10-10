@@ -35,7 +35,7 @@ bool QWaylandPersonalizationShellIntegration::initialize(QtWaylandClient::QWayla
     return m_manager != nullptr;
 }
 
-struct personalization_window_context_v1 *
+struct treeland_personalization_window_context_v1 *
 QWaylandPersonalizationShellIntegration::get_window_context(struct ::wl_surface *surface)
 {
     return m_manager->get_window_context(surface);

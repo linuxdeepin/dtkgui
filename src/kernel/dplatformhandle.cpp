@@ -6,7 +6,7 @@
 #include "dplatformhandle.h"
 #include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
-#include "wayland/dcontextshellwindow.h"
+#include "wayland/personalizationwaylandclientextension.h"
 #include <private/qwaylandwindow_p.h>
 
 #include <QWindow>
@@ -629,31 +629,29 @@ public:
         }
 
         if (auto *w = qobject_cast<QWindow *>(watched); w && isTreeLand()) {
-            if(DContextShellWindow *window = DContextShellWindow::get(qobject_cast<QWindow *>(watched))) {
-                bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
+            bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
 
-                if (event->type() == QEvent::MouseButtonRelease) {
-                    m_windowMoving = false;
-                }
+            if (event->type() == QEvent::MouseButtonRelease) {
+                m_windowMoving = false;
+            }
 
-                // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
-                // which makes app hang in windowMoving state. when a press happens, there's no sense of
-                // keeping the moving state, we can just reset ti back to normal.
-                if (event->type() == QEvent::MouseButtonPress) {
-                    m_windowMoving = false;
-                }
+            // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
+            // which makes app hang in windowMoving state. when a press happens, there's no sense of
+            // keeping the moving state, we can just reset ti back to normal.
+            if (event->type() == QEvent::MouseButtonPress) {
+                m_windowMoving = false;
+            }
 
-                // FIXME: We need to check whether the event is accepted.
-                //        Only when the upper control does not accept the event,
-                //        the window should be moved through the window.
-                //        But every event here has been accepted. I don't know what happened.
-                if (is_mouse_move && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
-                    if (!m_windowMoving && window->noTitlebar()) {
-                        m_windowMoving = true;
+            // FIXME: We need to check whether the event is accepted.
+            //        Only when the upper control does not accept the event,
+            //        the window should be moved through the window.
+            //        But every event here has been accepted. I don't know what happened.
+            if (is_mouse_move && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
+                if (!m_windowMoving && PersonalizationManager::instance()->noTitlebar()) {
+                 m_windowMoving = true;
 
-                        event->accept();
-                        static_cast<QtWaylandClient::QWaylandWindow *>(w->handle())->startSystemMove();
-                    }
+                 event->accept();
+                 static_cast<QtWaylandClient::QWaylandWindow *>(w->handle())->startSystemMove();
                 }
             }
         }
@@ -683,10 +681,7 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
         return false;
 
     if (window && isTreeLand()) {
-        DContextShellWindow *contextWindow = DContextShellWindow::get(window);
-        if (contextWindow->noTitlebar() == enable)
-            return true;
-        contextWindow->setNoTitlebar(enable);
+        PersonalizationManager::instance()->setNoTitlebar(enable, window);
         window->installEventFilter(new CreatorWindowEventFile(window));
         return true;
     }
