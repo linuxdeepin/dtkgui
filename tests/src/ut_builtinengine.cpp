@@ -60,7 +60,11 @@ TEST_F(ut_DBuiltinIconEngine, loadIcon)
     ASSERT_EQ(entry->dir.path, builtinActionPath);
     ASSERT_EQ(entry->dir.size, ICONSIZE);
     ASSERT_EQ(entry->dir.type, QIconDirInfo::Scalable);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    ASSERT_FALSE(entry->pixmap(QSize(ICONSIZE, ICONSIZE), QIcon::Normal, QIcon::On, 1.0).isNull());
+#else
     ASSERT_FALSE(entry->pixmap(QSize(ICONSIZE, ICONSIZE), QIcon::Normal, QIcon::On).isNull());
+#endif
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
     for (auto item : themeInfo.entries) {
