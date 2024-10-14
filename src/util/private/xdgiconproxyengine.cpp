@@ -189,7 +189,11 @@ QPixmap XdgIconProxyEngine::pixmapByEntry(QIconLoaderEngineEntry *entry, const Q
     if (!XdgIconFollowColorScheme()) {
         DEEPIN_XDG_THEME::colorScheme.setLocalData(DEEPIN_XDG_THEME::PALETTE_MAP());
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        return entry->pixmap(size, mode, state, 1.0);
+#else
         return entry->pixmap(size, mode, state);
+#endif
     }
 
     QPixmap pixmap;
@@ -206,7 +210,11 @@ QPixmap XdgIconProxyEngine::pixmapByEntry(QIconLoaderEngineEntry *entry, const Q
 
         pixmap = followColorPixmap(static_cast<ScalableEntry *>(entry), size, mode, state);
     } else {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        pixmap = entry->pixmap(size, mode, state, 1.0);
+#else
         pixmap = entry->pixmap(size, mode, state);
+#endif
     }
 
     free(type_name);
@@ -302,7 +310,7 @@ void XdgIconProxyEngine::virtual_hook(int id, void *data)
         QIconEngine::ScaledPixmapArgument &arg = *reinterpret_cast<QIconEngine::ScaledPixmapArgument *>(data);
         // QIcon::pixmap() multiplies size by the device pixel ratio.
         const int integerScale = qCeil(arg.scale);
-        
+
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QIconLoaderEngineEntry *entry = engine->entryForSize(arg.size / integerScale, integerScale);
 #else
