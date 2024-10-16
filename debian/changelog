@@ -1,3 +1,20 @@
+dtkgui (5.7.1) unstable; urgency=medium
+
+  * Revert "feat: add close.dci"(Issue: https://github.com/linuxdeepin/developer-center/issues/10482)
+  * feat: Add notitlebar function on wayland platform
+  * feat: support qt5 and qt6
+  * fix: cannot move window on wayland
+  * fix: remove treeland personalization protocols useless function
+  * feat: add fixme note
+  * chore: update license info
+  * chore: add build dep
+  * chore: update license
+  * chore: add extra cmake modules
+  * chore: add dtkgui namespace
+  * fix: app crashed in x11
+
+ -- Deepin Packages Builder <packages@deepin.org>  Wed, 16 Oct 2024 03:30:46 +0000
+
 dtkgui (5.6.34) unstable; urgency=medium
 
   * feat: add close.dci
