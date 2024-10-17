@@ -11,30 +11,7 @@ include(filedrag/dfiledrag.cmake)
 include(kernel/kernel.cmake)
 include(private/private.cmake)
 include(util/util.cmake)
-
-if("${QT_VERSION_MAJOR}" STREQUAL "6")
-    qt6_generate_wayland_protocol_client_sources(${LIB_NAME} FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/wayland/protocol/treeland-personalization-manager-v1.xml
-    )
-else()
-# ECM setup
-    include(FeatureSummary)
-    find_package(ECM REQUIRED NO_MODULE)
-    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
-    find_package(QtWaylandScanner)
-    ecm_add_qtwayland_client_protocol(${LIB_NAME}
-        PROTOCOL ${CMAKE_CURRENT_SOURCE_DIR}/wayland/protocol/treeland-personalization-manager-v1.xml
-        BASENAME treeland-personalization-manager-v1
-    )
-    target_sources(${LIB_NAME} PRIVATE
-        ${CLIENT_LIB_SRCS}
-    )
-endif()
-
-include(wayland/wayland.cmake)
-target_sources(${LIB_NAME} PRIVATE
-    ${wayland_SRC}
-)
+include(plugins/plugins.cmake)
 
 target_sources(${LIB_NAME} PRIVATE
     ${dbus_SRC}

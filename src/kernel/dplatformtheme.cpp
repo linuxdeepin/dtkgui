@@ -3,7 +3,17 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "dplatformtheme.h"
+#include "plugins/dplatforminterface.h"
 #include "private/dplatformtheme_p.h"
+#include "dguiapplicationhelper.h"
+
+#ifndef DTK_DISABLE_XCB
+#include "plugins/platform/xcb/dxcbplatforminterface.h"
+#endif
+
+#ifndef DTK_DISABLE_TREELAND
+#include "plugins/platform/treeland/dtreelandplatforminterface.h"
+#endif
 
 #include <QVariant>
 #include <QTimer>
@@ -19,7 +29,6 @@ DGUI_BEGIN_NAMESPACE
 DPlatformThemePrivate::DPlatformThemePrivate(Dtk::Gui::DPlatformTheme *qq)
     : DNativeSettingsPrivate(qq, QByteArrayLiteral("/deepin/palette"))
 {
-
 }
 
 void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, const QVariant &value)
@@ -141,6 +150,8 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
                       window, parent)
 {
     D_D(DPlatformTheme);
+
+    d->platformInterface = DPlatformInterface::self(this);
 
     d->theme = new DNativeSettings(window, QByteArray(), this);
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
@@ -387,7 +398,8 @@ int DPlatformTheme::dndDragThreshold() const
 
 int DPlatformTheme::windowRadius() const
 {
-    return windowRadius(-1);
+    Q_D(const DPlatformTheme);
+    return d->platformInterface->windowRadius();
 }
 
 int DPlatformTheme::windowRadius(int defaultValue) const
@@ -414,9 +426,9 @@ QByteArray DPlatformTheme::themeName() const
 
 QByteArray DPlatformTheme::iconThemeName() const
 {
-    FETCH_PROPERTY("Net/IconThemeName", iconThemeName)
+    Q_D(const DPlatformTheme);
 
-    return value.toByteArray();
+    return d->platformInterface->iconThemeName();
 }
 
 QByteArray DPlatformTheme::soundThemeName() const
@@ -426,18 +438,22 @@ QByteArray DPlatformTheme::soundThemeName() const
     return value.toByteArray();
 }
 
+QByteArray DPlatformTheme::cursorThemeName() const
+{
+    Q_D(const DPlatformTheme);
+    return d->platformInterface->cursorThemeName();
+}
+
 QByteArray DPlatformTheme::fontName() const
 {
-    FETCH_PROPERTY("Qt/FontName", fontName)
-
-    return value.toByteArray();
+    Q_D(const DPlatformTheme);
+    return d->platformInterface->fontName();
 }
 
 QByteArray DPlatformTheme::monoFontName() const
 {
-    FETCH_PROPERTY("Qt/MonoFontName", monoFontName)
-
-    return value.toByteArray();
+    Q_D(const DPlatformTheme);
+    return d->platformInterface->monoFontName();
 }
 
 qreal DPlatformTheme::fontPointSize() const
@@ -699,7 +715,7 @@ void DPlatformTheme::setIconThemeName(const QByteArray &iconThemeName)
 {
     D_D(DPlatformTheme);
 
-    d->theme->setSetting("Net/IconThemeName", iconThemeName);
+    d->platformInterface->setIconThemeName(iconThemeName);
 }
 
 void DPlatformTheme::setSoundThemeName(const QByteArray &soundThemeName)
@@ -709,18 +725,25 @@ void DPlatformTheme::setSoundThemeName(const QByteArray &soundThemeName)
     d->theme->setSetting("Net/SoundThemeName", soundThemeName);
 }
 
+void DPlatformTheme::setCursorThemeName(const QByteArray &cursorThemeName)
+{
+    D_D(DPlatformTheme);
+
+    d->platformInterface->setCursorThemeName(cursorThemeName);
+}
+
 void DPlatformTheme::setFontName(const QByteArray &fontName)
 {
     D_D(DPlatformTheme);
 
-    d->theme->setSetting("Qt/FontName", fontName);
+    d->platformInterface->setFontName(fontName);
 }
 
 void DPlatformTheme::setMonoFontName(const QByteArray &monoFontName)
 {
     D_D(DPlatformTheme);
 
-    d->theme->setSetting("Qt/MonoFontName", monoFontName);
+    d->platformInterface->setMonoFontName(monoFontName);
 }
 
 void DPlatformTheme::setFontPointSize(qreal fontPointSize)
@@ -896,8 +919,7 @@ void DPlatformTheme::setDotsPerInch(const QString &screenName, int dpi)
 void DPlatformTheme::setWindowRadius(int windowRadius)
 {
     D_D(DPlatformTheme);
-
-    d->theme->setSetting("DTK/WindowRadius", windowRadius);
+    d->platformInterface->setWindowRadius(windowRadius);
 }
 
 DGUI_END_NAMESPACE
