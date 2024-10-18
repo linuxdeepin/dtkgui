@@ -6,8 +6,11 @@
 #include "dplatformhandle.h"
 #include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
-#include "wayland/dcontextshellwindow.h"
+#ifndef DTK_DISABLE_TREELAND
+#include "wayland/personalizationwaylandclientextension.h"
+#endif
 #include <private/qwaylandwindow_p.h>
+#include <QtWaylandClient/private/qwaylandwindow_p.h>
 
 #include <QWindow>
 #include <QGuiApplication>
@@ -96,11 +99,6 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
 
     reinterpret_cast<void(*)(QWindow *, const char *, const QVariant &)>(setWindowProperty)(window, name, value);
 }
-
-static bool isTreeLand()
-{
-    return qEnvironmentVariable("DDE_CURRENT_COMPOSITOR") == "TreeLand";
-};
 
 /*!
   \class Dtk::Gui::DPlatformHandle
@@ -613,51 +611,60 @@ static void initWindowRadius(QWindow *window)
     }
 }
 
-class Q_DECL_HIDDEN CreatorWindowEventFile : public QObject {
-    bool m_windowMoving = false;
+class Q_DECL_HIDDEN CreatorWindowEventFilter : public QObject {
 public:
-    CreatorWindowEventFile(QObject *par= nullptr): QObject(par){}
+    CreatorWindowEventFilter(QObject *par= nullptr): QObject(par){}
 
 public:
     bool eventFilter(QObject *watched, QEvent *event) override {
         if (event->type() == QEvent::PlatformSurface) {
             QPlatformSurfaceEvent *se = static_cast<QPlatformSurfaceEvent*>(event);
             if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {  // 若收到此信号， 则 WinID 已被创建
-                initWindowRadius(qobject_cast<QWindow *>(watched));
-                deleteLater();
+                auto window = qobject_cast<QWindow *>(watched);
+                initWindowRadius(window);
+
+            #ifndef DTK_DISABLE_TREELAND
+                if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)) {
+                    PersonalizationManager::instance()->setEnableTitleBar(window, false);
+                }
+            #endif
+            deleteLater();
             }
         }
+        return QObject::eventFilter(watched, event);
+    }
+};
 
-        if (auto *w = qobject_cast<QWindow *>(watched); w && isTreeLand()) {
-            if(DContextShellWindow *window = DContextShellWindow::get(qobject_cast<QWindow *>(watched))) {
-                bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
+// only for TreeLand
+class Q_DECL_HIDDEN MoveWindowEventFilter : public QObject {
+  bool m_windowMoving = false;
+public:
+    MoveWindowEventFilter(QObject *par= nullptr): QObject(par){}
+public:
+    bool eventFilter(QObject *watched, QEvent *event) override {
+        if (auto *w = qobject_cast<QWindow *>(watched); w) {
+            bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
 
-                if (event->type() == QEvent::MouseButtonRelease) {
-                    m_windowMoving = false;
-                }
+            if (event->type() == QEvent::MouseButtonRelease) {
+                m_windowMoving = false;
+            }
+            if (event->type() == QEvent::MouseButtonPress) {
+                m_windowMoving = false;
+            }
 
-                // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
-                // which makes app hang in windowMoving state. when a press happens, there's no sense of
-                // keeping the moving state, we can just reset ti back to normal.
-                if (event->type() == QEvent::MouseButtonPress) {
-                    m_windowMoving = false;
-                }
+            // FIXME: We need to check whether the event is accepted.
+            //        Only when the upper control does not accept the event,
+            //        the window should be moved through the window.
+            //        But every event here has been accepted. I don't know what happened.
+            if (is_mouse_move && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
+                if (!m_windowMoving) {
+                    m_windowMoving = true;
 
-                // FIXME: We need to check whether the event is accepted.
-                //        Only when the upper control does not accept the event,
-                //        the window should be moved through the window.
-                //        But every event here has been accepted. I don't know what happened.
-                if (is_mouse_move && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
-                    if (!m_windowMoving && window->noTitlebar()) {
-                        m_windowMoving = true;
-
-                        event->accept();
-                        static_cast<QtWaylandClient::QWaylandWindow *>(w->handle())->startSystemMove();
-                    }
+                    event->accept();
+                    static_cast<QPlatformWindow *>(w->handle())->startSystemMove();
                 }
             }
         }
-
         return QObject::eventFilter(watched, event);
     }
 };
@@ -679,17 +686,16 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
     auto isDWaylandPlatform = [] {
         return qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
     };
-    if (!(isDXcbPlatform() || isDWaylandPlatform() || isTreeLand()))
+    if (!(isDXcbPlatform() || isDWaylandPlatform() || DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)))
         return false;
 
-    if (window && isTreeLand()) {
-        DContextShellWindow *contextWindow = DContextShellWindow::get(window);
-        if (contextWindow->noTitlebar() == enable)
-            return true;
-        contextWindow->setNoTitlebar(enable);
-        window->installEventFilter(new CreatorWindowEventFile(window));
+#ifndef DTK_DISABLE_TREELAND
+    if (window && DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)) {
+        window->installEventFilter(new CreatorWindowEventFilter(window));
+        window->installEventFilter(new MoveWindowEventFilter(window));
         return true;
     }
+#endif
 
     if (isEnabledNoTitlebar(window) == enable)
         return true;
@@ -706,7 +712,7 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
             if (window->handle()) {
                 initWindowRadius(window);
             } else {
-                window->installEventFilter(new CreatorWindowEventFile(window));
+                window->installEventFilter(new CreatorWindowEventFilter(window));
             }
         }
 
