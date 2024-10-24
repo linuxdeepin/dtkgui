@@ -16,6 +16,14 @@ include(kernel/kernel.cmake)
 include(private/private.cmake)
 include(util/util.cmake)
 
+try_compile(DEEPIN_WAYLAND_TEST_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}/wayland_test
+    ${CMAKE_CURRENT_LIST_DIR}/wayland/config.tests/wayland_test wayland_test CMAKE_FLAGS -DQT_VERSION_MAJOR=${QT_VERSION_MAJOR})
+
+if(NOT DEEPIN_WAYLAND_TEST_COMPILE_RESULT)
+    message("wayland_test failed, disable treeland support")
+    set(DTK_DISABLE_TREELAND ON)
+endif()
+
 if(NOT DTK_DISABLE_TREELAND AND TreeLandProtocols_FOUND)
     message("Support Treeland!")
     if("${QT_VERSION_MAJOR}" STREQUAL "6")
@@ -28,7 +36,7 @@ if(NOT DTK_DISABLE_TREELAND AND TreeLandProtocols_FOUND)
         find_package(ECM REQUIRED NO_MODULE)
         set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
         find_package(QtWaylandScanner)
-        ecm_add_qtwayland_client_protocol(${LIB_NAME}
+        ecm_add_qtwayland_client_protocol(CLIENT_LIB_SRCS
             PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
             BASENAME treeland-personalization-manager-v1
         )
