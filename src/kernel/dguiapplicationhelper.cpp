@@ -115,6 +115,8 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
 #define APP_THEME_TYPE "themeType"
+#define DTK_ENABLE_ANIMATIONS "enableDtkAnimations"
+#define DTK_ANIMATIONS_ENV "D_DTK_DISABLE_ANIMATIONS"
 Q_GLOBAL_STATIC_WITH_ARGS(DTK_CORE_NAMESPACE::DConfig, _d_dconfig, ("org.deepin.dtk.preference"));
 
 /*!
@@ -1743,6 +1745,14 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
         static bool isTreeland =  qgetenv("DDE_CURRENT_COMPOSITOR") == "TreeLand"
             && qApp->platformName() == QByteArrayLiteral("wayland");
         return isTreeland;
+    }
+    case HasAnimations: {
+        static bool isDisable = qEnvironmentVariableIsSet(DTK_ANIMATIONS_ENV);
+        if (isDisable)
+            return false;
+
+        static bool shouldEnable = _d_dconfig->value(DTK_ENABLE_ANIMATIONS, false).toBool();
+        return shouldEnable;
     }
     default:
         return DGuiApplicationHelperPrivate::attributes.testFlag(attribute);

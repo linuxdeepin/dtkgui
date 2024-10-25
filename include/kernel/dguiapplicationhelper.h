@@ -60,7 +60,8 @@ public:
         IsTableEnvironment       = ReadOnlyLimit << 3,
         IsDeepinEnvironment      = ReadOnlyLimit << 4,
         IsSpecialEffectsEnvironment = ReadOnlyLimit << 5,
-        IsTreelandPlatform       = ReadOnlyLimit << 6
+        IsTreelandPlatform       = ReadOnlyLimit << 6,
+        HasAnimations            = ReadOnlyLimit << 7,
     };
     Q_ENUM(Attribute)
     Q_DECLARE_FLAGS(Attributes, Attribute)
