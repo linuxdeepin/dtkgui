@@ -50,7 +50,11 @@ public:
         }
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    QPixmap pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state, qreal scale) override {
+#else
     QPixmap pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state) override {
+#endif
         Q_UNUSED(state)
 
         QPixmap pm;
@@ -111,7 +115,11 @@ public:
         return dir.filePath("normal." + suffix);
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    QPixmap pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state, qreal scale) override {
+#else
     QPixmap pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state) override {
+#endif
         if (iconFileMap.isEmpty()) {
             const QString &suffix = QFileInfo(filename).suffix();
             QDir dir(filename);
@@ -128,7 +136,11 @@ public:
 
         reader.setFileName(iconFileMap.value(mode << 8 | state));
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        return ImageEntry::pixmap(size, mode, state, scale);
+#else
         return ImageEntry::pixmap(size, mode, state);
+#endif
     }
 
     QMap<qint16, QString> iconFileMap;
@@ -192,7 +204,11 @@ QPixmap DBuiltinIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
 
     QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, size);
     if (entry)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        return entry->pixmap(size, mode, state, 1.0);
+#else
         return entry->pixmap(size, mode, state);
+#endif
 
     return QPixmap();
 }
@@ -222,7 +238,11 @@ void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
         QIcon(bgFileName).paint(painter, rect, Qt::AlignCenter, mode, state);
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    QPixmap pm = entry->pixmap(pixmapSize, mode, state, 1.0);
+#else
     QPixmap pm = entry->pixmap(pixmapSize, mode, state);
+#endif
     ImageEntry::Type type = static_cast<ImageEntry *>(entry)->type;
     if (type == ImageEntry::TextType || (type == ImageEntry::ActionType && mode != QIcon::Normal)) {
         QPainter pa(&pm);
@@ -386,7 +406,11 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
         // QIcon::pixmap() multiplies size by the device pixel ratio.
         const int integerScale = qCeil(arg.scale);
         QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, arg.size / integerScale, integerScale);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state, 1.0) : QPixmap();
+#else
         arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state) : QPixmap();
+#endif
     }
     break;
     default:
