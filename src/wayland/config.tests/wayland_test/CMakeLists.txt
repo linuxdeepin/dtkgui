@@ -19,8 +19,8 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
 
-find_package(TreeLandProtocols)
-set(TreeLandProtocols_FOUND ${TreeLandProtocols_FOUND})
+find_package(TreelandProtocols)
+set(TreelandProtocols_FOUND ${TreelandProtocols_FOUND})
 
 add_executable(${PROJECT_NAME} main.cpp)
 

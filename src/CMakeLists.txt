@@ -5,8 +5,8 @@ else()
 endif()
 
 option(DTK_DISABLE_TREELAND "Disable TreeLand Protocols" OFF)
-find_package(TreeLandProtocols)
-set(TreeLandProtocols_FOUND ${TreeLandProtocols_FOUND})
+find_package(TreelandProtocols)
+set(TreelandProtocols_FOUND ${TreelandProtocols_FOUND})
 
 add_library(${LIB_NAME} SHARED)
 
@@ -24,7 +24,7 @@ if(NOT DEEPIN_WAYLAND_TEST_COMPILE_RESULT)
     set(DTK_DISABLE_TREELAND ON)
 endif()
 
-if(NOT DTK_DISABLE_TREELAND AND TreeLandProtocols_FOUND)
+if(NOT DTK_DISABLE_TREELAND AND TreelandProtocols_FOUND)
     message("Support Treeland!")
     if("${QT_VERSION_MAJOR}" STREQUAL "6")
         qt6_generate_wayland_protocol_client_sources(${LIB_NAME} FILES
