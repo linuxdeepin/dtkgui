@@ -35,6 +35,12 @@ PersonalizationManager::PersonalizationManager()
     }
 }
 
+PersonalizationManager::~PersonalizationManager()
+{
+    qDeleteAll(m_windowContexts);
+    m_windowContexts.clear();
+}
+
 PersonalizationManager *PersonalizationManager::instance()
 {
     return personalizationManager;
@@ -45,6 +51,9 @@ PersonalizationWindowContext *PersonalizationManager::getWindowContext(QWindow *
     if (!window) {
         qWarning() << "window is nullptr!!!";
         return nullptr;
+    }
+    if (m_windowContexts.contains(window)) {
+        return m_windowContexts.value(window);
     }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     auto waylandWindow = window->nativeInterface<QNativeInterface::Private::QWaylandWindow>();
@@ -64,11 +73,10 @@ PersonalizationWindowContext *PersonalizationManager::getWindowContext(QWindow *
         qWarning() << "waylandSurface is nullptr!!!";
         return nullptr;
     }
-    auto context = get_window_context(surface);
-    if (m_windowContext.isNull()) {
-        m_windowContext.reset(new PersonalizationWindowContext(context));
-    }
-    return m_windowContext.data();
+    auto context =  new PersonalizationWindowContext(get_window_context(surface));
+    connect(window, &QWindow::destroy, context, &PersonalizationWindowContext::deleteLater);
+    m_windowContexts.insert(window, context);
+    return context;
 }
 
 void PersonalizationManager::addListener()
@@ -104,7 +112,7 @@ void PersonalizationManager::handleListenerGlobal(void *data, wl_registry *regis
 
 void PersonalizationManager::setEnableTitleBar(QWindow *window, bool enable)
 {
-    auto windowContext = this->getWindowContext(window);
+    auto windowContext = getWindowContext(window);
     if (!windowContext) {
         qWarning() << "windowContext is nullptr!";
         return;
@@ -120,12 +128,7 @@ PersonalizationWindowContext::PersonalizationWindowContext(struct ::treeland_per
 
 void PersonalizationWindowContext::setEnableTitleBar(bool enable)
 {
-    if (m_noTitlebar == enable) {
-        return;
-    }
-
-    m_noTitlebar = enable;
-    set_titlebar(m_noTitlebar ? enable_mode::enable_mode_enable : enable_mode::enable_mode_disable);
+    set_titlebar(enable ? enable_mode::enable_mode_enable : enable_mode::enable_mode_disable);
 }
 
 DGUI_END_NAMESPACE
