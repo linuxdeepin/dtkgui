@@ -21,6 +21,7 @@ class PersonalizationManager: public QWaylandClientExtensionTemplate<Personaliza
     Q_OBJECT
 public:
     static PersonalizationManager *instance();
+    ~PersonalizationManager();
 
     void setEnableTitleBar(QWindow *window, bool enable);
 
@@ -35,7 +36,7 @@ private:
     static void handleListenerGlobal(void *data, wl_registry *registry, uint32_t id, const QString &interface, uint32_t version);
 
 private:
-    QScopedPointer<PersonalizationWindowContext> m_windowContext;
+    QHash<QWindow *, PersonalizationWindowContext *> m_windowContexts;
     QtWaylandClient::QWaylandDisplay *m_waylandDisplay = nullptr;
 };
 
@@ -46,10 +47,6 @@ class PersonalizationWindowContext : public QWaylandClientExtensionTemplate<Pers
 public:
     explicit PersonalizationWindowContext(struct ::treeland_personalization_window_context_v1 *context);
 
-    bool enableTitleBar() const;
     void setEnableTitleBar(bool enable);
-
-private:
-    bool m_noTitlebar;
 };
 DGUI_END_NAMESPACE
