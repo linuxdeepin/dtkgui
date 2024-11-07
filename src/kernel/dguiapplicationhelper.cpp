@@ -971,15 +971,7 @@ void DGuiApplicationHelper::generatePaletteColor(DPalette &base, QPalette::Color
         base.setBrush(QPalette::Disabled, role, window);
         base.setBrush(QPalette::Inactive, role, window);
         return;
-    } else if (role == QPalette::Highlight && toColorType(base) == DarkType) {
-        // 暗色模式下的高亮色亮度要降低10%，避免太突兀
-        QColor highlight = base.highlight().color();
-
-        if (highlight.isValid()) {
-            base.setColor(QPalette::Highlight, adjustColor(highlight, 0, 0, -20, 0, 0, 0, 0));
-        }
     }
-
     generatePaletteColor_helper(base, role, type);
 }
 
