@@ -1638,7 +1638,7 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
                 DPathBuf path(dir);
                 QString translatePath = (path / translateFilename).toString();
                 if (QFile::exists(translatePath + ".qm")) {
-                    qDebug() << "load translate" << translatePath;
+                    qCDebug(dgAppHelper) << "load translate" << translatePath;
                     auto translator = new QTranslator(qApp);
                     translator->load(translatePath);
                     qApp->installTranslator(translator);
