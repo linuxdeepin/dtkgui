@@ -624,7 +624,7 @@ public:
                 initWindowRadius(window);
 
             #ifndef DTK_DISABLE_TREELAND
-                if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)) {
+                if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
                     PersonalizationManager::instance()->setEnableTitleBar(window, false);
                 }
             #endif
@@ -686,11 +686,11 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
     auto isDWaylandPlatform = [] {
         return qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
     };
-    if (!(isDXcbPlatform() || isDWaylandPlatform() || DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)))
+    if (!(isDXcbPlatform() || isDWaylandPlatform() || DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)))
         return false;
 
 #ifndef DTK_DISABLE_TREELAND
-    if (window && DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)) {
+    if (window && DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
         window->installEventFilter(new CreatorWindowEventFilter(window));
         window->installEventFilter(new MoveWindowEventFilter(window));
         return true;
