@@ -1741,9 +1741,8 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
     case IsSpecialEffectsEnvironment: {
         return qgetenv("DTK_DISABLED_SPECIAL_EFFECTS").toInt() != 1;
     }
-    case IsTreelandPlatform: {
-        static bool isTreeland =  qgetenv("DDE_CURRENT_COMPOSITOR") == "TreeLand"
-            && qApp->platformName() == QByteArrayLiteral("wayland");
+    case IsWaylandPlatform: {
+        static bool isTreeland = qApp->platformName() == QByteArrayLiteral("wayland");
         return isTreeland;
     }
     case HasAnimations: {
