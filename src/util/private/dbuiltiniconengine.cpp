@@ -291,6 +291,26 @@ QString DBuiltinIconEngine::iconName()
     return m_iconName;
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+QList<QSize> DBuiltinIconEngine::availableSizes(QIcon::Mode mode, QIcon::State state)
+{
+    ensureLoaded();
+
+    QList<QSize> sizes;
+    const int N = m_info.entries.size();
+    sizes.reserve(N);
+
+    // Gets all sizes from the DirectoryInfo entries
+    for (int i = 0; i < N; ++i) {
+        const auto& entry = m_info.entries.at(i);
+        int size = entry->dir.size;
+        sizes.append(QSize(size, size));
+    }
+
+    return sizes;
+}
+#endif
+
 QThemeIconInfo DBuiltinIconEngine::loadIcon(const QString &iconName, uint key)
 {
     QThemeIconInfo info;
