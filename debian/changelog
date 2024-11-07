@@ -1,3 +1,11 @@
+dtkgui (5.7.2) unstable; urgency=medium
+
+  * chore: Correct the name of TreelandProtocols package in cmake
+  * fix: Under treeland, the dialog has not disabled titlebar
+  * fix: Print "load translate" debug log to channels(Bug: 284539)
+
+ -- Deepin Packages Builder <packages@deepin.org>  Thu, 07 Nov 2024 08:47:57 +0000
+
 dtkgui (5.7.1) unstable; urgency=medium
 
   * Revert "feat: add close.dci"(Issue: https://github.com/linuxdeepin/developer-center/issues/10482)
