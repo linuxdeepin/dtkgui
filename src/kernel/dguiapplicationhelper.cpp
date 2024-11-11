@@ -24,6 +24,7 @@
 #include <QDirIterator>
 #include <QDesktopServices>
 #include <QLibraryInfo>
+#include <QTimer>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
@@ -345,9 +346,18 @@ void DGuiApplicationHelperPrivate::_q_initApplicationTheme(bool notifyChange)
     // 监听与程序主题相关的改变
     QObject::connect(appTheme, &DPlatformTheme::themeNameChanged, app, onAppThemeChanged);
     QObject::connect(appTheme, &DPlatformTheme::paletteChanged, app, onAppThemeChanged);
-    QObject::connect(appTheme, &DPlatformTheme::activeColorChanged, app, [this] {
+    QTimer *timer = new QTimer(app);
+    timer->setInterval(100);
+    timer->setSingleShot(true);
+    QObject::connect(timer, &QTimer::timeout, timer, [this] {
         if (!appPalette)
             notifyAppThemeChanged();
+    });
+    QObject::connect(appTheme, &DPlatformTheme::activeColorChanged, app, [timer]{
+            timer->start();
+    });
+    QObject::connect(appTheme, &DPlatformTheme::darkActiveColorChanged, app, [timer] {
+            timer->start();
     });
 
     // appTheme在此之前可能由systemTheme所代替被使用，此时在创建appTheme
@@ -750,7 +760,7 @@ static QColor dark_qpalette[QPalette::NColorRoles] {
     QColor("#282828"),                  //Base
     QColor("#252525"),                  //Window
     QColor(0, 0, 0, 0.05 * 255),        //Shadow
-    QColor("#0081ff"),                  //Highlight
+    QColor("#024CCA"),                  //Highlight
     QColor("#F1F6FF"),                  //HighlightedText
     QColor("#0082fa"),                  //Link
     QColor("#ad4579"),                  //LinkVisited
@@ -1024,6 +1034,20 @@ void DGuiApplicationHelper::generatePalette(DPalette &base, ColorType type)
     }
 }
 
+static inline QColor getActiveColor(const DPlatformTheme *theme, DGuiApplicationHelper::ColorType type)
+{
+    QColor activeColor;
+    if (type == DGuiApplicationHelper::DarkType) {
+        activeColor = theme->darkActiveColor();
+        if (!activeColor.isValid()) {
+            activeColor = theme->activeColor();
+        }
+    } else {
+        activeColor = theme->activeColor();
+    }
+
+    return activeColor;
+}
 /*!
   \brief 获取调色板数据.
 
@@ -1049,7 +1073,7 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
 
     bool ok = false;
     base_palette = theme->fetchPalette(standardPalette(type), &ok);
-    const QColor &active_color = theme->activeColor();
+    const QColor &active_color = getActiveColor(theme, type);
 
     if (active_color.isValid()) {
         base_palette.setColor(QPalette::Normal, QPalette::Highlight, active_color);
@@ -1220,7 +1244,7 @@ DPalette DGuiApplicationHelper::applicationPalette(ColorType paletteType) const
         // 覆盖DPalette中的的QPalette数据
         pa.QPalette::operator =(qGuiApp->palette());
     } else {
-        const QColor &active_color = theme->activeColor();
+        const QColor &active_color = getActiveColor(theme, type);
 
         if (active_color.isValid()) {
             // 应用Active Color
