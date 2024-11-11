@@ -461,6 +461,13 @@ QColor DPlatformTheme::activeColor() const
     return qvariant_cast<QColor>(value);
 }
 
+QColor DPlatformTheme::darkActiveColor() const
+{
+    FETCH_PROPERTY("Qt/DarkActiveColor", darkActiveColor)
+
+    return qvariant_cast<QColor>(value);
+}
+
 bool DPlatformTheme::isValidPalette() const
 {
     return !allKeys().isEmpty();
@@ -742,6 +749,13 @@ void DPlatformTheme::setActiveColor(const QColor activeColor)
     D_D(DPlatformTheme);
 
     d->theme->setSetting("Qt/ActiveColor", activeColor);
+}
+
+void DPlatformTheme::setDarkActiveColor(const QColor &activeColor)
+{
+    D_D(DPlatformTheme);
+
+    d->theme->setSetting("Qt/DarkActiveColor", activeColor);
 }
 
 #define SET_COLOR(Role) setSetting(QByteArrayLiteral(#Role), Role)
