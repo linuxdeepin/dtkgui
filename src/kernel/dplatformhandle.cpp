@@ -624,7 +624,7 @@ public:
                 initWindowRadius(window);
 
             #ifndef DTK_DISABLE_TREELAND
-                if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+                if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform) && PersonalizationManager::instance()->isSupported()) {
                     PersonalizationManager::instance()->setEnableTitleBar(window, false);
                 }
             #endif

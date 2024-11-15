@@ -24,6 +24,7 @@ public:
     ~PersonalizationManager();
 
     void setEnableTitleBar(QWindow *window, bool enable);
+    bool isSupported() const;
 
 protected:
     explicit PersonalizationManager();
@@ -38,6 +39,7 @@ private:
 private:
     QHash<QWindow *, PersonalizationWindowContext *> m_windowContexts;
     QtWaylandClient::QWaylandDisplay *m_waylandDisplay = nullptr;
+    bool m_isSupported;
 };
 
 class PersonalizationWindowContext : public QWaylandClientExtensionTemplate<PersonalizationWindowContext>,

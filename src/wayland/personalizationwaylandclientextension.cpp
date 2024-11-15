@@ -18,20 +18,23 @@ class PersonalizationManager_: public PersonalizationManager {};
 Q_GLOBAL_STATIC(PersonalizationManager_, personalizationManager)
 
 PersonalizationManager::PersonalizationManager()
-    : QWaylandClientExtensionTemplate<PersonalizationManager>(1)
+    : QWaylandClientExtensionTemplate<PersonalizationManager>(treeland_personalization_manager_v1_interface.version)
+    , m_isSupported(false)
 {
-    if (QGuiApplication::platformName() == QLatin1String("wayland")) {
-        QtWaylandClient::QWaylandIntegration *waylandIntegration = static_cast<QtWaylandClient::QWaylandIntegration *>(QGuiApplicationPrivate::platformIntegration());
-        if (!waylandIntegration) {
-            qWarning() << "waylandIntegration is nullptr!!!";
-            return;
-        }
-        m_waylandDisplay = waylandIntegration->display();
-        if (!m_waylandDisplay) {
-            qWarning() << "waylandDisplay is nullptr!!!";
-            return;
-        }
-        addListener();
+    QtWaylandClient::QWaylandIntegration *waylandIntegration = static_cast<QtWaylandClient::QWaylandIntegration *>(QGuiApplicationPrivate::platformIntegration());
+    if (!waylandIntegration) {
+        qWarning() << "waylandIntegration is nullptr!!!";
+        return;
+    }
+    m_waylandDisplay = waylandIntegration->display();
+    if (!m_waylandDisplay) {
+        qWarning() << "waylandDisplay is nullptr!!!";
+        return;
+    }
+    addListener();
+    m_isSupported = m_waylandDisplay->hasRegistryGlobal(QString::fromUtf8(treeland_personalization_manager_v1_interface.name));
+    if (!m_isSupported) {
+        qWarning() << "PersonalizationManager is not support";
     }
 }
 
@@ -46,8 +49,16 @@ PersonalizationManager *PersonalizationManager::instance()
     return personalizationManager;
 }
 
+bool PersonalizationManager::isSupported() const
+{
+    return m_isSupported;
+}
+
 PersonalizationWindowContext *PersonalizationManager::getWindowContext(QWindow *window)
 {
+    if (!m_isSupported) {
+        return nullptr;
+    }
     if (!window) {
         qWarning() << "window is nullptr!!!";
         return nullptr;
@@ -73,8 +84,16 @@ PersonalizationWindowContext *PersonalizationManager::getWindowContext(QWindow *
         qWarning() << "waylandSurface is nullptr!!!";
         return nullptr;
     }
+
+    // FIXME: Before calling get_window_context, it was not determined whether PersonalizationManager was isActive
     auto context =  new PersonalizationWindowContext(get_window_context(surface));
-    connect(window, &QWindow::destroy, context, &PersonalizationWindowContext::deleteLater);
+    connect(window, &QWindow::visibleChanged, context, [this, context, window](bool visible){
+        if (!visible) {
+            context->deleteLater();
+            m_windowContexts.remove(window);
+        }
+    });
+
     m_windowContexts.insert(window, context);
     return context;
 }
@@ -121,7 +140,7 @@ void PersonalizationManager::setEnableTitleBar(QWindow *window, bool enable)
 }
 
 PersonalizationWindowContext::PersonalizationWindowContext(struct ::treeland_personalization_window_context_v1 *context)
-    : QWaylandClientExtensionTemplate<PersonalizationWindowContext>(1)
+    : QWaylandClientExtensionTemplate<PersonalizationWindowContext>(treeland_personalization_window_context_v1_interface.version)
     , QtWayland::treeland_personalization_window_context_v1(context)
 {
 }
