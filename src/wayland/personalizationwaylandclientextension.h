@@ -24,6 +24,7 @@ public:
     ~PersonalizationManager();
 
     void setEnableTitleBar(QWindow *window, bool enable);
+    void setEnableBlurWindow(QWindow *window, bool enable);
     bool isSupported() const;
 
 protected:
@@ -33,6 +34,7 @@ private:
     void addListener();
     void removeListener();
     PersonalizationWindowContext *getWindowContext(QWindow *window);
+    QMap<QWindow*, bool> m_pendingEnableBlurWindows;
 
     static void handleListenerGlobal(void *data, wl_registry *registry, uint32_t id, const QString &interface, uint32_t version);
 
