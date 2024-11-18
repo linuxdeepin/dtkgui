@@ -1281,6 +1281,12 @@ void DPlatformHandle::setEnableSystemMove(bool enableSystemMove)
 
 void DPlatformHandle::setEnableBlurWindow(bool enableBlurWindow)
 {
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        PersonalizationManager::instance()->setEnableBlurWindow(m_window, enableBlurWindow);
+        return;
+    }
+#endif
     setWindowProperty(m_window, _enableBlurWindow, enableBlurWindow);
 }
 

@@ -36,6 +36,13 @@ PersonalizationManager::PersonalizationManager()
     if (!m_isSupported) {
         qWarning() << "PersonalizationManager is not support";
     }
+
+    connect(this, &PersonalizationManager::activeChanged, this, [this] () {
+        for (auto window: m_pendingEnableBlurWindows.keys()) {
+            setEnableBlurWindow(window, m_pendingEnableBlurWindows[window]);
+        }
+        m_pendingEnableBlurWindows.clear();
+    });
 }
 
 PersonalizationManager::~PersonalizationManager()
@@ -137,6 +144,23 @@ void PersonalizationManager::setEnableTitleBar(QWindow *window, bool enable)
         return;
     }
     windowContext->setEnableTitleBar(enable);
+}
+
+void PersonalizationManager::setEnableBlurWindow(QWindow *window, bool enable)
+{
+    if (!isActive()) {
+        m_pendingEnableBlurWindows[window] = enable;
+        connect(window, &QWindow::destroyed, this, [=] {
+            m_pendingEnableBlurWindows.remove(window);
+        });
+        return;
+    }
+    auto windowContext = getWindowContext(window);
+    if (!windowContext) {
+        qWarning() << "windowContext is nullptr!";
+        return;
+    }
+    windowContext->set_blend_mode(enable ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
 }
 
 PersonalizationWindowContext::PersonalizationWindowContext(struct ::treeland_personalization_window_context_v1 *context)
