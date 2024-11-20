@@ -1,3 +1,9 @@
+dtkgui (5.7.3) unstable; urgency=medium
+
+  * fix: No judgment on the validity of the protocol(Bug: 286859)
+
+ -- Deepin Packages Builder <packages@deepin.org>  Wed, 20 Nov 2024 02:19:06 +0000
+
 dtkgui (5.7.2) unstable; urgency=medium
 
   * chore: Correct the name of TreelandProtocols package in cmake
