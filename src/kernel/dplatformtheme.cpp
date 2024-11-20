@@ -5,14 +5,30 @@
 #include "dplatformtheme.h"
 #include "private/dplatformtheme_p.h"
 
+#ifndef DTK_DISABLE_XCB
+#include "plugins/platform/xcb/dxcbplatforminterface.h"
+#endif
+#ifndef DTK_DISABLE_TREELAND
+#include "plugins/platform/treeland/dtreelandplatforminterface.h"
+#endif
+#include "private/dplatforminterface_p.h"
+
 #include <QVariant>
 #include <QTimer>
 #include <QMetaProperty>
 #include <QDebug>
+#include <DGuiApplicationHelper>
 
 #include <functional>
 
 DGUI_BEGIN_NAMESPACE
+
+static DPlatformInterfaceFactory::HelperCreator OutsideInterfaceCreator = nullptr;
+
+void DPlatformInterfaceFactory::registerInterface(HelperCreator creator)
+{
+    OutsideInterfaceCreator = creator;
+}
 
 // "/deepin/palette" 为调色板属性的存储位置
 // 在x11平台下，将使用_DEEPIN_PALETTE作为存储调色板数据的窗口属性
@@ -20,76 +36,6 @@ DPlatformThemePrivate::DPlatformThemePrivate(Dtk::Gui::DPlatformTheme *qq)
     : DNativeSettingsPrivate(qq, QByteArrayLiteral("/deepin/palette"))
 {
 
-}
-
-void DPlatformThemePrivate::_q_onThemePropertyChanged(const QByteArray &name, const QVariant &value)
-{
-    D_Q(DPlatformTheme);
-
-    // 转发属性变化的信号，此信号来源可能为parent theme或“非调色板”的属性变化。
-    // 使用队列的形式转发，避免多次发出同样的信号
-    q->staticMetaObject.invokeMethod(q, "propertyChanged", Qt::QueuedConnection,
-                                     Q_ARG(const QByteArray&, name), Q_ARG(const QVariant&, value));
-
-    if (QByteArrayLiteral("Gtk/FontName") == name) {
-        Q_EMIT q->gtkFontNameChanged(value.toByteArray());
-        return;
-    }
-
-    if (name.startsWith("Qt/DPI/")) {
-        const QString &screen_name = QString::fromLocal8Bit(name.mid(7));
-
-        if (!screen_name.isEmpty()) {
-            bool ok = false;
-            int dpi = value.toInt(&ok);
-
-            Q_EMIT q->dotsPerInchChanged(screen_name, ok ? dpi : -1);
-        }
-
-        return;
-    }
-
-    if (QByteArrayLiteral("Xft/DPI") == name) {
-        bool ok = false;
-        int dpi = value.toInt(&ok);
-        Q_EMIT q->dotsPerInchChanged(QString(), ok ? dpi : -1);
-    }
-
-    const QByteArrayList &list = name.split('/');
-
-    if (list.count() != 2)
-        return;
-
-    QByteArray pn = list.last();
-
-    if (pn.isEmpty())
-        return;
-
-    // 转换首字母为小写
-    pn[0] = QChar(pn.at(0)).toLower().toLatin1();
-
-    // 直接使用静态的meta object，防止通过metaObject函数调用到dynamic metaobject
-    const QMetaObject *mo = &DPlatformTheme::staticMetaObject;
-    int index = mo->indexOfProperty(pn.constData());
-
-    if (index < 0)
-        return;
-
-    const QMetaProperty &p = mo->property(index);
-    bool is_parent_signal = q->sender() != theme;
-
-    // 当自己的属性有效时应该忽略父主题的属性变化信号，优先以自身的属性值为准。
-    if (is_parent_signal && p.read(q).isValid()) {
-        return;
-    }
-
-    if (p.hasNotifySignal()) {
-        // invoke会做Q_ASSERT(mobj->cast(object))判断, DPlatformTheme的dynamic metaObject为
-        // qt5platform-plugin插件的DNativeSettings. 导致崩溃.
-        // invokeOnGadget与invoke代码逻辑一致, 只是少了异步支持.
-        if (!p.notifySignal().invokeOnGadget(q, QGenericArgument(value.typeName(), value.constData())))
-            qWarning() << "_q_onThemePropertyChanged() error when notify signal" << p.notifySignal().name();
-    }
 }
 
 void DPlatformThemePrivate::onQtColorChanged(QPalette::ColorRole role, const QColor &color)
@@ -142,38 +88,27 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
 {
     D_D(DPlatformTheme);
 
-    d->theme = new DNativeSettings(window, QByteArray(), this);
-#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
-    connect(this, &DPlatformTheme::windowChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Window, std::placeholders::_1));
-    connect(this, &DPlatformTheme::windowTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::WindowText, std::placeholders::_1));
-    connect(this, &DPlatformTheme::baseChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Base, std::placeholders::_1));
-    connect(this, &DPlatformTheme::alternateBaseChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::AlternateBase, std::placeholders::_1));
-    connect(this, &DPlatformTheme::toolTipBaseChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::ToolTipBase, std::placeholders::_1));
-    connect(this, &DPlatformTheme::toolTipTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::ToolTipText, std::placeholders::_1));
-    connect(this, &DPlatformTheme::textChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Text, std::placeholders::_1));
-    connect(this, &DPlatformTheme::buttonChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Button, std::placeholders::_1));
-    connect(this, &DPlatformTheme::buttonTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::ButtonText, std::placeholders::_1));
-    connect(this, &DPlatformTheme::brightTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::BrightText, std::placeholders::_1));
-    connect(this, &DPlatformTheme::lightChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Light, std::placeholders::_1));
-    connect(this, &DPlatformTheme::midlightChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Midlight, std::placeholders::_1));
-    connect(this, &DPlatformTheme::darkChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Dark, std::placeholders::_1));
-    connect(this, &DPlatformTheme::midChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Mid, std::placeholders::_1));
-    connect(this, &DPlatformTheme::shadowChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Shadow, std::placeholders::_1));
-    connect(this, &DPlatformTheme::highlightChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Highlight, std::placeholders::_1));
-    connect(this, &DPlatformTheme::highlightedTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::HighlightedText, std::placeholders::_1));
-    connect(this, &DPlatformTheme::linkChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Link, std::placeholders::_1));
-    connect(this, &DPlatformTheme::linkVisitedChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::LinkVisited, std::placeholders::_1));
-    connect(this, &DPlatformTheme::itemBackgroundChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::ItemBackground, std::placeholders::_1));
-    connect(this, &DPlatformTheme::textTitleChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextTitle, std::placeholders::_1));
-    connect(this, &DPlatformTheme::textTipsChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextTips, std::placeholders::_1));
-    connect(this, &DPlatformTheme::textWarningChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextWarning, std::placeholders::_1));
-    connect(this, &DPlatformTheme::textLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextLively, std::placeholders::_1));
-    connect(this, &DPlatformTheme::lightLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::LightLively, std::placeholders::_1));
-    connect(this, &DPlatformTheme::darkLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::DarkLively, std::placeholders::_1));
-    connect(this, &DPlatformTheme::frameBorderChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::FrameBorder, std::placeholders::_1));
+    if (OutsideInterfaceCreator) {
+        d->platformInterface = OutsideInterfaceCreator(this);
+    } else {
+#ifndef DTK_DISABLE_XCB
+        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsXWindowPlatform)) {
+            d->platformInterface = new DXCBPlatformInterface(0, this);
+        }
 #endif
-    connect(d->theme, SIGNAL(propertyChanged(const QByteArray &, const QVariant &)),
-            this, SLOT(_q_onThemePropertyChanged(const QByteArray &, const QVariant &)));
+
+#ifndef DTK_DISABLE_TREELAND
+        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)) {
+            d->platformInterface = new DTreelandPlatformInterface(this);
+        }
+#endif
+    }
+
+    if (!d->platformInterface) {
+        d->platformInterface = new DPlatformInterface(this);
+    }
+
+    d->theme = new DNativeSettings(window, QByteArray(), this);
 }
 
 DPlatformTheme::DPlatformTheme(quint32 window, DPlatformTheme *parent)
@@ -193,6 +128,9 @@ DPlatformTheme::~DPlatformTheme()
 
     if (d->palette) {
         delete d->palette;
+    }
+    if (d->platformInterface) {
+        delete d->platformInterface;
     }
 }
 
@@ -331,141 +269,106 @@ void DPlatformTheme::setPalette(const DPalette &palette)
 #endif
 }
 
-#define FETCH_PROPERTY(Name, Function) \
-    D_DC(DPlatformTheme); \
-    QVariant value = d->theme->getSetting(QByteArrayLiteral(Name)); \
-    if (d->fallbackProperty && !value.isValid() && d->parent) \
-        return d->parent->Function(); \
-
-#define FETCH_PROPERTY_WITH_ARGS(Name, Function, Args) \
-    D_DC(DPlatformTheme); \
-    QVariant value = d->theme->getSetting(Name); \
-    if (d->fallbackProperty && !value.isValid() && d->parent) \
-        return d->parent->Function(Args); \
-
 int DPlatformTheme::cursorBlinkTime() const
 {
-    FETCH_PROPERTY("Net/CursorBlinkTime", cursorBlinkTime)
-
-    return value.toInt();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->cursorBlinkTime();
 }
 
 int DPlatformTheme::cursorBlinkTimeout() const
 {
-    FETCH_PROPERTY("Net/CursorBlinkTimeout", cursorBlinkTimeout)
-
-    return value.toInt();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->cursorBlinkTimeout();
 }
 
 bool DPlatformTheme::cursorBlink() const
 {
-    FETCH_PROPERTY("Net/CursorBlink", cursorBlink)
-
-    return value.toInt();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->cursorBlink();
 }
 
 int DPlatformTheme::doubleClickDistance() const
 {
-    FETCH_PROPERTY("Net/DoubleClickDistance", doubleClickDistance)
-
-    return value.toInt();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->doubleClickDistance();
 }
 
 int DPlatformTheme::doubleClickTime() const
 {
-    FETCH_PROPERTY("Net/DoubleClickTime", doubleClickTime)
-
-    return value.toInt();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->doubleClickTime();
 }
 
 int DPlatformTheme::dndDragThreshold() const
 {
-    FETCH_PROPERTY("Net/DndDragThreshold", dndDragThreshold)
-
-    return value.toInt();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->dndDragThreshold();
 }
 
 int DPlatformTheme::windowRadius() const
 {
-    return windowRadius(-1);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->windowRadius();
 }
 
 int DPlatformTheme::windowRadius(int defaultValue) const
 {
-    Q_D(const DPlatformTheme);
-
-    QVariant value = d->theme->getSetting(QByteArrayLiteral("DTK/WindowRadius"));
-    bool ok = false;
-
-    if (d->fallbackProperty && !value.isValid() && d->parent)
-        return d->parent->windowRadius(defaultValue);
-
-    int radius = value.toInt(&ok);
-
-    return ok ? radius : defaultValue;
+    D_DC(DPlatformTheme);
+    return d->platformInterface->windowRadius(defaultValue);
 }
 
 QByteArray DPlatformTheme::themeName() const
 {
-    FETCH_PROPERTY("Net/ThemeName", themeName)
-
-    return value.toByteArray();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->themeName();
 }
 
 QByteArray DPlatformTheme::iconThemeName() const
 {
-    FETCH_PROPERTY("Net/IconThemeName", iconThemeName)
-
-    return value.toByteArray();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->iconThemeName();
 }
 
 QByteArray DPlatformTheme::soundThemeName() const
 {
-    FETCH_PROPERTY("Net/SoundThemeName", soundThemeName)
-
-    return value.toByteArray();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->soundThemeName();
 }
 
 QByteArray DPlatformTheme::fontName() const
 {
-    FETCH_PROPERTY("Qt/FontName", fontName)
-
-    return value.toByteArray();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->fontName();
 }
 
 QByteArray DPlatformTheme::monoFontName() const
 {
-    FETCH_PROPERTY("Qt/MonoFontName", monoFontName)
-
-    return value.toByteArray();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->monoFontName();
 }
 
 qreal DPlatformTheme::fontPointSize() const
 {
-    FETCH_PROPERTY("Qt/FontPointSize", fontPointSize)
-
-    return value.toDouble();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->fontPointSize();
 }
 
 QByteArray DPlatformTheme::gtkFontName() const
 {
-    FETCH_PROPERTY("Gtk/FontName", gtkFontName)
-
-    return value.toByteArray();
+    D_DC(DPlatformTheme);
+    return d->platformInterface->gtkFontName();
 }
 
 QColor DPlatformTheme::activeColor() const
 {
-    FETCH_PROPERTY("Qt/ActiveColor", activeColor)
-
-    return qvariant_cast<QColor>(value);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->activeColor();
 }
 
 QColor DPlatformTheme::darkActiveColor() const
 {
-    FETCH_PROPERTY("Qt/DarkActiveColor", darkActiveColor)
-
-    return qvariant_cast<QColor>(value);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->darkActiveColor();
 }
 
 bool DPlatformTheme::isValidPalette() const
@@ -477,155 +380,171 @@ bool DPlatformTheme::isValidPalette() const
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 QColor DPlatformTheme::window() const
 {
-    return GET_COLOR(window);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->window();
 }
 
 QColor DPlatformTheme::windowText() const
 {
-    return GET_COLOR(windowText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->windowText();
 }
 
 QColor DPlatformTheme::base() const
 {
-    return GET_COLOR(base);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->base();
 }
 
 QColor DPlatformTheme::alternateBase() const
 {
-    return GET_COLOR(alternateBase);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->alternateBase();
 }
 
 QColor DPlatformTheme::toolTipBase() const
 {
-    return GET_COLOR(toolTipBase);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->toolTipBase();
 }
 
 QColor DPlatformTheme::toolTipText() const
 {
-    return GET_COLOR(toolTipText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->toolTipText();
 }
 
 QColor DPlatformTheme::text() const
 {
-    return GET_COLOR(text);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->text();
 }
 
 QColor DPlatformTheme::button() const
 {
-    return GET_COLOR(button);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->button();
 }
 
 QColor DPlatformTheme::buttonText() const
 {
-    return GET_COLOR(buttonText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->buttonText();
 }
 
 QColor DPlatformTheme::brightText() const
 {
-    return GET_COLOR(brightText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->brightText();
 }
 
 QColor DPlatformTheme::light() const
 {
-    return GET_COLOR(light);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->light();
 }
 
 QColor DPlatformTheme::midlight() const
 {
-    return GET_COLOR(midlight);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->midlight();
 }
 
 QColor DPlatformTheme::dark() const
 {
-    return GET_COLOR(dark);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->dark();
 }
 
 QColor DPlatformTheme::mid() const
 {
-    return GET_COLOR(mid);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->mid();
 }
 
 QColor DPlatformTheme::shadow() const
 {
-    return GET_COLOR(shadow);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->shadow();
 }
 
 QColor DPlatformTheme::highlight() const
 {
-    return GET_COLOR(highlight);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->highlight();
 }
 
 QColor DPlatformTheme::highlightedText() const
 {
-    return GET_COLOR(highlightedText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->highlightedText();
 }
 
 QColor DPlatformTheme::link() const
 {
-    return GET_COLOR(link);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->link();
 }
 
 QColor DPlatformTheme::linkVisited() const
 {
-    return GET_COLOR(linkVisited);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->linkVisited();
 }
 
 QColor DPlatformTheme::itemBackground() const
 {
-    return GET_COLOR(itemBackground);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->itemBackground();
 }
 
 QColor DPlatformTheme::textTitle() const
 {
-    return GET_COLOR(textTitle);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->textTitle();
 }
 
 QColor DPlatformTheme::textTips() const
 {
-    return GET_COLOR(textTips);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->textTips();
 }
 
 QColor DPlatformTheme::textWarning() const
 {
-    return GET_COLOR(textWarning);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->textWarning();
 }
 
 QColor DPlatformTheme::textLively() const
 {
-    return GET_COLOR(textLively);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->textLively();
 }
 
 QColor DPlatformTheme::lightLively() const
 {
-    return GET_COLOR(lightLively);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->lightLively();
 }
 
 QColor DPlatformTheme::darkLively() const
 {
-    return GET_COLOR(darkLively);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->darkLively();
 }
 
 QColor DPlatformTheme::frameBorder() const
 {
-    return GET_COLOR(frameBorder);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->frameBorder();
 }
 #endif
 
 int DPlatformTheme::dotsPerInch(const QString &screenName) const
 {
-    bool ok = false;
-
-    if (!screenName.isEmpty()) {
-        FETCH_PROPERTY_WITH_ARGS("Qt/DPI/" + screenName.toLocal8Bit(), dotsPerInch, screenName);
-        int dpi = value.toInt(&ok);
-
-        if (ok)
-            return dpi;
-    }
-
-    FETCH_PROPERTY_WITH_ARGS("Xft/DPI", dotsPerInch, screenName);
-    int dpi = value.toInt(&ok);
-    return ok ? dpi : -1;
+    D_DC(DPlatformTheme);
+    return d->platformInterface->dotsPerInch(screenName);
 }
 
 /*!
@@ -635,8 +554,7 @@ int DPlatformTheme::dotsPerInch(const QString &screenName) const
 int DPlatformTheme::sizeMode() const
 {
     D_DC(DPlatformTheme);
-    QVariant value = d->theme->getSetting(QByteArrayLiteral("DTK/SizeMode"));
-    return value.toInt();
+    return d->platformInterface->sizeMode();
 }
 
 /*!
@@ -648,270 +566,275 @@ int DPlatformTheme::sizeMode() const
  */
 int DPlatformTheme::scrollBarPolicy() const
 {
-    FETCH_PROPERTY("Qt/ScrollBarPolicy", scrollBarPolicy)
-
-    return qvariant_cast<int>(value);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->scrollBarPolicy();
 }
 
 void DPlatformTheme::setCursorBlinkTime(int cursorBlinkTime)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/CursorBlinkTime", cursorBlinkTime);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setCursorBlinkTime(cursorBlinkTime);
 }
 
 void DPlatformTheme::setCursorBlinkTimeout(int cursorBlinkTimeout)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/CursorBlinkTimeout", cursorBlinkTimeout);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setCursorBlinkTimeout(cursorBlinkTimeout);
 }
 
 void DPlatformTheme::setCursorBlink(bool cursorBlink)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/CursorBlink", cursorBlink);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setCursorBlink(cursorBlink);
 }
 
 void DPlatformTheme::setDoubleClickDistance(int doubleClickDistance)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/DoubleClickDistance", doubleClickDistance);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setDoubleClickDistance(doubleClickDistance);
 }
 
 void DPlatformTheme::setDoubleClickTime(int doubleClickTime)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/DoubleClickTime", doubleClickTime);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setDoubleClickTime(doubleClickTime);
 }
 
 void DPlatformTheme::setDndDragThreshold(int dndDragThreshold)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/DndDragThreshold", dndDragThreshold);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setDndDragThreshold(dndDragThreshold);
 }
 
 void DPlatformTheme::setThemeName(const QByteArray &themeName)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/ThemeName", themeName);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setThemeName(themeName);
 }
 
 void DPlatformTheme::setIconThemeName(const QByteArray &iconThemeName)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/IconThemeName", iconThemeName);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setIconThemeName(iconThemeName);
 }
 
 void DPlatformTheme::setSoundThemeName(const QByteArray &soundThemeName)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Net/SoundThemeName", soundThemeName);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setSoundThemeName(soundThemeName);
 }
 
 void DPlatformTheme::setFontName(const QByteArray &fontName)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Qt/FontName", fontName);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setFontName(fontName);
 }
 
 void DPlatformTheme::setMonoFontName(const QByteArray &monoFontName)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Qt/MonoFontName", monoFontName);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setMonoFontName(monoFontName);
 }
 
 void DPlatformTheme::setFontPointSize(qreal fontPointSize)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Qt/FontPointSize", fontPointSize);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setFontPointSize(fontPointSize);
 }
 
 void DPlatformTheme::setGtkFontName(const QByteArray &fontName)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Gtk/FontName", fontName);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setGtkFontName(fontName);
 }
 
 void DPlatformTheme::setActiveColor(const QColor activeColor)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Qt/ActiveColor", activeColor);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setActiveColor(activeColor);
 }
 
 void DPlatformTheme::setDarkActiveColor(const QColor &activeColor)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("Qt/DarkActiveColor", activeColor);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setDarkActiveColor(activeColor);
 }
 
 #define SET_COLOR(Role) setSetting(QByteArrayLiteral(#Role), Role)
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 void DPlatformTheme::setWindow(const QColor &window)
 {
-    SET_COLOR(window);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setWindow(window);
 }
 
 void DPlatformTheme::setWindowText(const QColor &windowText)
 {
-    SET_COLOR(windowText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setWindowText(windowText);
 }
 
 void DPlatformTheme::setBase(const QColor &base)
 {
-    SET_COLOR(base);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setBase(base);
 }
 
 void DPlatformTheme::setAlternateBase(const QColor &alternateBase)
 {
-    SET_COLOR(alternateBase);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setAlternateBase(alternateBase);
 }
 
 void DPlatformTheme::setToolTipBase(const QColor &toolTipBase)
 {
-    SET_COLOR(toolTipBase);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setToolTipBase(toolTipBase);
 }
 
 void DPlatformTheme::setToolTipText(const QColor &toolTipText)
 {
-    SET_COLOR(toolTipText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setToolTipText(toolTipText);
 }
 
 void DPlatformTheme::setText(const QColor &text)
 {
-    SET_COLOR(text);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setText(text);
 }
 
 void DPlatformTheme::setButton(const QColor &button)
 {
-    SET_COLOR(button);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setButton(button);
 }
 
 void DPlatformTheme::setButtonText(const QColor &buttonText)
 {
-    SET_COLOR(buttonText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setButtonText(buttonText);
 }
 
 void DPlatformTheme::setBrightText(const QColor &brightText)
 {
-    SET_COLOR(brightText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setBrightText(brightText);
 }
 
 void DPlatformTheme::setLight(const QColor &light)
 {
-    SET_COLOR(light);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setLight(light);
 }
 
 void DPlatformTheme::setMidlight(const QColor &midlight)
 {
-    SET_COLOR(midlight);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setMidlight(midlight);
 }
 
 void DPlatformTheme::setDark(const QColor &dark)
 {
-    SET_COLOR(dark);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setDark(dark);
 }
 
 void DPlatformTheme::setMid(const QColor &mid)
 {
-    SET_COLOR(mid);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setMid(mid);
 }
 
 void DPlatformTheme::setShadow(const QColor &shadow)
 {
-    SET_COLOR(shadow);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setShadow(shadow);
 }
 
 void DPlatformTheme::setHighlight(const QColor &highlight)
 {
-    SET_COLOR(highlight);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setHighlight(highlight);
 }
 
 void DPlatformTheme::setHighlightedText(const QColor &highlightText)
 {
-    SET_COLOR(highlightText);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setHighlightedText(highlightText);
 }
 
 void DPlatformTheme::setLink(const QColor &link)
 {
-    SET_COLOR(link);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setLink(link);
 }
 
 void DPlatformTheme::setLinkVisited(const QColor &linkVisited)
 {
-    SET_COLOR(linkVisited);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setLinkVisited(linkVisited);
 }
 
 void DPlatformTheme::setItemBackground(const QColor &itemBackground)
 {
-    SET_COLOR(itemBackground);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setItemBackground(itemBackground);
 }
 
 void DPlatformTheme::setTextTitle(const QColor &textTitle)
 {
-    SET_COLOR(textTitle);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setTextTitle(textTitle);
 }
 
 void DPlatformTheme::setTextTips(const QColor &textTips)
 {
-    SET_COLOR(textTips);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setTextTips(textTips);
 }
 
 void DPlatformTheme::setTextWarning(const QColor &textWarning)
 {
-    SET_COLOR(textWarning);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setTextWarning(textWarning);
 }
 
 void DPlatformTheme::setTextLively(const QColor &textLively)
 {
-    SET_COLOR(textLively);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setTextLively(textLively);
 }
 
 void DPlatformTheme::setLightLively(const QColor &lightLively)
 {
-    SET_COLOR(lightLively);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setLightLively(lightLively);
 }
 
 void DPlatformTheme::setDarkLively(const QColor &darkLively)
 {
-    SET_COLOR(darkLively);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setDarkLively(darkLively);
 }
 
 void DPlatformTheme::setFrameBorder(const QColor &frameBorder)
 {
-    SET_COLOR(frameBorder);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setFrameBorder(frameBorder);
 }
 #endif
 
 void DPlatformTheme::setDotsPerInch(const QString &screenName, int dpi)
 {
-    D_D(DPlatformTheme);
-
-    if (screenName.isEmpty()) {
-        d->theme->setSetting("Xft/DPI", dpi);
-    } else {
-        d->theme->setSetting("Qt/DPI/" + screenName.toLocal8Bit(), dpi);
-    }
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setDotsPerInch(screenName, dpi);
 }
 
 void DPlatformTheme::setWindowRadius(int windowRadius)
 {
-    D_D(DPlatformTheme);
-
-    d->theme->setSetting("DTK/WindowRadius", windowRadius);
+    D_DC(DPlatformTheme);
+    return d->platformInterface->setWindowRadius(windowRadius);
 }
 
 DGUI_END_NAMESPACE

@@ -4,10 +4,6 @@ else()
     find_package(Qt5 REQUIRED COMPONENTS WaylandClient XkbCommonSupport)
 endif()
 
-option(DTK_DISABLE_TREELAND "Disable TreeLand Protocols" OFF)
-find_package(TreelandProtocols)
-set(TreelandProtocols_FOUND ${TreelandProtocols_FOUND})
-
 add_library(${LIB_NAME} SHARED)
 
 include(dbus/dbus.cmake)
@@ -15,42 +11,7 @@ include(filedrag/dfiledrag.cmake)
 include(kernel/kernel.cmake)
 include(private/private.cmake)
 include(util/util.cmake)
-
-try_compile(DEEPIN_WAYLAND_TEST_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}/wayland_test
-    ${CMAKE_CURRENT_LIST_DIR}/wayland/config.tests/wayland_test wayland_test CMAKE_FLAGS -DQT_VERSION_MAJOR=${QT_VERSION_MAJOR})
-
-if(NOT DEEPIN_WAYLAND_TEST_COMPILE_RESULT)
-    message("wayland_test failed, disable treeland support")
-    set(DTK_DISABLE_TREELAND ON)
-endif()
-
-if(NOT DTK_DISABLE_TREELAND AND TreelandProtocols_FOUND)
-    message("Support Treeland!")
-    if("${QT_VERSION_MAJOR}" STREQUAL "6")
-        qt6_generate_wayland_protocol_client_sources(${LIB_NAME} FILES
-            ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
-        )
-    else()
-    # ECM setup
-        include(FeatureSummary)
-        find_package(ECM REQUIRED NO_MODULE)
-        set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
-        find_package(QtWaylandScanner)
-        ecm_add_qtwayland_client_protocol(CLIENT_LIB_SRCS
-            PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
-            BASENAME treeland-personalization-manager-v1
-        )
-        target_sources(${LIB_NAME} PRIVATE
-            ${CLIENT_LIB_SRCS}
-        )
-    endif()
-    include(wayland/wayland.cmake)
-    target_sources(${LIB_NAME} PRIVATE
-        ${wayland_SRC}
-    )
-else()
-    target_compile_definitions(${LIB_NAME} PRIVATE DTK_DISABLE_TREELAND)
-endif()
+include(plugins/plugins.cmake)
 
 target_sources(${LIB_NAME} PRIVATE
     ${dbus_SRC}

@@ -13,7 +13,7 @@
 DGUI_BEGIN_NAMESPACE
 
 class DPlatformThemePrivate;
-class DPlatformTheme : public DNativeSettings
+class Q_DECL_DEPRECATED DPlatformTheme : public DNativeSettings
 {
     Q_OBJECT
     D_DECLARE_PRIVATE(DPlatformTheme)
@@ -242,9 +242,6 @@ Q_SIGNALS:
 
 private:
     friend class DPlatformThemePrivate;
-
-private:
-    D_PRIVATE_SLOT(void _q_onThemePropertyChanged(const QByteArray &name, const QVariant &value))
 };
 
 DGUI_END_NAMESPACE
