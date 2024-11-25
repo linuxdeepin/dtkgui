@@ -13,7 +13,8 @@
 DGUI_BEGIN_NAMESPACE
 
 class DPlatformThemePrivate;
-class Q_DECL_DEPRECATED DPlatformTheme : public DNativeSettings
+// TODO: class DPlatformTheme will be removed in the future
+class DPlatformTheme : public DNativeSettings
 {
     Q_OBJECT
     D_DECLARE_PRIVATE(DPlatformTheme)

@@ -2,28 +2,24 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#define protected public
-#include <QWindow>
-#undef protected
 
 #include "dguiapplicationhelper.h"
 #include "dplatformhandle.h"
 #include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
-#include "dvtablehook.h"
+
 #ifndef DTK_DISABLE_TREELAND
-#include "wayland/personalizationwaylandclientextension.h"
+#include "plugins/platform/treeland/dtreelandplatformwindowinterface.h"
 #endif
+
 #include <private/qwaylandwindow_p.h>
-#include <QtWaylandClient/private/qwaylandwindow_p.h>
 #include <dtkcore_global.h>
 
 #include <QGuiApplication>
 #include <QDebug>
 #include <QPlatformSurfaceEvent>
 #include <QStyleHints>
-
-DCORE_USE_NAMESPACE
+#include <QHash>
 
 DGUI_BEGIN_NAMESPACE
 
@@ -107,6 +103,20 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
 
     reinterpret_cast<void(*)(QWindow *, const char *, const QVariant &)>(setWindowProperty)(window, name, value);
 }
+
+#ifndef DTK_DISABLE_TREELAND
+static QHash<DPlatformHandle *, DTreeLandPlatformWindowInterface *> g_platformThemeMap;
+
+static DTreeLandPlatformWindowInterface *dPlatformWindowInterfaceByWindow(QWindow * window)
+{
+    for (auto it = g_platformThemeMap.cbegin(); it != g_platformThemeMap.cend(); ++it) {
+        if (it.value()->getWindow() == window) {
+            return it.value();
+        }
+    }
+    return nullptr;
+}
+#endif
 
 /*!
   \class Dtk::Gui::DPlatformHandle
@@ -395,9 +405,23 @@ DPlatformHandle::DPlatformHandle(QWindow *window, QObject *parent)
     : QObject(parent)
     , m_window(window)
 {
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        g_platformThemeMap.insert(this, new DTreeLandPlatformWindowInterface(nullptr, window));
+    }
+#endif
+
     enableDXcbForWindow(window);
 
     window->installEventFilter(this);
+}
+
+DPlatformHandle::~DPlatformHandle()
+{
+#ifndef DTK_DISABLE_TREELAND
+    g_platformThemeMap.value(this)->deleteLater();
+    g_platformThemeMap.remove(this);
+#endif
 }
 
 /*!
@@ -630,136 +654,11 @@ public:
             if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {  // 若收到此信号， 则 WinID 已被创建
                 auto window = qobject_cast<QWindow *>(watched);
                 initWindowRadius(window);
-
-            #ifndef DTK_DISABLE_TREELAND
-                if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform) && PersonalizationManager::instance()->isSupported()) {
-                    PersonalizationManager::instance()->setEnableTitleBar(window, false);
-                }
-            #endif
-            deleteLater();
             }
         }
         return QObject::eventFilter(watched, event);
     }
 };
-
-class MoveWindowHelper : public QObject
-{
-public:
-    explicit MoveWindowHelper(QWindow *w);
-    ~MoveWindowHelper();
-
-    static QHash<const QWindow*, MoveWindowHelper*> mapped;
-
-private:
-    static bool windowEvent(QWindow *w, QEvent *event);
-    void updateEnableSystemMoveFromProperty();
-
-    QWindow *m_window;
-    bool m_windowMoving;
-    bool m_enableSystemMove;
-};
-
-QHash<const QWindow*, MoveWindowHelper*> MoveWindowHelper::mapped;
-
-MoveWindowHelper::MoveWindowHelper(QWindow *window)
-    : QObject(window)
-    , m_window(window)
-{
-    mapped[window] = this;
-    updateEnableSystemMoveFromProperty();
-}
-
-MoveWindowHelper::~MoveWindowHelper()
-{
-    if (DVtableHook::hasVtable(m_window)) {
-        DVtableHook::resetVtable(m_window);
-    }
-
-    mapped.remove(qobject_cast<QWindow*>(parent()));
-}
-
-void MoveWindowHelper::updateEnableSystemMoveFromProperty()
-{
-    if (!m_window) {
-        return;
-    }
-    const QVariant &v = m_window->property("_d_enableSystemMove");
-
-    m_enableSystemMove = !v.isValid() || v.toBool();
-
-    if (m_enableSystemMove) {
-        DVtableHook::overrideVfptrFun(m_window, &QWindow::event, &MoveWindowHelper::windowEvent);
-    } else if (DVtableHook::hasVtable(m_window)) {
-        DVtableHook::resetVfptrFun(m_window, &QWindow::event);
-    }
-}
-
-bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
-{
-    MoveWindowHelper *self = mapped.value(w);
-
-    if (!self)
-        return DVtableHook::callOriginalFun(w, &QWindow::event, event);
-    // m_window 的 event 被 override 以后，在 windowEvent 里面获取到的 this 就成 m_window 了，
-    // 而不是 DNoTitlebarWlWindowHelper，所以此处 windowEvent 改为 static 并传 self 进来
-    {
-        static bool isTouchDown = false;
-        static QPointF touchBeginPosition;
-        if (event->type() == QEvent::TouchBegin) {
-            isTouchDown = true;
-        }
-        if (event->type() == QEvent::TouchEnd || event->type() == QEvent::MouseButtonRelease) {
-            isTouchDown = false;
-        }
-        if (isTouchDown && event->type() == QEvent::MouseButtonPress) {
-            touchBeginPosition = static_cast<QMouseEvent*>(event)->globalPos();
-        }
-        // add some redundancy to distinguish trigger between system menu and system move
-        if (event->type() == QEvent::MouseMove) {
-            QPointF currentPos = static_cast<QMouseEvent*>(event)->globalPos();
-            QPointF delta = touchBeginPosition  - currentPos;
-            if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
-                return DVtableHook::callOriginalFun(w, &QWindow::event, event);
-            }
-        }
-    }
-
-    bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
-
-    if (event->type() == QEvent::MouseButtonRelease) {
-        self->m_windowMoving = false;
-    }
-
-    if (!DVtableHook::callOriginalFun(w, &QWindow::event, event))
-        return false;
-
-    // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
-    // which makes app hang in windowMoving state. when a press happens, there's no sense of
-    // keeping the moving state, we can just reset ti back to normal.
-    if (event->type() == QEvent::MouseButtonPress) {
-        self->m_windowMoving = false;
-    }
-
-    if (is_mouse_move && !event->isAccepted()
-            && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
-        if (!self->m_windowMoving && self->m_enableSystemMove) {
-            self->m_windowMoving = true;
-
-            event->accept();
-            if (w && w->handle()) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-                static_cast<QPlatformWindow *>(w->handle())->startSystemMove(QCursor::pos());
-#else
-                static_cast<QPlatformWindow *>(w->handle())->startSystemMove();
-#endif
-    }
-        }
-    }
-
-    return true;
-}
-
 
 /*!
   \brief DPlatformHandle::setEnabledNoTitlebarForWindow.
@@ -783,10 +682,11 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
 
 #ifndef DTK_DISABLE_TREELAND
     if (window && DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
-        window->installEventFilter(new CreatorWindowEventFilter(window));
-        if (MoveWindowHelper::mapped.value(window))
-            return true;
-        Q_UNUSED(new MoveWindowHelper(window))
+
+        auto handle = dPlatformWindowInterfaceByWindow(window);
+        if (handle) {
+            handle->setEnabledNoTitlebar(true);
+        }
         return true;
     }
 #endif
@@ -1377,7 +1277,7 @@ void DPlatformHandle::setEnableBlurWindow(bool enableBlurWindow)
 {
 #ifndef DTK_DISABLE_TREELAND
     if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
-        PersonalizationManager::instance()->setEnableBlurWindow(m_window, enableBlurWindow);
+        g_platformThemeMap.value(this)->setEnableBlurWindow(enableBlurWindow);
         return;
     }
 #endif
