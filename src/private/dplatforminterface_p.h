@@ -6,6 +6,7 @@
 #define DPLATFORMINTERFACE_H
 
 #include <QObject>
+#include <QWindow>
 
 #include "dtkgui_global.h"
 
@@ -125,7 +126,7 @@ protected:
     DPlatformTheme *m_platformTheme;
 };
 
-class DPlatformInterfaceFactory {
+class LIBDTKCORESHARED_EXPORT DPlatformInterfaceFactory {
 public:
     using HelperCreator = DPlatformInterface * (*)(DPlatformTheme*);
     static void registerInterface(HelperCreator creator);

@@ -1,7 +1,6 @@
 option(DTK_DISABLE_XCB "Disable XCB Protocols" OFF)
 
-# force disable, because we don't support Treeland
-option(DTK_DISABLE_TREELAND "Disable Treeland Protocols" ON)
+option(DTK_DISABLE_TREELAND "Disable Treeland Protocols" OFF)
 
 file(GLOB PLATFORM_INTERFACE_HEADER
     ${CMAKE_CURRENT_LIST_DIR}/*.h
@@ -33,6 +32,15 @@ else()
 endif()
 
 # Treeland
+
+try_compile(DEEPIN_WAYLAND_TEST_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}/treeland_test
+    ${CMAKE_CURRENT_LIST_DIR}/platform/config.tests/treeland_test treeland_test CMAKE_FLAGS -DQT_VERSION_MAJOR=${QT_VERSION_MAJOR})
+
+if(NOT DEEPIN_WAYLAND_TEST_COMPILE_RESULT)
+    message("wayland_test failed, disable treeland support")
+    set(DTK_DISABLE_TREELAND ON)
+endif()
+
 if(NOT DTK_DISABLE_TREELAND)
     find_package(TreelandProtocols)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS WaylandClient)

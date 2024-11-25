@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "dplatformtheme.h"
+#include "dguiapplicationhelper.h"
 #include "private/dplatformtheme_p.h"
 
 #ifndef DTK_DISABLE_XCB
@@ -18,10 +19,12 @@
 #include <QMetaProperty>
 #include <QDebug>
 #include <DGuiApplicationHelper>
-
-#include <functional>
+#include <DConfig>
 
 DGUI_BEGIN_NAMESPACE
+#define DTK_PREFERENCE_NAME "org.deepin.dtk.preference"
+#define DTK_SIZE_MODE_KEY "sizeMode"
+#define DTK_SCROLLBAR_POLICY_KEY "scrollBarPolicy"
 
 static DPlatformInterfaceFactory::HelperCreator OutsideInterfaceCreator = nullptr;
 
@@ -75,6 +78,18 @@ void DPlatformThemePrivate::notifyPaletteChanged()
     notifyPaletteChangeTimer->start(300);
 }
 
+void DPlatformThemePrivate::onDtkPreferenceDConfigChanged(const QString &key)
+{
+    D_Q(DPlatformTheme);
+    if (key == DTK_SIZE_MODE_KEY) {
+        sizeMode = static_cast<DGuiApplicationHelper::SizeMode>(dtkPreferenceConfig->value(key).toInt());
+        Q_EMIT q->sizeModeChanged(sizeMode);
+    } else if (key == DTK_SCROLLBAR_POLICY_KEY) {
+        scrollBarPolicy = static_cast<Qt::ScrollBarPolicy>(dtkPreferenceConfig->value(key).toInt());
+        Q_EMIT q->scrollBarPolicyChanged(scrollBarPolicy);
+    }
+}
+
 /*!
   \class Dtk::Gui::DPlatformTheme
   \inmodule dtkgui
@@ -98,7 +113,7 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
 #endif
 
 #ifndef DTK_DISABLE_TREELAND
-        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsTreelandPlatform)) {
+        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
             d->platformInterface = new DTreelandPlatformInterface(this);
         }
 #endif
@@ -109,6 +124,44 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
     }
 
     d->theme = new DNativeSettings(window, QByteArray(), this);
+
+    d->dtkPreferenceConfig = DConfig::createGeneric(DTK_PREFERENCE_NAME, "", this);
+    d->sizeMode = static_cast<DGuiApplicationHelper::SizeMode>(d->dtkPreferenceConfig->value(DTK_SIZE_MODE_KEY).toInt());
+    d->scrollBarPolicy = static_cast<Qt::ScrollBarPolicy>(d->dtkPreferenceConfig->value(DTK_SCROLLBAR_POLICY_KEY).toInt());
+    connect(d->dtkPreferenceConfig, &DConfig::valueChanged, this, [this](const QString &key) -> void{
+        D_D(DPlatformTheme);
+        d->onDtkPreferenceDConfigChanged(key);
+    });
+
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
+    connect(this, &DPlatformTheme::windowChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Window, std::placeholders::_1));
+    connect(this, &DPlatformTheme::windowTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::WindowText, std::placeholders::_1));
+    connect(this, &DPlatformTheme::baseChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Base, std::placeholders::_1));
+    connect(this, &DPlatformTheme::alternateBaseChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::AlternateBase, std::placeholders::_1));
+    connect(this, &DPlatformTheme::toolTipBaseChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::ToolTipBase, std::placeholders::_1));
+    connect(this, &DPlatformTheme::toolTipTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::ToolTipText, std::placeholders::_1));
+    connect(this, &DPlatformTheme::textChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Text, std::placeholders::_1));
+    connect(this, &DPlatformTheme::buttonChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Button, std::placeholders::_1));
+    connect(this, &DPlatformTheme::buttonTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::ButtonText, std::placeholders::_1));
+    connect(this, &DPlatformTheme::brightTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::BrightText, std::placeholders::_1));
+    connect(this, &DPlatformTheme::lightChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Light, std::placeholders::_1));
+    connect(this, &DPlatformTheme::midlightChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Midlight, std::placeholders::_1));
+    connect(this, &DPlatformTheme::darkChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Dark, std::placeholders::_1));
+    connect(this, &DPlatformTheme::midChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Mid, std::placeholders::_1));
+    connect(this, &DPlatformTheme::shadowChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Shadow, std::placeholders::_1));
+    connect(this, &DPlatformTheme::highlightChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Highlight, std::placeholders::_1));
+    connect(this, &DPlatformTheme::highlightedTextChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::HighlightedText, std::placeholders::_1));
+    connect(this, &DPlatformTheme::linkChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::Link, std::placeholders::_1));
+    connect(this, &DPlatformTheme::linkVisitedChanged, std::bind(&DPlatformThemePrivate::onQtColorChanged, d, QPalette::LinkVisited, std::placeholders::_1));
+    connect(this, &DPlatformTheme::itemBackgroundChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::ItemBackground, std::placeholders::_1));
+    connect(this, &DPlatformTheme::textTitleChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextTitle, std::placeholders::_1));
+    connect(this, &DPlatformTheme::textTipsChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextTips, std::placeholders::_1));
+    connect(this, &DPlatformTheme::textWarningChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextWarning, std::placeholders::_1));
+    connect(this, &DPlatformTheme::textLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::TextLively, std::placeholders::_1));
+    connect(this, &DPlatformTheme::lightLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::LightLively, std::placeholders::_1));
+    connect(this, &DPlatformTheme::darkLivelyChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::DarkLively, std::placeholders::_1));
+    connect(this, &DPlatformTheme::frameBorderChanged, std::bind(&DPlatformThemePrivate::onDtkColorChanged, d, DPalette::FrameBorder, std::placeholders::_1));
+#endif
 }
 
 DPlatformTheme::DPlatformTheme(quint32 window, DPlatformTheme *parent)
@@ -554,7 +607,7 @@ int DPlatformTheme::dotsPerInch(const QString &screenName) const
 int DPlatformTheme::sizeMode() const
 {
     D_DC(DPlatformTheme);
-    return d->platformInterface->sizeMode();
+    return d->sizeMode;
 }
 
 /*!
@@ -567,7 +620,7 @@ int DPlatformTheme::sizeMode() const
 int DPlatformTheme::scrollBarPolicy() const
 {
     D_DC(DPlatformTheme);
-    return d->platformInterface->scrollBarPolicy();
+    return d->scrollBarPolicy;
 }
 
 void DPlatformTheme::setCursorBlinkTime(int cursorBlinkTime)

@@ -19,7 +19,7 @@ class QWindow;
 QT_END_NAMESPACE
 
 DGUI_BEGIN_NAMESPACE
-
+// TODO: class DPlatformHandle will be removed in the future
 class DPlatformHandle : public QObject
 {
     Q_OBJECT
@@ -44,6 +44,7 @@ class DPlatformHandle : public QObject
 
 public:
     explicit DPlatformHandle(QWindow *window, QObject *parent = 0);
+    ~DPlatformHandle();
 
     static QString pluginVersion();
     static bool isDXcbPlatform();
