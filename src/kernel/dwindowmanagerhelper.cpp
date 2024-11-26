@@ -24,6 +24,10 @@
 
 #include <functional>
 
+#ifndef DTK_DISABLE_TREELAND
+#include "plugins/platform/treeland/dtreelandwindowmanagerhelper.h"
+#endif
+
 DGUI_BEGIN_NAMESPACE
 
 #define DEFINE_CONST_CHAR(Name) const char _##Name[] = "_d_" #Name
@@ -110,6 +114,11 @@ public:
 
     mutable QList<DForeignWindow *> windowList;
 };
+
+// TODO abstract an interface to adapt to various WM.
+#ifndef DTK_DISABLE_TREELAND
+Q_GLOBAL_STATIC(TreelandWindowManagerHelper, treelandWMHGlobal)
+#endif
 
 class DWindowManagerHelper_ : public DWindowManagerHelper {};
 Q_GLOBAL_STATIC(DWindowManagerHelper_, wmhGlobal)
@@ -323,6 +332,11 @@ DWindowManagerHelper::~DWindowManagerHelper()
  */
 DWindowManagerHelper *DWindowManagerHelper::instance()
 {
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        return treelandWMHGlobal;
+    }
+#endif
     return wmhGlobal;
 }
 
@@ -519,6 +533,11 @@ void DWindowManagerHelper::popupSystemWindowMenu(const QWindow *window)
  */
 bool DWindowManagerHelper::hasBlurWindow() const
 {
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        return treelandWMHGlobal->hasBlurWindow();
+    }
+#endif
     return callPlatformFunction<bool, bool(*)()>(_hasBlurWindow);
 }
 
@@ -528,6 +547,12 @@ bool DWindowManagerHelper::hasBlurWindow() const
  */
 bool DWindowManagerHelper::hasComposite() const
 {
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        return treelandWMHGlobal->hasComposite();
+    }
+#endif
+
     QFunctionPointer hasComposite = Q_NULLPTR;
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
@@ -557,6 +582,11 @@ bool DWindowManagerHelper::hasComposite() const
  */
 bool DWindowManagerHelper::hasNoTitlebar() const
 {
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        return treelandWMHGlobal->hasNoTitlebar();
+    }
+#endif
     return callPlatformFunction<bool, bool(*)()>(_hasNoTitlebar);
 }
 
