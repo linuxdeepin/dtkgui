@@ -419,8 +419,9 @@ DPlatformHandle::DPlatformHandle(QWindow *window, QObject *parent)
 DPlatformHandle::~DPlatformHandle()
 {
 #ifndef DTK_DISABLE_TREELAND
-    g_platformThemeMap.value(this)->deleteLater();
-    g_platformThemeMap.remove(this);
+    if (auto item = g_platformThemeMap.take(this)) {
+        item->deleteLater();
+    }
 #endif
 }
 
@@ -685,7 +686,7 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
 
         auto handle = dPlatformWindowInterfaceByWindow(window);
         if (handle) {
-            handle->setEnabledNoTitlebar(true);
+            handle->setEnabledNoTitlebar(enable);
         }
         return true;
     }
