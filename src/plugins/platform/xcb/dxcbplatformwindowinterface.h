@@ -2,28 +2,34 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef DTREELANDPLATFORMWINDOWINTERFACE_H
-#define DTREELANDPLATFORMWINDOWINTERFACE_H
+#ifndef DXCBPLATFORMWINDOWINTERFACE_H
+#define DXCBPLATFORMWINDOWINTERFACE_H
 
-#include "dtkgui_global.h"
-#include "dtreelandplatforminterface.h"
-#include <QObject>
-#include <QtWaylandClient/private/qwaylandwindow_p.h>
 #include "private/dplatformwindowinterface_p.h"
+
+#include <QWindow>
 
 DGUI_BEGIN_NAMESPACE
 
-class PersonalizationWindowContext;
-class DTreeLandPlatformWindowInterfacePrivate;
-class DTreeLandPlatformWindowInterface : public DPlatformWindowInterface
+class DXCBPlatformWindowInterfacePrivate;
+class DXCBPlatformWindowInterface : public DPlatformWindowInterface
 {
     Q_OBJECT
-    D_DECLARE_PRIVATE(DTreeLandPlatformWindowInterface)
+    D_DECLARE_PRIVATE(DXCBPlatformWindowInterface)
 public:
-    explicit DTreeLandPlatformWindowInterface(QWindow *window, DPlatformHandle *platformHandle, QObject *parent = nullptr);
-    ~DTreeLandPlatformWindowInterface();
+    explicit DXCBPlatformWindowInterface(QWindow *window, DPlatformHandle *platformHandle, QObject *parent);
+    ~DXCBPlatformWindowInterface();
 
-    void initWaylandWindow();
+    static QString pluginVersion();
+    static bool isDXcbPlatform();
+    static bool connectWindowManagerChangedSignal(QObject *object, std::function<void ()> slot);
+    static bool connectHasBlurWindowChanged(QObject *object, std::function<void ()> slot);
+    static WId windowLeader();
+
+    void enableDXcb();
+    void enableDXcb(bool redirectContent);
+    bool isEnabledDXcb();
+    bool eventFilterForXcb(QObject *obj, QEvent *event);
 
     bool setWindowBlurArea(const QVector<DPlatformHandle::WMBlurArea> &area) override;
     bool setWindowBlurArea(const QList<QPainterPath> &paths) override;
@@ -82,18 +88,7 @@ public:
     void setAutoInputMaskByClipPath(bool autoInputMaskByClipPath) override;
 
     WId realWindowId() const override;
-
-public slots:
-    void onSurfaceCreated();
-    void onSurfaceDestroyed();
-
-private:
-    PersonalizationWindowContext *getWindowContext();
-    void handlePendingTasks();
-    void doSetEnabledBlurWindow();
-    void doSetEnabledNoTitlebar();
-    void doSetWindowRadius();
 };
 
 DGUI_END_NAMESPACE
-#endif // DTREELANDPLATFORMWINDOWINTERFACE_H
+#endif // DXCBPLATFORMWINDOWINTERFACE_H
