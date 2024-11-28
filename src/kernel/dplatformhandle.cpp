@@ -8,6 +8,11 @@
 #include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
 
+#include "private/dplatformwindowinterface_p.h"
+#include <qsharedpointer.h>
+#ifndef DTK_DISABLE_XCB
+#include "plugins/platform/xcb/dxcbplatformwindowinterface.h"
+#endif
 #ifndef DTK_DISABLE_TREELAND
 #include "plugins/platform/treeland/dtreelandplatformwindowinterface.h"
 #endif
@@ -104,19 +109,17 @@ static void setWindowProperty(QWindow *window, const char *name, const QVariant 
     reinterpret_cast<void(*)(QWindow *, const char *, const QVariant &)>(setWindowProperty)(window, name, value);
 }
 
-#ifndef DTK_DISABLE_TREELAND
-static QHash<DPlatformHandle *, DTreeLandPlatformWindowInterface *> g_platformThemeMap;
+static QHash<DPlatformHandle*, DPlatformWindowInterface*> g_platformThemeMap;
 
-static DTreeLandPlatformWindowInterface *dPlatformWindowInterfaceByWindow(QWindow * window)
+static DPlatformWindowInterface *dPlatformWindowInterfaceByWindow(QWindow *window)
 {
     for (auto it = g_platformThemeMap.cbegin(); it != g_platformThemeMap.cend(); ++it) {
-        if (it.value()->getWindow() == window) {
+        if (it.value()->window() == window) {
             return it.value();
         }
     }
     return nullptr;
 }
-#endif
 
 /*!
   \class Dtk::Gui::DPlatformHandle
@@ -394,6 +397,13 @@ static DTreeLandPlatformWindowInterface *dPlatformWindowInterfaceByWindow(QWindo
   竖直方向的圆角半径
 */
 
+static DPlatformWindowInterfaceFactory::HelperCreator OutsideWindowInterfaceCreator = nullptr;
+
+void DPlatformWindowInterfaceFactory::registerInterface(HelperCreator creator)
+{
+    OutsideWindowInterfaceCreator = creator;
+}
+
 /*!
   \brief DPlatformHandle::DPlatformHandle
   将 \a window 对象传递给 enableDXcbForWindow
@@ -405,11 +415,21 @@ DPlatformHandle::DPlatformHandle(QWindow *window, QObject *parent)
     : QObject(parent)
     , m_window(window)
 {
-#ifndef DTK_DISABLE_TREELAND
-    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
-        g_platformThemeMap.insert(this, new DTreeLandPlatformWindowInterface(nullptr, window));
-    }
+    if (OutsideWindowInterfaceCreator) {
+        g_platformThemeMap.insert(this, OutsideWindowInterfaceCreator(window, this));
+    } else {
+#ifndef DTK_DISABLE_XCB
+        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsXWindowPlatform)) {
+            g_platformThemeMap.insert(this, new DXCBPlatformWindowInterface(window, this, parent));
+        }
 #endif
+
+#ifndef DTK_DISABLE_TREELAND
+        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+            g_platformThemeMap.insert(this, new DTreeLandPlatformWindowInterface(window, this, parent));
+        }
+#endif
+    }
 
     enableDXcbForWindow(window);
 
@@ -418,11 +438,9 @@ DPlatformHandle::DPlatformHandle(QWindow *window, QObject *parent)
 
 DPlatformHandle::~DPlatformHandle()
 {
-#ifndef DTK_DISABLE_TREELAND
     if (auto item = g_platformThemeMap.take(this)) {
         item->deleteLater();
     }
-#endif
 }
 
 /*!

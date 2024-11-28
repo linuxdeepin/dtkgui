@@ -6,31 +6,29 @@
 #define DTREELANDPLATFORMWINDOWINTERFACE_H
 
 #include "dtkgui_global.h"
-#include "dtreelandplatforminterface.h"
-#include <QObject>
+#include "private/dplatformwindowinterface_p.h"
 
-DGUI_USE_NAMESPACE
-class DTreeLandPlatformWindowInterface : public QObject
+DGUI_BEGIN_NAMESPACE
+
+class PersonalizationWindowContext;
+class DTreeLandPlatformWindowInterfacePrivate;
+class DTreeLandPlatformWindowInterface : public DPlatformWindowInterface
 {
     Q_OBJECT
+    D_DECLARE_PRIVATE(DTreeLandPlatformWindowInterface)
 public:
-    explicit DTreeLandPlatformWindowInterface(QObject *parent = nullptr, QWindow *window = nullptr);
+    explicit DTreeLandPlatformWindowInterface(QWindow *window, DPlatformHandle *platformHandle, QObject *parent = nullptr);
     ~DTreeLandPlatformWindowInterface();
-    bool setEnabledNoTitlebar(bool enable);
-    void setEnableBlurWindow(bool enable);
+
+    bool setEnabledNoTitlebar(bool enable) override;
+    void setEnableBlurWindow(bool enable) override;
+    
     void doSetEnabledNoTitlebar();
-    [[nodiscard]]QWindow *getWindow() const { return m_window; }
 
 private:
     PersonalizationWindowContext *getWindowContext();
     void handlePendingTasks();
-
-private:
-    QWindow *m_window = nullptr;
-    QQueue<std::function<void()>> m_pendingTasks;
-    PersonalizationManager *m_manager = nullptr;
-    PersonalizationWindowContext *m_windowContext = nullptr;
-    bool m_isNoTitlebar = true;
 };
 
+DGUI_END_NAMESPACE
 #endif // DTREELANDPLATFORMWINDOWINTERFACE_H
