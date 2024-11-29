@@ -144,6 +144,7 @@ void PersonalizationFontContext::treeland_personalization_font_context_v1_font_s
 {
     // treeland侧无法存储浮点数，约定 font_size 为 10 倍的 pointSize
     qreal pointSize = font_size / 10.0;
+    pointSize = qBound(8.25, pointSize, 15.00);
     m_interface->m_fontPointSize = pointSize;
     emit m_interface->m_platformTheme->fontPointSizeChanged(pointSize);
 }
