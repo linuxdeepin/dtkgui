@@ -82,6 +82,13 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
 
     if (!self)
         return DVtableHook::callOriginalFun(w, &QWindow::event, event);
+
+    // TODO Crashed when delete by Vtable.
+    if (event->type() == QEvent::DeferredDelete) {
+        DVtableHook::resetVtable(w);
+        return w->event(event);
+    }
+
     // m_window 的 event 被 override 以后，在 windowEvent 里面获取到的 this 就成 m_window 了，
     // 而不是 DNoTitlebarWlWindowHelper，所以此处 windowEvent 改为 static 并传 self 进来
     {
