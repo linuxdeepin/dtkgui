@@ -198,6 +198,7 @@ PersonalizationWindowContext *DTreeLandPlatformWindowInterface::getWindowContext
     if (m_windowContext) {
         return m_windowContext;
     }
+    m_window->winId();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     auto waylandWindow = m_window->nativeInterface<QNativeInterface::Private::QWaylandWindow>();
 #else
@@ -219,14 +220,13 @@ PersonalizationWindowContext *DTreeLandPlatformWindowInterface::getWindowContext
 
     if (!m_windowContext) {
         m_windowContext =  new PersonalizationWindowContext(m_manager->get_window_context(surface));
+        connect(m_window, &QWindow::visibleChanged, m_windowContext, [this](bool visible){
+            if (!visible) {
+                m_windowContext->deleteLater();
+                m_windowContext = nullptr;
+            }
+        });
     }
-
-    connect(m_window, &QWindow::visibleChanged, m_windowContext, [this](bool visible){
-        if (!visible) {
-            m_windowContext->deleteLater();
-            m_windowContext = nullptr;
-        }
-    });
 
     return m_windowContext;
 }
