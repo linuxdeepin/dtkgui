@@ -1682,17 +1682,24 @@ bool DGuiApplicationHelper::loadTranslator(const QList<QLocale> &localeFallback)
 #else
     auto qTranslationsPath = QLibraryInfo::path(QLibraryInfo::TranslationsPath);
 #endif
-    loadTranslator("qt", {qTranslationsPath}, localeFallback);
-    loadTranslator("qtbase", {qTranslationsPath}, localeFallback);
 
     DCORE_USE_NAMESPACE
-    QList<QString> translateDirs;
-    auto appName = qApp->applicationName();
     //("/home/user/.local/share", "/usr/local/share", "/usr/share")
     auto dataDirs = DStandardPaths::standardLocations(QStandardPaths::GenericDataLocation);
+    QList<QString> qtranslateDirs = { qTranslationsPath };
     for (const auto &path : dataDirs) {
-        DPathBuf DPathBuf(path);
-        translateDirs << (DPathBuf / appName / "translations").toString();
+        DPathBuf pathBuf(path);
+        qtranslateDirs << (pathBuf / "qt" QT_STRINGIFY(QT_VERSION_MAJOR) / "translations").toString();
+    }
+
+    loadTranslator("qt", qtranslateDirs, localeFallback);
+    loadTranslator("qtbase", qtranslateDirs, localeFallback);
+
+    QList<QString> translateDirs;
+    auto appName = qApp->applicationName();
+    for (const auto &path : dataDirs) {
+        DPathBuf pathBuf(path);
+        translateDirs << (pathBuf / appName / "translations").toString();
     }
 
     // ${translateDir}/${appName}_${localeName}.qm
