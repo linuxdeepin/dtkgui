@@ -144,7 +144,6 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
     return true;
 }
 
-
 class Q_DECL_HIDDEN WindowEventFilter : public QObject {
 public:
     WindowEventFilter(QObject *parent = nullptr, DTreeLandPlatformWindowInterface *interface = nullptr)
@@ -158,7 +157,8 @@ public:
         if (event->type() == QEvent::PlatformSurface) {
             QPlatformSurfaceEvent *se = static_cast<QPlatformSurfaceEvent*>(event);
             if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
-                m_interface->doSetEnabledNoTitlebar();
+                m_interface->initWaylandWindow();
+                m_interface->onSurfaceCreated();
             }
         }
         return QObject::eventFilter(watched, event);
@@ -182,11 +182,47 @@ DTreeLandPlatformWindowInterface::DTreeLandPlatformWindowInterface(QObject *pare
     if (!MoveWindowHelper::mapped.value(window)) {
         Q_UNUSED(new MoveWindowHelper(window))
     }
+
+    initWaylandWindow();
 }
 
 DTreeLandPlatformWindowInterface::~DTreeLandPlatformWindowInterface()
 {
 
+}
+
+void DTreeLandPlatformWindowInterface::onSurfaceCreated()
+{
+    if (m_isNoTitlebar) {
+        doSetEnabledNoTitlebar();
+    }
+    if (m_isWindowBlur) {
+        doSetEnabledBlurWindow();
+    }
+}
+
+void DTreeLandPlatformWindowInterface::onSurfaceDestroyed()
+{
+    if (m_windowContext) {
+        m_windowContext->deleteLater();
+        m_windowContext = nullptr;
+    }
+}
+
+void DTreeLandPlatformWindowInterface::initWaylandWindow()
+{
+    // force create window handle
+    m_window->winId();
+
+    auto waylandWindow = dynamic_cast<QtWaylandClient::QWaylandWindow *>(m_window->handle());
+
+    if (!waylandWindow) {
+        qWarning() << "waylandWindow is nullptr!!!";
+        return;
+    }
+
+    connect(waylandWindow, &QtWaylandClient::QWaylandWindow::wlSurfaceCreated, this, &DTreeLandPlatformWindowInterface::onSurfaceCreated, Qt::UniqueConnection);
+    connect(waylandWindow, &QtWaylandClient::QWaylandWindow::wlSurfaceDestroyed, this, &DTreeLandPlatformWindowInterface::onSurfaceDestroyed, Qt::UniqueConnection);
 }
 
 PersonalizationWindowContext *DTreeLandPlatformWindowInterface::getWindowContext()
@@ -201,21 +237,14 @@ PersonalizationWindowContext *DTreeLandPlatformWindowInterface::getWindowContext
     if (m_windowContext) {
         return m_windowContext;
     }
-    m_window->winId();
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    auto waylandWindow = m_window->nativeInterface<QNativeInterface::Private::QWaylandWindow>();
-#else
+
     auto waylandWindow = dynamic_cast<QtWaylandClient::QWaylandWindow *>(m_window->handle());
-#endif
     if (!waylandWindow) {
         qWarning() << "waylandWindow is nullptr!!!";
         return nullptr;
     }
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    auto surface = waylandWindow->surface();
-#else
+
     auto surface = waylandWindow->waylandSurface()->object();
-#endif
     if (!surface) {
         qWarning() << "waylandSurface is nullptr!!!";
         return nullptr;
@@ -223,12 +252,6 @@ PersonalizationWindowContext *DTreeLandPlatformWindowInterface::getWindowContext
 
     if (!m_windowContext) {
         m_windowContext =  new PersonalizationWindowContext(m_manager->get_window_context(surface));
-        connect(m_window, &QWindow::visibleChanged, m_windowContext, [this](bool visible){
-            if (!visible) {
-                m_windowContext->deleteLater();
-                m_windowContext = nullptr;
-            }
-        });
     }
 
     return m_windowContext;
@@ -244,6 +267,9 @@ void DTreeLandPlatformWindowInterface::handlePendingTasks()
 
 bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
 {
+    if (m_isNoTitlebar == enable) {
+        return true;
+    }
     m_isNoTitlebar = enable;
     doSetEnabledNoTitlebar();
     return true;
@@ -251,19 +277,11 @@ bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
 
 void DTreeLandPlatformWindowInterface::setEnableBlurWindow(bool enable)
 {
-    auto handleFunc = [this, enable](){
-        auto windowContext = getWindowContext();
-        if (!windowContext) {
-            qWarning() << "windowContext is nullptr!";
-            return;
-        }
-        windowContext->set_blend_mode(enable ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
-    };
-    if (m_manager->isActive()) {
-        handleFunc();
-    } else {
-        m_pendingTasks.enqueue(handleFunc);
+    if (m_isWindowBlur == enable) {
+        return;
     }
+    m_isWindowBlur = enable;
+    doSetEnabledBlurWindow();
 }
 
 void DTreeLandPlatformWindowInterface::doSetEnabledNoTitlebar()
@@ -272,10 +290,27 @@ void DTreeLandPlatformWindowInterface::doSetEnabledNoTitlebar()
         auto windowContext = getWindowContext();
         if (!windowContext) {
             qWarning() << "windowContext is nullptr!";
-            return false;
+            return;
         }
         windowContext->set_titlebar(m_isNoTitlebar ? PersonalizationWindowContext::enable_mode_disable : PersonalizationWindowContext::enable_mode_enable);
-        return true;
+        return;
+    };
+    if (m_manager->isActive()) {
+        handleFunc();
+    } else {
+        m_pendingTasks.enqueue(handleFunc);
+    }
+}
+
+void DTreeLandPlatformWindowInterface::doSetEnabledBlurWindow()
+{
+    auto handleFunc = [this](){
+        auto windowContext = getWindowContext();
+        if (!windowContext) {
+            qWarning() << "windowContext is nullptr!";
+            return;
+        }
+        windowContext->set_blend_mode(m_isWindowBlur ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
     };
     if (m_manager->isActive()) {
         handleFunc();
