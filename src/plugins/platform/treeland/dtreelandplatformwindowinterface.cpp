@@ -53,10 +53,6 @@ MoveWindowHelper::MoveWindowHelper(QWindow *window)
 
 MoveWindowHelper::~MoveWindowHelper()
 {
-    if (DVtableHook::hasVtable(m_window)) {
-        DVtableHook::resetVtable(m_window);
-    }
-
     mapped.remove(qobject_cast<QWindow*>(parent()));
 }
 
