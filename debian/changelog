@@ -1,3 +1,19 @@
+dtkgui (5.7.4) unstable; urgency=medium
+
+  * chore(CI): add debian check workflow
+    Thanks to kuchune
+  * refactor: xcb platform theme interface
+  * refactor: treeland platform theme interface 扩展Treeland的个性化接口
+  * fix: Possible null pointer dereference and Notitlebar input parameter error
+  * feat: support treeland platform for wmHelper
+  * fix: blur is invalid for treeland
+  * feat: Limit maximum and minimum fonts
+  * fix: app crashed when window destroyed in quick
+  * fix: app crashed when window destroyed in quick
+  * fix: linglong app load qt translations failed
+
+ -- Deepin Packages Builder <packages@deepin.org>  Tue, 03 Dec 2024 02:00:46 +0000
+
 dtkgui (5.7.3) unstable; urgency=medium
 
   * fix: No judgment on the validity of the protocol(Bug: 286859)
