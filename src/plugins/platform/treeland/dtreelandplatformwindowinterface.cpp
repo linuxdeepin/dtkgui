@@ -244,9 +244,14 @@ PersonalizationWindowContext *DTreeLandPlatformWindowInterface::getWindowContext
         return nullptr;
     }
 
+    if (!waylandWindow->waylandSurface()) {
+        qWarning() << "waylandSurface is nullptr!!!";
+        return nullptr;
+    }
+
     auto surface = waylandWindow->waylandSurface()->object();
     if (!surface) {
-        qWarning() << "waylandSurface is nullptr!!!";
+        qWarning() << "wl_surface is nullptr!!!";
         return nullptr;
     }
 
