@@ -50,12 +50,12 @@ int DPlatformInterface::dndDragThreshold() const
 
 int DPlatformInterface::windowRadius() const
 {
-    return {};
+    return -1;
 }
 
-int DPlatformInterface::windowRadius(int) const
+int DPlatformInterface::windowRadius(int defaultValue) const
 {
-    return {};
+    return defaultValue;
 }
 
 QByteArray DPlatformInterface::themeName() const
