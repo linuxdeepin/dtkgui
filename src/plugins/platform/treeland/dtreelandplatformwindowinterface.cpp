@@ -7,23 +7,24 @@
 #undef protected
 
 #include "dtreelandplatformwindowinterface.h"
-
-#include <QWaylandClientExtension>
-#include <QStyleHints>
+#include "dtreelandplatformwindowinterface.h"
+#include "dtreelandplatforminterface.h"
 #include <private/qwaylandintegration_p.h>
 #include <private/qguiapplication_p.h>
 #include <private/qwaylandwindow_p.h>
-#include <private/qwaylandsurface_p.h>
-
-#include "dvtablehook.h"
 
 #include "personalizationwaylandclientextension.h"
+#include <qwaylandclientextension.h>
+#include "dvtablehook.h"
+
+#include <QtWaylandClient/QWaylandClientExtension>
+#include <QtWaylandClient/private/qwaylandsurface_p.h>
+#include <QtWaylandClient/private/qwaylandwindow_p.h>
+#include <QStyleHints>
 
 DCORE_USE_NAMESPACE
 
-DGUI_BEGIN_NAMESPACE
-
-class Q_DECL_HIDDEN MoveWindowHelper : public QObject
+class MoveWindowHelper : public QObject
 {
 public:
     explicit MoveWindowHelper(QWindow *w);
@@ -145,36 +146,33 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
 
 class Q_DECL_HIDDEN WindowEventFilter : public QObject {
 public:
-    WindowEventFilter(DTreeLandPlatformWindowInterface *interface = nullptr)
-        : QObject(interface)
+    WindowEventFilter(QObject *parent = nullptr, DTreeLandPlatformWindowInterface *interface = nullptr)
+        : QObject(parent)
+        , m_interface(interface)
     {
     }
 
-    DTreeLandPlatformWindowInterface *interface() const
-    {
-        return qobject_cast<DTreeLandPlatformWindowInterface *>(parent());
-    }
-
-    bool eventFilter(QObject *watched, QEvent *event) {
+public:
+    bool eventFilter(QObject *watched, QEvent *event) override {
         if (event->type() == QEvent::PlatformSurface) {
             QPlatformSurfaceEvent *se = static_cast<QPlatformSurfaceEvent*>(event);
             if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
-                if (auto item = interface()) {
-                    item->initWaylandWindow();
-                    item->onSurfaceCreated();
-                }
+                m_interface->initWaylandWindow();
+                m_interface->onSurfaceCreated();
             }
         }
         return QObject::eventFilter(watched, event);
     }
+private:
+    DTreeLandPlatformWindowInterface *m_interface;
 };
 
-DTreeLandPlatformWindowInterface::DTreeLandPlatformWindowInterface(QWindow *window, DPlatformHandle *platformHandle, QObject *parent)
+DTreeLandPlatformWindowInterface::DTreeLandPlatformWindowInterface(QObject *parent, QWindow *window)
     : QObject(parent)
-    , DPlatformWindowInterface(window, platformHandle)
+    , m_window(window)
 {
     m_manager = PersonalizationManager::instance();
-    m_window->installEventFilter(new WindowEventFilter(this));
+    m_window->installEventFilter(new WindowEventFilter(this, this));
     connect(m_manager, &PersonalizationManager::activeChanged, this, [this](){
         if (m_manager->isActive()) {
             handlePendingTasks();
@@ -227,18 +225,6 @@ void DTreeLandPlatformWindowInterface::initWaylandWindow()
     connect(waylandWindow, &QtWaylandClient::QWaylandWindow::wlSurfaceDestroyed, this, &DTreeLandPlatformWindowInterface::onSurfaceDestroyed, Qt::UniqueConnection);
 }
 
-void DTreeLandPlatformWindowInterface::setEnabled(bool enabled)
-{
-    if (setEnabledNoTitlebar(enabled)) {
-        return;
-    }
-}
-
-bool DTreeLandPlatformWindowInterface::isEnabled() const
-{
-    return isEnabledNoTitlebar();
-}
-
 PersonalizationWindowContext *DTreeLandPlatformWindowInterface::getWindowContext()
 {
     if (!m_manager->isSupported()) {
@@ -284,11 +270,6 @@ void DTreeLandPlatformWindowInterface::handlePendingTasks()
     }
 }
 
-bool DTreeLandPlatformWindowInterface::isEnabledNoTitlebar() const
-{
-    return m_isNoTitlebar;
-}
-
 bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
 {
     if (m_isNoTitlebar == enable) {
@@ -297,25 +278,6 @@ bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
     m_isNoTitlebar = enable;
     doSetEnabledNoTitlebar();
     return true;
-}
-
-int DTreeLandPlatformWindowInterface::windowRadius() const
-{
-    return m_radius;
-}
-
-void DTreeLandPlatformWindowInterface::setWindowRadius(int windowRadius)
-{
-    if (m_radius == windowRadius) {
-        return;
-    }
-    m_radius = windowRadius;
-    doSetWindowRadius();
-}
-
-bool DTreeLandPlatformWindowInterface::enableBlurWindow() const
-{
-    return m_isWindowBlur;
 }
 
 void DTreeLandPlatformWindowInterface::setEnableBlurWindow(bool enable)
@@ -345,27 +307,6 @@ void DTreeLandPlatformWindowInterface::doSetEnabledNoTitlebar()
     }
 }
 
-void DTreeLandPlatformWindowInterface::doSetWindowRadius()
-{
-    auto handleFunc = [this](){
-        auto windowContext = getWindowContext();
-        if (!windowContext) {
-            qWarning() << "windowContext is nullptr!";
-            return;
-        }
-        windowContext->set_round_corner_radius(m_radius);
-        if (m_platformHandle) {
-            Q_EMIT m_platformHandle->windowRadiusChanged();
-        }
-        return;
-    };
-    if (m_manager->isActive()) {
-        handleFunc();
-    } else {
-        m_pendingTasks.enqueue(handleFunc);
-    }
-}
-
 void DTreeLandPlatformWindowInterface::doSetEnabledBlurWindow()
 {
     auto handleFunc = [this](){
@@ -382,4 +323,3 @@ void DTreeLandPlatformWindowInterface::doSetEnabledBlurWindow()
         m_pendingTasks.enqueue(handleFunc);
     }
 }
-DGUI_END_NAMESPACE

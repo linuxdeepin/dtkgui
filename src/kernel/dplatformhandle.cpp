@@ -2,24 +2,121 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "dplatformhandle.h"
-#include "dplatformwindowinterface_p.h"
+
 #include "dguiapplicationhelper.h"
-#ifndef DTK_DISABLE_XCB
-#include "plugins/platform/xcb/dxcbplatformwindowinterface.h"
-#endif
+#include "dplatformhandle.h"
+#include "dplatformtheme.h"
+#include "dwindowmanagerhelper.h"
+
 #ifndef DTK_DISABLE_TREELAND
 #include "plugins/platform/treeland/dtreelandplatformwindowinterface.h"
 #endif
 
+#include <private/qwaylandwindow_p.h>
+#include <dtkcore_global.h>
+
+#include <QGuiApplication>
+#include <QDebug>
+#include <QPlatformSurfaceEvent>
+#include <QStyleHints>
+#include <QHash>
+
 DGUI_BEGIN_NAMESPACE
 
-static QHash<const DPlatformHandle*, DPlatformWindowInterface*> g_platformWindowImpls;
+#define DXCB_PLUGIN_KEY "dxcb"
+#define DXCB_PLUGIN_SYMBOLIC_PROPERTY "_d_isDxcb"
 
-static DPlatformWindowInterface *platformWindowImpl(const DPlatformHandle *platformHandle)
+#define DEFINE_CONST_CHAR(Name) const char _##Name[] = "_d_" #Name
+
+DEFINE_CONST_CHAR(useDxcb);
+DEFINE_CONST_CHAR(redirectContent);
+DEFINE_CONST_CHAR(netWmStates);
+DEFINE_CONST_CHAR(windowRadius);
+DEFINE_CONST_CHAR(borderWidth);
+DEFINE_CONST_CHAR(borderColor);
+DEFINE_CONST_CHAR(windowEffect);
+DEFINE_CONST_CHAR(windowStartUpEffect);
+DEFINE_CONST_CHAR(shadowRadius);
+DEFINE_CONST_CHAR(shadowOffset);
+DEFINE_CONST_CHAR(shadowColor);
+DEFINE_CONST_CHAR(clipPath);
+DEFINE_CONST_CHAR(frameMask);
+DEFINE_CONST_CHAR(frameMargins);
+DEFINE_CONST_CHAR(translucentBackground);
+DEFINE_CONST_CHAR(enableSystemResize);
+DEFINE_CONST_CHAR(enableSystemMove);
+DEFINE_CONST_CHAR(enableBlurWindow);
+DEFINE_CONST_CHAR(windowBlurAreas);
+DEFINE_CONST_CHAR(windowBlurPaths);
+DEFINE_CONST_CHAR(windowWallpaperParas);
+DEFINE_CONST_CHAR(autoInputMaskByClipPath);
+
+DEFINE_CONST_CHAR(resolve_mask);
+enum PropRole {
+    WindowRadius,
+
+    // TO BE CONTINUE
+};
+
+// functions
+DEFINE_CONST_CHAR(setWmBlurWindowBackgroundArea);
+DEFINE_CONST_CHAR(setWmBlurWindowBackgroundPathList);
+DEFINE_CONST_CHAR(setWmBlurWindowBackgroundMaskImage);
+DEFINE_CONST_CHAR(setWmWallpaperParameter);
+DEFINE_CONST_CHAR(setWindowProperty);
+DEFINE_CONST_CHAR(pluginVersion);
+DEFINE_CONST_CHAR(disableOverrideCursor);
+DEFINE_CONST_CHAR(enableDxcb);
+DEFINE_CONST_CHAR(isEnableDxcb);
+DEFINE_CONST_CHAR(setEnableNoTitlebar);
+DEFINE_CONST_CHAR(isEnableNoTitlebar);
+DEFINE_CONST_CHAR(clientLeader);
+
+static void resolve(QObject *obj, PropRole role)
 {
-    return g_platformWindowImpls.value(platformHandle);
+    int mask = obj->property(_resolve_mask).toInt();
+    obj->setProperty(_resolve_mask, (mask |= 1 << role));
 }
+
+static bool resolved(QObject *obj, PropRole role)
+{
+    int mask = obj->property(_resolve_mask).toInt();
+    return mask & (1 << role);
+}
+
+static void setWindowProperty(QWindow *window, const char *name, const QVariant &value)
+{
+    if (!window)
+        return;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    static QFunctionPointer setWindowProperty = qApp->platformFunction(_setWindowProperty);
+#else
+    constexpr QFunctionPointer setWindowProperty = nullptr;
+#endif
+
+    if (!setWindowProperty) {
+        window->setProperty(name, value);
+
+        return;
+    }
+
+    reinterpret_cast<void(*)(QWindow *, const char *, const QVariant &)>(setWindowProperty)(window, name, value);
+}
+
+#ifndef DTK_DISABLE_TREELAND
+static QHash<DPlatformHandle *, DTreeLandPlatformWindowInterface *> g_platformThemeMap;
+
+static DTreeLandPlatformWindowInterface *dPlatformWindowInterfaceByWindow(QWindow * window)
+{
+    for (auto it = g_platformThemeMap.cbegin(); it != g_platformThemeMap.cend(); ++it) {
+        if (it.value()->getWindow() == window) {
+            return it.value();
+        }
+    }
+    return nullptr;
+}
+#endif
 
 /*!
   \class Dtk::Gui::DPlatformHandle
@@ -297,36 +394,6 @@ static DPlatformWindowInterface *platformWindowImpl(const DPlatformHandle *platf
   竖直方向的圆角半径
 */
 
-static DPlatformWindowInterfaceFactory::Creator OutsideWindowInterfaceCreator = nullptr;
-
-void DPlatformWindowInterfaceFactory::registerInterface(Creator creator)
-{
-    OutsideWindowInterfaceCreator = creator;
-}
-
-static DPlatformWindowInterface *createWindowInterface(QWindow *window, DPlatformHandle *platformHandle)
-{
-    DPlatformWindowInterface *impl = nullptr;
-    if (OutsideWindowInterfaceCreator) {
-        impl = OutsideWindowInterfaceCreator(window, platformHandle);
-    }
-    if (!impl) {
-#ifndef DTK_DISABLE_XCB
-        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsXWindowPlatform)) {
-            impl = new DXCBPlatformWindowInterface(window, platformHandle);
-        }
-#endif
-
-#ifndef DTK_DISABLE_TREELAND
-        if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
-            impl = new DTreeLandPlatformWindowInterface(window, platformHandle);
-        }
-#endif
-    }
-
-    return impl;
-}
-
 /*!
   \brief DPlatformHandle::DPlatformHandle
   将 \a window 对象传递给 enableDXcbForWindow
@@ -338,21 +405,24 @@ DPlatformHandle::DPlatformHandle(QWindow *window, QObject *parent)
     : QObject(parent)
     , m_window(window)
 {
-    auto impl = createWindowInterface(window, this);
-    if (!impl) {
-        qDebug() << "Use default DPlatformWindowInterface for the window" << window->winId();
-        impl = new DPlatformWindowInterface(window, this);
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        g_platformThemeMap.insert(this, new DTreeLandPlatformWindowInterface(nullptr, window));
     }
-    g_platformWindowImpls.insert(this, impl);
+#endif
 
-    impl->setEnabled(true);
+    enableDXcbForWindow(window);
+
+    window->installEventFilter(this);
 }
 
 DPlatformHandle::~DPlatformHandle()
 {
-    if (auto item = g_platformWindowImpls.take(this)) {
-        delete item;
+#ifndef DTK_DISABLE_TREELAND
+    if (auto item = g_platformThemeMap.take(this)) {
+        item->deleteLater();
     }
+#endif
 }
 
 /*!
@@ -362,11 +432,16 @@ DPlatformHandle::~DPlatformHandle()
  */
 QString DPlatformHandle::pluginVersion()
 {
-#ifndef DTK_DISABLE_XCB
-    return DXCBPlatformWindowInterface::pluginVersion();
-#else
-    return {};
+    QFunctionPointer pv = 0;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    pv = qApp->platformFunction(_pluginVersion);
 #endif
+
+    if (Q_UNLIKELY(!pv))
+        return QString();
+
+    return reinterpret_cast<QString(*)()>(pv)();
 }
 
 /*!
@@ -375,11 +450,12 @@ QString DPlatformHandle::pluginVersion()
  */
 bool DPlatformHandle::isDXcbPlatform()
 {
-#ifndef DTK_DISABLE_XCB
-    return DXCBPlatformWindowInterface::isDXcbPlatform();
-#else
-    return false;
-#endif
+    if (!qApp)
+        return false;
+
+    static bool _is_dxcb = qApp->platformName() == DXCB_PLUGIN_KEY || qApp->property(DXCB_PLUGIN_SYMBOLIC_PROPERTY).toBool();
+
+    return _is_dxcb;
 }
 
 /*!
@@ -475,12 +551,28 @@ bool DPlatformHandle::isDXcbPlatform()
  */
 void DPlatformHandle::enableDXcbForWindow(QWindow *window)
 {
-    DPlatformHandle handle(window);
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handle))) {
-        impl->setEnabled(true);
+    // 优先使用窗口管理器中实现的no titlebar接口实现自定义窗口修饰器的效果
+    if (setEnabledNoTitlebarForWindow(window, true)) {
+        return;
     }
+
+    if (!isDXcbPlatform())
+        return;
+
+    QFunctionPointer enable_dxcb = nullptr;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    enable_dxcb = qApp->platformFunction(_enableDxcb);
 #endif
+
+    if (enable_dxcb) {
+        (*reinterpret_cast<bool(*)(QWindow*)>(enable_dxcb))(window);
+    } else if (window->handle()) {
+        Q_ASSERT_X(window->property(_useDxcb).toBool(), "DPlatformHandler:",
+                   "Must be called before window handle has been created. See also QWindow::handle()");
+    } else {
+        window->setProperty(_useDxcb, true);
+    }
 }
 
 /*!
@@ -501,12 +593,9 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window)
  */
 void DPlatformHandle::enableDXcbForWindow(QWindow *window, bool redirectContent)
 {
-    DPlatformHandle handle(window);
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handle))) {
-        impl->enableDXcb(redirectContent);
-    }
-#endif
+    window->setProperty(_redirectContent, redirectContent);
+
+    enableDXcbForWindow(window);
 }
 
 /*!
@@ -517,14 +606,60 @@ void DPlatformHandle::enableDXcbForWindow(QWindow *window, bool redirectContent)
  */
 bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
 {
-    DPlatformHandle handle(const_cast<QWindow *>(window));
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handle))) {
-        return impl->isEnabled();
-    }
+    if (isEnabledNoTitlebar(window))
+        return true;
+
+    QFunctionPointer is_enable_dxcb = nullptr;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    is_enable_dxcb = qApp->platformFunction(_isEnableDxcb);
 #endif
-    return false;
+
+    if (is_enable_dxcb) {
+        return (*reinterpret_cast<bool(*)(const QWindow*)>(is_enable_dxcb))(window);
+    }
+
+    return window->property(_useDxcb).toBool();
 }
+
+static void initWindowRadius(QWindow *window)
+{
+    if (window->property(_windowRadius).isValid())
+        return;
+
+    auto theme = DGuiApplicationHelper::instance()->systemTheme();
+    int radius = theme->windowRadius(18); //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
+
+    setWindowProperty(window, _windowRadius, radius);
+    // Qt::UniqueConnection will report a warning
+    // to `unique connections require a pointer to member function of a QObject subclass`.
+    const char *uniqueueConnectionFlag("_d_uniqueueConnectionFlag");
+    bool connected = window->property(uniqueueConnectionFlag).toBool();
+    if (!connected) {
+        window->setProperty(uniqueueConnectionFlag, true);
+        window->connect(theme, &DPlatformTheme::windowRadiusChanged, window, [window] (int radius) {
+            if (!resolved(window, PropRole::WindowRadius))
+                setWindowProperty(window, _windowRadius, radius);
+        });
+    }
+}
+
+class Q_DECL_HIDDEN CreatorWindowEventFilter : public QObject {
+public:
+    CreatorWindowEventFilter(QObject *par= nullptr): QObject(par){}
+
+public:
+    bool eventFilter(QObject *watched, QEvent *event) override {
+        if (event->type() == QEvent::PlatformSurface) {
+            QPlatformSurfaceEvent *se = static_cast<QPlatformSurfaceEvent*>(event);
+            if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {  // 若收到此信号， 则 WinID 已被创建
+                auto window = qobject_cast<QWindow *>(watched);
+                initWindowRadius(window);
+            }
+        }
+        return QObject::eventFilter(watched, event);
+    }
+};
 
 /*!
   \brief DPlatformHandle::setEnabledNoTitlebarForWindow.
@@ -540,9 +675,46 @@ bool DPlatformHandle::isEnabledDXcb(const QWindow *window)
  */
 bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable)
 {
-    DPlatformHandle handle(window);
-    auto impl = platformWindowImpl(&handle);
-    return impl->setEnabledNoTitlebar(enable);
+    auto isDWaylandPlatform = [] {
+        return qApp->platformName() == "dwayland" || qApp->property("_d_isDwayland").toBool();
+    };
+    if (!(isDXcbPlatform() || isDWaylandPlatform() || DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)))
+        return false;
+
+#ifndef DTK_DISABLE_TREELAND
+    if (window && DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+
+        auto handle = dPlatformWindowInterfaceByWindow(window);
+        if (handle) {
+            handle->setEnabledNoTitlebar(enable);
+        }
+        return true;
+    }
+#endif
+
+    if (isEnabledNoTitlebar(window) == enable)
+        return true;
+
+    QFunctionPointer enable_no_titlear = nullptr;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    enable_no_titlear = qApp->platformFunction(_setEnableNoTitlebar);
+#endif
+
+    if (enable_no_titlear) {
+        bool ok = (*reinterpret_cast<bool(*)(QWindow*, bool)>(enable_no_titlear))(window, enable);
+        if (ok && enable) {
+            if (window->handle()) {
+                initWindowRadius(window);
+            } else {
+                window->installEventFilter(new CreatorWindowEventFilter(window));
+            }
+        }
+
+        return ok;
+    }
+
+    return false;
 }
 
 /*!
@@ -553,9 +725,34 @@ bool DPlatformHandle::setEnabledNoTitlebarForWindow(QWindow *window, bool enable
  */
 bool DPlatformHandle::isEnabledNoTitlebar(const QWindow *window)
 {
-    DPlatformHandle handle(const_cast<QWindow *>(window));
-    auto impl = platformWindowImpl(&handle);
-    return impl->isEnabledNoTitlebar();
+    QFunctionPointer is_enable_no_titlebar = nullptr;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    is_enable_no_titlebar = qApp->platformFunction(_isEnableNoTitlebar);
+#endif
+
+    if (is_enable_no_titlebar) {
+        return (*reinterpret_cast<bool(*)(const QWindow*)>(is_enable_no_titlebar))(window);
+    }
+
+    return false;
+}
+
+inline DPlatformHandle::WMBlurArea operator *(const DPlatformHandle::WMBlurArea &area, qreal scale)
+{
+    if (qFuzzyCompare(scale, 1.0))
+        return area;
+
+    DPlatformHandle::WMBlurArea new_area;
+
+    new_area.x = qRound64(area.x * scale);
+    new_area.y = qRound64(area.y * scale);
+    new_area.width = qRound64(area.width * scale);
+    new_area.height = qRound64(area.height * scale);
+    new_area.xRadius = qRound64(area.xRadius * scale);
+    new_area.yRaduis = qRound64(area.yRaduis * scale);
+
+    return new_area;
 }
 
 /*!
@@ -602,13 +799,66 @@ bool DPlatformHandle::isEnabledNoTitlebar(const QWindow *window)
  */
 bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QVector<DPlatformHandle::WMBlurArea> &area)
 {
-    DPlatformHandle handle(const_cast<QWindow *>(window));
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handle))) {
-        return impl->setWindowBlurArea(area);
+    if (!window) {
+        return false;
     }
+
+    if (isEnabledDXcb(window)) {
+        QVector<quint32> areas;
+        for (auto item : area)
+            areas << item.x << item.y << item.width << item.height << item.xRadius << item.yRaduis;
+        setWindowProperty(window, _windowBlurAreas, QVariant::fromValue(areas));
+        return true;
+    }
+
+    QFunctionPointer setWmBlurWindowBackgroundArea = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    setWmBlurWindowBackgroundArea = qApp->platformFunction(_setWmBlurWindowBackgroundArea);
 #endif
-    return false;
+
+    if (!setWmBlurWindowBackgroundArea) {
+        qWarning("setWindowBlurAreaByWM is not support");
+
+        return false;
+    }
+
+    QSurfaceFormat format = window->format();
+
+    format.setAlphaBufferSize(8);
+    window->setFormat(format);
+
+    const qreal device_ratio = window->devicePixelRatio();
+
+    if (qFuzzyCompare(device_ratio, 1.0)) {
+        return reinterpret_cast<bool(*)(const quint32, const QVector<WMBlurArea>&)>(setWmBlurWindowBackgroundArea)(window->winId(), area);
+    }
+
+    QVector<WMBlurArea> new_areas;
+
+    new_areas.reserve(area.size());
+
+    for (const WMBlurArea &a : area) {
+        new_areas.append(a * device_ratio);
+    }
+
+    return reinterpret_cast<bool(*)(const quint32, const QVector<WMBlurArea>&)>(setWmBlurWindowBackgroundArea)(window->winId(), new_areas);
+}
+
+inline QPainterPath operator *(const QPainterPath &path, qreal scale)
+{
+    if (qFuzzyCompare(1.0, scale))
+        return path;
+
+    QPainterPath new_path = path;
+
+    for (int i = 0; i < path.elementCount(); ++i) {
+        const QPainterPath::Element &e = path.elementAt(i);
+
+        new_path.setElementPositionAt(i, qRound(e.x * scale), qRound(e.y * scale));
+    }
+
+    return new_path;
 }
 
 /*!
@@ -657,13 +907,48 @@ bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QVector<DPlat
  */
 bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QList<QPainterPath> &paths)
 {
-    DPlatformHandle handle(const_cast<QWindow *>(window));
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handle))) {
-        return impl->setWindowBlurArea(paths);
+    if (!window) {
+        return false;
     }
+
+    if (isEnabledDXcb(window)) {
+        setWindowProperty(window, _windowBlurPaths, QVariant::fromValue(paths));
+
+        return true;
+    }
+
+    QFunctionPointer setWmBlurWindowBackgroundPathList = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    setWmBlurWindowBackgroundPathList = qApp->platformFunction(_setWmBlurWindowBackgroundPathList);
 #endif
-    return false;
+
+    if (!setWmBlurWindowBackgroundPathList) {
+        qWarning("setWindowBlurAreaByWM is not support");
+
+        return false;
+    }
+
+    QSurfaceFormat format = window->format();
+
+    format.setAlphaBufferSize(8);
+    window->setFormat(format);
+
+    const qreal device_ratio = window->devicePixelRatio();
+
+    if (qFuzzyCompare(device_ratio, 1.0)) {
+        return reinterpret_cast<bool(*)(const quint32, const QList<QPainterPath>&)>(setWmBlurWindowBackgroundPathList)(window->winId(), paths);
+    }
+
+    QList<QPainterPath> new_paths;
+
+    new_paths.reserve(paths.size());
+
+    for (const QPainterPath &p : paths) {
+        new_paths.append(p * device_ratio);
+    }
+
+    return reinterpret_cast<bool(*)(const quint32, const QList<QPainterPath>&)>(setWmBlurWindowBackgroundPathList)(window->winId(), new_paths);
 }
 
 /*!
@@ -705,13 +990,49 @@ bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QList<QPainte
  */
 bool DPlatformHandle::setWindowWallpaperParaByWM(QWindow *window, const QRect &area, WallpaperScaleMode sMode, WallpaperFillMode fMode)
 {
-    DPlatformHandle handler(window);
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handler))) {
-        return impl->setWindowWallpaperPara(area, sMode, fMode);
+    if (!window) {
+        return false;
     }
+
+    QFunctionPointer setWmWallpaperParameter = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    setWmWallpaperParameter = qApp->platformFunction(_setWmWallpaperParameter);
 #endif
-    return false;
+
+    if (!setWmWallpaperParameter) {
+        qWarning("setWindowWallpaperParaByWM is not support");
+
+        return false;
+    }
+
+    QSurfaceFormat format = window->format();
+
+    format.setAlphaBufferSize(8);
+    window->setFormat(format);
+
+    quint32 bMode = sMode | fMode;
+
+    // 激活 backing store
+    window->setProperty("_d_dxcb_wallpaper", QVariant::fromValue(QPair<QRect, int>(area, bMode)));
+
+    if (!window->handle())  {
+        return true;
+    } else {
+        qWarning() << "because the window handle has been created, so 2D mode will have no effect";
+    }
+
+    const qreal device_ratio = window->devicePixelRatio();
+    if (qFuzzyCompare(device_ratio, 1.0) || !area.isValid()) {
+        return reinterpret_cast<bool(*)(const quint32, const QRect&, const quint32)>(setWmWallpaperParameter)(window->winId(), area, bMode);
+    }
+
+    QRect new_area(area.x() * device_ratio,
+                   area.y() * device_ratio,
+                   area.width() * device_ratio,
+                   area.height() * device_ratio);
+
+    return reinterpret_cast<bool(*)(const quint32, const QRect&, const quint32)>(setWmWallpaperParameter)(window->winId(), new_area, bMode);
 }
 
 /*!
@@ -724,10 +1045,11 @@ bool DPlatformHandle::setWindowWallpaperParaByWM(QWindow *window, const QRect &a
  */
 bool DPlatformHandle::connectWindowManagerChangedSignal(QObject *object, std::function<void ()> slot)
 {
-#ifndef DTK_DISABLE_XCB
-    return DXCBPlatformWindowInterface::connectWindowManagerChangedSignal(object, slot);
-#endif
-    return false;
+    if (object) {
+        return QObject::connect(DWindowManagerHelper::instance(), &DWindowManagerHelper::windowManagerChanged, object, slot);
+    }
+
+    return QObject::connect(DWindowManagerHelper::instance(), &DWindowManagerHelper::windowManagerChanged, slot);
 }
 
 /*!
@@ -741,10 +1063,11 @@ bool DPlatformHandle::connectWindowManagerChangedSignal(QObject *object, std::fu
  */
 bool DPlatformHandle::connectHasBlurWindowChanged(QObject *object, std::function<void ()> slot)
 {
-#ifndef DTK_DISABLE_XCB
-    return DXCBPlatformWindowInterface::connectHasBlurWindowChanged(object, slot);
-#endif
-    return false;
+    if (object) {
+        return QObject::connect(DWindowManagerHelper::instance(), &DWindowManagerHelper::hasBlurWindowChanged, object, slot);
+    }
+
+    return QObject::connect(DWindowManagerHelper::instance(), &DWindowManagerHelper::hasBlurWindowChanged, slot);
 }
 
 /*!
@@ -782,228 +1105,230 @@ bool DPlatformHandle::setWindowBlurAreaByWM(const QList<QPainterPath> &paths)
  */
 void DPlatformHandle::setDisableWindowOverrideCursor(QWindow *window, bool disable)
 {
-    DPlatformHandle handler(window);
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handler))) {
-        impl->setDisableWindowOverrideCursor(disable);
-    }
-#endif
+    window->setProperty(_disableOverrideCursor, disable);
 }
 
 int DPlatformHandle::windowRadius() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->windowRadius();
+    return m_window->property(_windowRadius).toInt();
 }
 
 int DPlatformHandle::borderWidth() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->borderWidth();
+    return m_window->property(_borderWidth).toInt();
 }
 
 QColor DPlatformHandle::borderColor() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->borderColor();
+    return qvariant_cast<QColor>(m_window->property(_borderColor));
 }
 
 int DPlatformHandle::shadowRadius() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->shadowRadius();
+    return m_window->property(_shadowRadius).toInt();
 }
 
 QPoint DPlatformHandle::shadowOffset() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->shadowOffset();
+    return m_window->property(_shadowOffset).toPoint();
 }
 
 QColor DPlatformHandle::shadowColor() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->shadowColor();
+    return qvariant_cast<QColor>(m_window->property(_shadowColor));
 }
 
 DPlatformHandle::EffectScene DPlatformHandle::windowEffect()
 {
-    auto impl = platformWindowImpl(this);
-    return impl->windowEffect();
+    return qvariant_cast<EffectScene>(m_window->property(_windowEffect));
 }
 
 DPlatformHandle::EffectType DPlatformHandle::windowStartUpEffect()
 {
-    auto impl = platformWindowImpl(this);
-    return impl->windowStartUpEffect();
+    return qvariant_cast<EffectType>(m_window->property(_windowStartUpEffect));
 }
 
 QPainterPath DPlatformHandle::clipPath() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->clipPath();
+    return qvariant_cast<QPainterPath>(m_window->property(_clipPath));
 }
 
 QRegion DPlatformHandle::frameMask() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->frameMask();
+    return qvariant_cast<QRegion>(m_window->property(_frameMask));
 }
 
 QMargins DPlatformHandle::frameMargins() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->frameMargins();
+    return qvariant_cast<QMargins>(m_window->property(_frameMargins));
 }
 
 bool DPlatformHandle::translucentBackground() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->translucentBackground();
+    return m_window->property(_translucentBackground).toBool();
 }
 
 bool DPlatformHandle::enableSystemResize() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->enableSystemResize();
+    return m_window->property(_enableSystemResize).toBool();
 }
 
 bool DPlatformHandle::enableSystemMove() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->enableSystemMove();
+    return m_window->property(_enableSystemMove).toBool();
 }
 
 bool DPlatformHandle::enableBlurWindow() const
 {
-    auto impl = platformWindowImpl(this);
-    return impl->enableBlurWindow();
+    return m_window->property(_enableBlurWindow).toBool();
 }
 
 bool DPlatformHandle::autoInputMaskByClipPath() const
 {
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(this))) {
-        return impl->autoInputMaskByClipPath();
-    }
-#endif
-    return false;
+    return m_window->property(_autoInputMaskByClipPath).toBool();
 }
 
 WId DPlatformHandle::realWindowId() const
 {
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(this))) {
-        return impl->realWindowId();
-    }
-#endif
-    return 0;
+    return qvariant_cast<WId>(m_window->property("_d_real_content_window"));
 }
 
 WId DPlatformHandle::windowLeader()
 {
-#ifndef DTK_DISABLE_XCB
-    return DXCBPlatformWindowInterface::windowLeader();
+    QFunctionPointer clientLeader = Q_NULLPTR;
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+    clientLeader = qApp->platformFunction(_clientLeader);
 #endif
-    return 0;
+
+    if (!clientLeader) {
+        return 0;
+    }
+
+    return reinterpret_cast<quint32(*)()>(clientLeader)();
 }
 
 void DPlatformHandle::setWindowRadius(int windowRadius)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setWindowRadius(windowRadius);
+    setWindowProperty(m_window, _windowRadius, windowRadius);
+    resolve(m_window, PropRole::WindowRadius);
 }
 
 void DPlatformHandle::setBorderWidth(int borderWidth)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setBorderWidth(borderWidth);
+    setWindowProperty(m_window, _borderWidth, borderWidth);
 }
 
 void DPlatformHandle::setBorderColor(const QColor &borderColor)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setBorderColor(borderColor);
+    setWindowProperty(m_window, _borderColor, QVariant::fromValue(borderColor));
 }
 
 void DPlatformHandle::setWindowEffect(DPlatformHandle::EffectScenes effectScene)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setWindowEffect(effectScene);
+    setWindowProperty(m_window, _windowEffect, static_cast<quint32>(effectScene));
 }
 
 void DPlatformHandle::setWindowStartUpEffect(DPlatformHandle::EffectTypes effectType)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setWindowStartUpEffect(effectType);
+    setWindowProperty(m_window, _windowStartUpEffect, static_cast<quint32>(effectType));
 }
 
 void DPlatformHandle::setShadowRadius(int shadowRadius)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setShadowRadius(shadowRadius);
+    setWindowProperty(m_window, _shadowRadius, shadowRadius);
 }
 
 void DPlatformHandle::setShadowOffset(const QPoint &shadowOffset)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setShadowOffset(shadowOffset);
+    setWindowProperty(m_window, _shadowOffset, shadowOffset);
 }
 
 void DPlatformHandle::setShadowColor(const QColor &shadowColor)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setShadowColor(shadowColor);
+    setWindowProperty(m_window, _shadowColor, QVariant::fromValue(shadowColor));
 }
 
 void DPlatformHandle::setClipPath(const QPainterPath &clipPath)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setClipPath(clipPath);
+    setWindowProperty(m_window, _clipPath, QVariant::fromValue(clipPath));
 }
 
 void DPlatformHandle::setFrameMask(const QRegion &frameMask)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setFrameMask(frameMask);
+    setWindowProperty(m_window, _frameMask, QVariant::fromValue(frameMask));
 }
 
 void DPlatformHandle::setTranslucentBackground(bool translucentBackground)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setTranslucentBackground(translucentBackground);
+    setWindowProperty(m_window, _translucentBackground, translucentBackground);
 }
 
 void DPlatformHandle::setEnableSystemResize(bool enableSystemResize)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setEnableSystemResize(enableSystemResize);
+    setWindowProperty(m_window, _enableSystemResize, enableSystemResize);
 }
 
 void DPlatformHandle::setEnableSystemMove(bool enableSystemMove)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setEnableSystemMove(enableSystemMove);
+    setWindowProperty(m_window, _enableSystemMove, enableSystemMove);
 }
 
 void DPlatformHandle::setEnableBlurWindow(bool enableBlurWindow)
 {
-    auto impl = platformWindowImpl(this);
-    impl->setEnableBlurWindow(enableBlurWindow);
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        g_platformThemeMap.value(this)->setEnableBlurWindow(enableBlurWindow);
+        return;
+    }
+#endif
+    setWindowProperty(m_window, _enableBlurWindow, enableBlurWindow);
 }
 
 void DPlatformHandle::setAutoInputMaskByClipPath(bool autoInputMaskByClipPath)
 {
-#ifndef DTK_DISABLE_XCB
-    if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(this))) {
-        impl->setAutoInputMaskByClipPath(autoInputMaskByClipPath);
-    }
-#endif
+    setWindowProperty(m_window, _autoInputMaskByClipPath, autoInputMaskByClipPath);
 }
 
 bool DPlatformHandle::eventFilter(QObject *obj, QEvent *event)
 {
-    return QObject::eventFilter(obj, event);
+    if (obj == m_window) {
+        if (event->type() == QEvent::DynamicPropertyChange) {
+            QDynamicPropertyChangeEvent *e = static_cast<QDynamicPropertyChangeEvent *>(event);
+
+            if (e->propertyName() == _windowRadius) {
+                Q_EMIT windowRadiusChanged();
+            } else if (e->propertyName() == _borderWidth) {
+                Q_EMIT borderWidthChanged();
+            } else if (e->propertyName() == _borderColor) {
+                Q_EMIT borderColorChanged();
+            } else if (e->propertyName() == _shadowRadius) {
+                Q_EMIT shadowRadiusChanged();
+            } else if (e->propertyName() == _shadowOffset) {
+                Q_EMIT shadowOffsetChanged();
+            } else if (e->propertyName() == _shadowColor) {
+                Q_EMIT shadowColorChanged();
+            } else if (e->propertyName() == _clipPath) {
+                Q_EMIT clipPathChanged();
+            } else if (e->propertyName() == _frameMask) {
+                Q_EMIT frameMaskChanged();
+            } else if (e->propertyName() == _frameMargins) {
+                Q_EMIT frameMarginsChanged();
+            } else if (e->propertyName() == _translucentBackground) {
+                Q_EMIT translucentBackgroundChanged();
+            } else if (e->propertyName() == _enableSystemResize) {
+                Q_EMIT enableSystemResizeChanged();
+            } else if (e->propertyName() == _enableSystemMove) {
+                Q_EMIT enableSystemMoveChanged();
+            } else if (e->propertyName() == _enableBlurWindow) {
+                Q_EMIT enableBlurWindowChanged();
+            } else if (e->propertyName() == _autoInputMaskByClipPath) {
+                Q_EMIT autoInputMaskByClipPathChanged();
+            }
+        }
+    }
+
+    return false;
 }
 
 DGUI_END_NAMESPACE
