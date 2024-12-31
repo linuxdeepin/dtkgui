@@ -147,6 +147,8 @@ QFont DFontManager::get(int pixelSize, const QFont &base)
 {
     QFont font = base;
     font.setPixelSize(pixelSize);
+    // Ensure that the FamilyResolved flag is set in order for Qt to correctly set fonts
+    font.setFamilies(base.families());
     return font;
 }
 
