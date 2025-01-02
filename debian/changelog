@@ -1,3 +1,13 @@
+dtkgui (5.7.6) unstable; urgency=medium
+
+  * refact: refacting DPlatformHandle to adap treeland
+  * Revert "refact: refacting DPlatformHandle to adap treeland"
+  * refact: refacting DPlatformHandle to adapt treeland
+  * fix: iterator out of bounds for dciicon
+  * fix: set font family invalid
+
+ -- Deepin Packages Builder <packages@deepin.org>  Thu, 02 Jan 2025 05:43:53 +0000
+
 dtkgui (5.7.5) unstable; urgency=medium
 
   * fix: availableSizes not work on Qt6
