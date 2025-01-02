@@ -852,7 +852,7 @@ QList<int> DDciIcon::availableSizes(DDciIcon::Theme theme, DDciIcon::Mode mode) 
     return sizes;
 }
 
-bool DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttibute attr) const
+bool DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttribute attr) const
 {
     switch (attr) {
     case HasPalette:
@@ -864,7 +864,7 @@ bool DDciIcon::isSupportedAttribute(DDciIconMatchResult result, IconAttibute att
     return false;
 }
 
-bool DDciIcon::isSupportedAttribute(const DDciIconImage &image, IconAttibute attr)
+bool DDciIcon::isSupportedAttribute(const DDciIconImage &image, IconAttribute attr)
 {
     if (image.isNull())
         return false;
