@@ -51,7 +51,7 @@ MoveWindowHelper::MoveWindowHelper(QWindow *window)
 
 MoveWindowHelper::~MoveWindowHelper()
 {
-    mapped.remove(qobject_cast<QWindow*>(parent()));
+    mapped.remove(static_cast<QWindow*>(parent()));
 }
 
 void MoveWindowHelper::updateEnableSystemMoveFromProperty()
@@ -178,7 +178,8 @@ DTreeLandPlatformWindowHelper::DTreeLandPlatformWindowHelper(QWindow *window)
 
 DTreeLandPlatformWindowHelper::~DTreeLandPlatformWindowHelper()
 {
-    windowMap.remove(window());
+    // see tst_qwindow.cpp tst_QWindow::qobject_castOnDestruction()
+    windowMap.remove(static_cast<QWindow*>(parent()));
 }
 
 bool DTreeLandPlatformWindowHelper::eventFilter(QObject *watched, QEvent *event) {
