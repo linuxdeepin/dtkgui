@@ -1,3 +1,11 @@
+dtkgui (5.7.7) unstable; urgency=medium
+
+  * fix: accessing wild pointer in qt6
+  * chore: correct typos about Dtk::Gui::DDciIcon::IconAttribute
+    Thanks to Felix Yan
+
+ -- Deepin Packages Builder <packages@deepin.org>  Thu, 09 Jan 2025 09:28:38 +0000
+
 dtkgui (5.7.6) unstable; urgency=medium
 
   * refact: refacting DPlatformHandle to adap treeland
