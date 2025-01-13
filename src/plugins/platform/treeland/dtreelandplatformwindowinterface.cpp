@@ -219,7 +219,15 @@ void DTreeLandPlatformWindowHelper::onActiveChanged()
 
 void DTreeLandPlatformWindowHelper::onSurfaceCreated()
 {
-    Q_EMIT surfaceCreated();
+    if (m_isNoTitlebar) {
+        doSetEnabledNoTitlebar();
+    }
+    if (m_radius > 0) {
+        doSetWindowRadius();
+    }
+    if (m_isWindowBlur) {
+        doSetEnabledBlurWindow();
+    }
 }
 
 void DTreeLandPlatformWindowHelper::onSurfaceDestroyed()
@@ -258,6 +266,43 @@ PersonalizationWindowContext *DTreeLandPlatformWindowHelper::windowContext() con
     return m_windowContext;
 }
 
+void DTreeLandPlatformWindowHelper::setEnabledNoTitlebar(bool enable)
+{
+    m_isNoTitlebar = enable;
+    doSetEnabledNoTitlebar();
+}
+void DTreeLandPlatformWindowHelper::setWindowRadius(int windowRadius)
+{
+    m_radius = windowRadius;
+    doSetWindowRadius();
+}
+void DTreeLandPlatformWindowHelper::setEnableBlurWindow(bool enableBlurWindow)
+{
+    m_isWindowBlur = enableBlurWindow;
+    doSetEnabledBlurWindow();
+}
+
+void DTreeLandPlatformWindowHelper::doSetEnabledNoTitlebar()
+{
+    if (auto context = windowContext()) {
+        context->set_titlebar(m_isNoTitlebar ? PersonalizationWindowContext::enable_mode_disable : PersonalizationWindowContext::enable_mode_enable);
+    }
+}
+
+void DTreeLandPlatformWindowHelper::doSetWindowRadius()
+{
+    if (auto context = windowContext()) {
+        context->set_round_corner_radius(m_radius);
+    }
+}
+
+void DTreeLandPlatformWindowHelper::doSetEnabledBlurWindow()
+{
+    if (auto context = windowContext()) {
+        context->set_blend_mode(m_isWindowBlur ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
+    }
+}
+
 DTreeLandPlatformWindowInterface::DTreeLandPlatformWindowInterface(QWindow *window, DPlatformHandle *platformHandle, QObject *parent)
     : QObject(parent)
     , DPlatformWindowInterface(window, platformHandle)
@@ -265,24 +310,10 @@ DTreeLandPlatformWindowInterface::DTreeLandPlatformWindowInterface(QWindow *wind
     if (!MoveWindowHelper::mapped.value(window)) {
         Q_UNUSED(new MoveWindowHelper(window))
     }
-    
-    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
-        connect(helper, &DTreeLandPlatformWindowHelper::surfaceCreated, this, &DTreeLandPlatformWindowInterface::onSurfaceCreated);
-    }
 }
 
 DTreeLandPlatformWindowInterface::~DTreeLandPlatformWindowInterface()
 {
-}
-
-void DTreeLandPlatformWindowInterface::onSurfaceCreated()
-{
-    if (m_isNoTitlebar) {
-        doSetEnabledNoTitlebar();
-    }
-    if (m_isWindowBlur) {
-        doSetEnabledBlurWindow();
-    }
 }
 
 void DTreeLandPlatformWindowInterface::setEnabled(bool enabled)
@@ -308,7 +339,9 @@ bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
         return true;
     }
     m_isNoTitlebar = enable;
-    doSetEnabledNoTitlebar();
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setEnabledNoTitlebar(enable);
+    }
     return true;
 }
 
@@ -323,7 +356,12 @@ void DTreeLandPlatformWindowInterface::setWindowRadius(int windowRadius)
         return;
     }
     m_radius = windowRadius;
-    doSetWindowRadius();
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setWindowRadius(m_radius);
+    }
+    if (m_platformHandle) {
+        Q_EMIT m_platformHandle->windowRadiusChanged();
+    }
 }
 
 bool DTreeLandPlatformWindowInterface::enableBlurWindow() const
@@ -337,45 +375,11 @@ void DTreeLandPlatformWindowInterface::setEnableBlurWindow(bool enable)
         return;
     }
     m_isWindowBlur = enable;
-    doSetEnabledBlurWindow();
-}
-
-void DTreeLandPlatformWindowInterface::doSetEnabledNoTitlebar()
-{
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
-        auto context = helper->windowContext();
-        if (!context) {
-            return;
-        }
-        context->set_titlebar(m_isNoTitlebar ? PersonalizationWindowContext::enable_mode_disable : PersonalizationWindowContext::enable_mode_enable);
+        helper->setEnableBlurWindow(enable);
     }
-}
-
-void DTreeLandPlatformWindowInterface::doSetWindowRadius()
-{
-    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
-        auto context = helper->windowContext();
-        if (!context) {
-            return;
-        }
-        context->set_round_corner_radius(m_radius);
-        if (m_platformHandle) {
-            Q_EMIT m_platformHandle->windowRadiusChanged();
-        }
-    }
-}
-
-void DTreeLandPlatformWindowInterface::doSetEnabledBlurWindow()
-{
-    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
-        auto context = helper->windowContext();
-        if (!context) {
-            return;
-        }
-        context->set_blend_mode(m_isWindowBlur ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
-        if (m_platformHandle) {
-            Q_EMIT m_platformHandle->enableBlurWindowChanged();
-        }
+    if (m_platformHandle) {
+        Q_EMIT m_platformHandle->enableBlurWindowChanged();
     }
 }
 DGUI_END_NAMESPACE
