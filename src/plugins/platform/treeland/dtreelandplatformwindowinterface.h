@@ -22,8 +22,10 @@ public:
     QWindow *window() const { return qobject_cast<QWindow *>(parent()); }
     PersonalizationWindowContext *windowContext() const;
 
-Q_SIGNALS:
-    void surfaceCreated();
+    void setEnabledNoTitlebar(bool enable);
+    void setWindowRadius(int windowRadius);
+    void setEnableBlurWindow(bool enableBlurWindow);
+
 private slots:
     void onActiveChanged();
     void onSurfaceCreated();
@@ -32,9 +34,17 @@ private:
     explicit DTreeLandPlatformWindowHelper(QWindow *window);
     bool eventFilter(QObject *watched, QEvent *event) override;
     void initWaylandWindow();
+
+    void doSetEnabledNoTitlebar();
+    void doSetWindowRadius();
+    void doSetEnabledBlurWindow();
 private:
     PersonalizationWindowContext *m_windowContext = nullptr;
     static QMap<QWindow *, DTreeLandPlatformWindowHelper*> windowMap;
+
+    bool m_isNoTitlebar = false;
+    bool m_isWindowBlur = false;
+    int m_radius = 0;
 };
 
 class DTreeLandPlatformWindowInterface : public QObject, public DPlatformWindowInterface
@@ -56,14 +66,7 @@ public:
     bool enableBlurWindow() const override;
     void setEnableBlurWindow(bool enableBlurWindow) override;
 
-public slots:
-    void onSurfaceCreated();
-
 private:
-    void doSetEnabledNoTitlebar();
-    void doSetWindowRadius();
-    void doSetEnabledBlurWindow();
-
     bool m_isNoTitlebar = false;
     bool m_isWindowBlur = false;
     int m_radius = 0;
