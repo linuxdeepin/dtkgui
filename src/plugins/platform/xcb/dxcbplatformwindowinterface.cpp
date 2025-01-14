@@ -264,7 +264,7 @@ static void initWindowRadius(QWindow *window)
         return;
 
     auto theme = DGuiApplicationHelper::instance()->systemTheme();
-    int radius = theme->windowRadius(18); //###(zccrs): 暂时在此处给窗口默认设置为18px的圆角
+    int radius = theme->windowRadius(12); //###(zccrs): 暂时在此处给窗口默认设置为12px的圆角
 
     setWindowProperty(window, _windowRadius, radius);
     // Qt::UniqueConnection will report a warning
