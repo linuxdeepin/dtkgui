@@ -19,6 +19,17 @@
 
 DGUI_BEGIN_NAMESPACE
 
+static qreal devicePixelRatio(QPainter *painter)
+{
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    if (qApp->testAttribute(Qt::AA_UseHighDpiPixmaps))
+        return (painter && painter->device()) ? painter->device()->devicePixelRatioF() : qApp->devicePixelRatio();
+    return 1.0;
+#else
+    return (painter && painter->device()) ? painter->device()->devicePixelRatioF() : qApp->devicePixelRatio();
+#endif
+}
+
 class Q_DECL_HIDDEN ImageEntry : public QIconLoaderEngineEntry
 {
 public:
@@ -57,8 +68,13 @@ public:
 #endif
         Q_UNUSED(state)
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+        const QSize pixmapSize = size * scale;
+#else
+        const QSize pixmapSize(size);
+#endif
         QPixmap pm;
-        QString pmckey(pmcKey(size, mode, state));
+        QString pmckey(pmcKey(pixmapSize, mode, state));
         if (QPixmapCache::find(pmckey, &pm)) {
             genIconTypeIcon(pm, mode);
             return pm;
@@ -71,7 +87,7 @@ public:
         }
 
         if (dir.type == QIconDirInfo::Scalable)
-            reader.setScaledSize(size);
+            reader.setScaledSize(pixmapSize);
 
         pm = QPixmap::fromImageReader(&reader);
         if (!pm.isNull())
@@ -205,7 +221,7 @@ QPixmap DBuiltinIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
     QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, size);
     if (entry)
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
-        return entry->pixmap(size, mode, state, 1.0);
+        return entry->pixmap(size, mode, state, devicePixelRatio(nullptr));
 #else
         return entry->pixmap(size, mode, state);
 #endif
@@ -218,13 +234,7 @@ void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
 {
     ensureLoaded();
 
-    qreal scale = 1.0;
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    if (qApp->testAttribute(Qt::AA_UseHighDpiPixmaps))
-        scale = painter->device() ? painter->device()->devicePixelRatioF() : qApp->devicePixelRatio();
-#else
-    scale = painter->device() ? painter->device()->devicePixelRatioF() : qApp->devicePixelRatio();
-#endif
+    const qreal scale = devicePixelRatio(painter);
     QSize pixmapSize = rect.size() * scale;
 
     QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, pixmapSize);
@@ -427,7 +437,7 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
         const int integerScale = qCeil(arg.scale);
         QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, arg.size / integerScale, integerScale);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
-        arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state, 1.0) : QPixmap();
+        arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state, arg.scale) : QPixmap();
 #else
         arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state) : QPixmap();
 #endif
