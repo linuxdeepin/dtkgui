@@ -58,3 +58,8 @@ Files: src/util/icons/actions/*  src/util/icons/icons/* src/util/icons/texts/*
   src/util/icons/dci/* tests/images/* tests/actions/* tests/dcis/* examples/animation-dci/*
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later
+
+Files: toolGenerate/**/*
+Copyright: None
+License: CC0-1.0
+
