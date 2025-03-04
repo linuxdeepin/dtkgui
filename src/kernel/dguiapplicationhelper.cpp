@@ -208,11 +208,18 @@ public:
     }
     virtual bool eventFilter(QObject *watched, QEvent *event) override
     {
+        if (watched != qApp)
+            return QObject::eventFilter(watched, event);
+
         switch(event->type()) {
         case QEvent::ApplicationFontChange: {
             const QFont font(qGuiApp->font());
             m_transmitter->q_func()->fontChanged(font);
         } break;
+        case QEvent::ApplicationPaletteChange: {
+            m_transmitter->onApplicationPaletteChanged();
+            break;
+        }
         default:
             break;
         }
@@ -269,11 +276,10 @@ void DGuiApplicationHelperPrivate::initApplication(QGuiApplication *app)
     app->installEventFilter(new GuiApplicationEventFilter(this, app));
 #else
     q->connect(app, &QGuiApplication::fontChanged, q, &DGuiApplicationHelper::fontChanged);
-#endif
-    // TODO handle event in qt6.
     q->connect(app, &QGuiApplication::paletteChanged, q, [this] {
         onApplicationPaletteChanged();
     });
+#endif
 
     if (Q_UNLIKELY(!appTheme)) { // 此时说明appTheme可能已经被初始化为了systemtheme
         if (QGuiApplicationPrivate::is_app_running) {
@@ -371,11 +377,13 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChanged()
 {
     D_Q(DGuiApplicationHelper);
     notifyAppThemeChangedByEvent();
-    // 通知主题类型发生变化, 此处可能存在误报的行为, 不过不应该对此做额外的约束
-    // 此信号的行为应当等价于 applicationPaletteChanged
-    Q_EMIT q->themeTypeChanged(q->themeType());
-    // 通知调色板对象的改变
-    Q_EMIT q->applicationPaletteChanged();
+    QMetaObject::invokeMethod(q, [q] () {
+        // 通知主题类型发生变化, 此处可能存在误报的行为, 不过不应该对此做额外的约束
+        // 此信号的行为应当等价于 applicationPaletteChanged
+        Q_EMIT q->themeTypeChanged(q->themeType());
+        // 通知调色板对象的改变
+        Q_EMIT q->applicationPaletteChanged();
+    }, Qt::QueuedConnection);
 }
 
 void DGuiApplicationHelperPrivate::notifyAppThemeChangedByEvent()
