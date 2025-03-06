@@ -9,8 +9,9 @@
 #include "dplatformtheme.h"
 #include "dnativesettings_p.h"
 
-#include <DConfig>
 #include <dguiapplicationhelper.h>
+
+class OrgDeepinDTKPreference;
 
 DCORE_USE_NAMESPACE
 DGUI_BEGIN_NAMESPACE
@@ -38,15 +39,12 @@ public:
     DPalette *palette = nullptr;
     // 减少调色板changed信号的通知频率
     QTimer *notifyPaletteChangeTimer = nullptr;
-    DConfig *dtkPreferenceConfig = nullptr;
+    OrgDeepinDTKPreference *dtkPreferenceConfig = nullptr;
 
     DPlatformInterface *platformInterface = nullptr;
 
     DGuiApplicationHelper::SizeMode sizeMode = DGuiApplicationHelper::NormalMode;
     Qt::ScrollBarPolicy scrollBarPolicy = Qt::ScrollBarAsNeeded;
-    
-public slots:
-    void onDtkPreferenceDConfigChanged(const QString &key);
 };
 
 DGUI_END_NAMESPACE
