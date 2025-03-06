@@ -189,7 +189,11 @@ QPixmap XdgIconProxyEngine::pixmapByEntry(QIconLoaderEngineEntry *entry, const Q
     if (!XdgIconFollowColorScheme()) {
         DEEPIN_XDG_THEME::colorScheme.setLocalData(DEEPIN_XDG_THEME::PALETTE_MAP());
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 1)
+        return entry->pixmap(size, mode, state, 1.0);
+#else
         return entry->pixmap(size, mode, state);
+#endif
     }
 
     QPixmap pixmap;
@@ -206,7 +210,11 @@ QPixmap XdgIconProxyEngine::pixmapByEntry(QIconLoaderEngineEntry *entry, const Q
 
         pixmap = followColorPixmap(static_cast<ScalableEntry *>(entry), size, mode, state);
     } else {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 1)
+        pixmap = entry->pixmap(size, mode, state, 1.0);
+#else
         pixmap = entry->pixmap(size, mode, state);
+#endif
     }
 
     free(type_name);
