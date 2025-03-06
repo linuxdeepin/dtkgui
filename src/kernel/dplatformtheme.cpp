@@ -13,18 +13,15 @@
 #include "plugins/platform/treeland/dtreelandplatforminterface.h"
 #endif
 #include "private/dplatforminterface_p.h"
+#include "orgdeepindtkpreference.hpp"
 
 #include <QVariant>
 #include <QTimer>
 #include <QMetaProperty>
 #include <QDebug>
 #include <DGuiApplicationHelper>
-#include <DConfig>
 
 DGUI_BEGIN_NAMESPACE
-#define DTK_PREFERENCE_NAME "org.deepin.dtk.preference"
-#define DTK_SIZE_MODE_KEY "sizeMode"
-#define DTK_SCROLLBAR_POLICY_KEY "scrollBarPolicy"
 
 static DPlatformInterfaceFactory::HelperCreator OutsideInterfaceCreator = nullptr;
 
@@ -78,18 +75,6 @@ void DPlatformThemePrivate::notifyPaletteChanged()
     notifyPaletteChangeTimer->start(300);
 }
 
-void DPlatformThemePrivate::onDtkPreferenceDConfigChanged(const QString &key)
-{
-    D_Q(DPlatformTheme);
-    if (key == DTK_SIZE_MODE_KEY) {
-        sizeMode = static_cast<DGuiApplicationHelper::SizeMode>(dtkPreferenceConfig->value(key).toInt());
-        Q_EMIT q->sizeModeChanged(sizeMode);
-    } else if (key == DTK_SCROLLBAR_POLICY_KEY) {
-        scrollBarPolicy = static_cast<Qt::ScrollBarPolicy>(dtkPreferenceConfig->value(key).toInt());
-        Q_EMIT q->scrollBarPolicyChanged(scrollBarPolicy);
-    }
-}
-
 /*!
   \class Dtk::Gui::DPlatformTheme
   \inmodule dtkgui
@@ -125,12 +110,18 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
 
     d->theme = new DNativeSettings(window, QByteArray(), this);
 
-    d->dtkPreferenceConfig = DConfig::createGeneric(DTK_PREFERENCE_NAME, "", this);
-    d->sizeMode = static_cast<DGuiApplicationHelper::SizeMode>(d->dtkPreferenceConfig->value(DTK_SIZE_MODE_KEY).toInt());
-    d->scrollBarPolicy = static_cast<Qt::ScrollBarPolicy>(d->dtkPreferenceConfig->value(DTK_SCROLLBAR_POLICY_KEY).toInt());
-    connect(d->dtkPreferenceConfig, &DConfig::valueChanged, this, [this](const QString &key) -> void{
+    d->dtkPreferenceConfig = OrgDeepinDTKPreference::createGeneric("", this);
+    d->sizeMode = static_cast<DGuiApplicationHelper::SizeMode>(d->dtkPreferenceConfig->sizeMode());
+    d->scrollBarPolicy = static_cast<Qt::ScrollBarPolicy>(d->dtkPreferenceConfig->scrollBarPolicy());
+    connect(d->dtkPreferenceConfig, &OrgDeepinDTKPreference::sizeModeChanged, this, [this] {
         D_D(DPlatformTheme);
-        d->onDtkPreferenceDConfigChanged(key);
+        d->sizeMode = static_cast<DGuiApplicationHelper::SizeMode>(d->dtkPreferenceConfig->sizeMode());
+        Q_EMIT sizeModeChanged(d->sizeMode);
+    });
+    connect(d->dtkPreferenceConfig, &OrgDeepinDTKPreference::scrollBarPolicyChanged, this, [this] {
+        D_D(DPlatformTheme);
+        d->scrollBarPolicy = static_cast<Qt::ScrollBarPolicy>(d->dtkPreferenceConfig->scrollBarPolicy());
+        Q_EMIT scrollBarPolicyChanged(d->scrollBarPolicy);
     });
 
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)

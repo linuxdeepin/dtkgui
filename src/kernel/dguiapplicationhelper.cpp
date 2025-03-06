@@ -5,8 +5,10 @@
 #include "dguiapplicationhelper.h"
 #include "private/dguiapplicationhelper_p.h"
 #include "dplatformhandle.h"
+
 #include <DFontManager>
 #include <DStandardPaths>
+#include <DSGApplication>
 
 #include <QHash>
 #include <QColor>
@@ -34,7 +36,6 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QProcess>
-#include <DConfig>
 #endif
 #include <QDir>
 #include <QLockFile>
@@ -60,6 +61,8 @@
 #ifdef Q_OS_LINUX
 #include <unistd.h>
 #endif
+
+#include "orgdeepindtkpreference.hpp"
 
 #ifdef Q_OS_UNIX
 class EnvReplaceGuard
@@ -115,10 +118,9 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
-#define APP_THEME_TYPE "themeType"
-#define DTK_ENABLE_ANIMATIONS "enableDtkAnimations"
 #define DTK_ANIMATIONS_ENV "D_DTK_DISABLE_ANIMATIONS"
-Q_GLOBAL_STATIC_WITH_ARGS(DTK_CORE_NAMESPACE::DConfig, _d_dconfig, ("org.deepin.dtk.preference"));
+Q_GLOBAL_STATIC(OrgDeepinDTKPreference, _d_dconfig, DTK_CORE_NAMESPACE::DConfig::globalThread(), nullptr,
+                "org.deepin.dtk.preference", DTK_CORE_NAMESPACE::DSGApplication::id(), {}, false, nullptr)
 
 /*!
  @private
@@ -445,7 +447,7 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
         return;
 
     auto applyThemeType = [this](bool emitSignal){
-        int ct = _d_dconfig->value(APP_THEME_TYPE, DGuiApplicationHelper::UnknownType).toInt();
+        int ct = _d_dconfig->themeType();
         if (ct > DGuiApplicationHelper::DarkType || ct < DGuiApplicationHelper::UnknownType)
             ct = DGuiApplicationHelper::UnknownType;
 
@@ -454,10 +456,7 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
 
     applyThemeType(false);
 
-    QObject::connect(_d_dconfig, &DConfig::valueChanged, _d_dconfig, [applyThemeType](const QString &key){
-        if (key != APP_THEME_TYPE)
-            return;
-
+    QObject::connect(_d_dconfig.operator ()(), &OrgDeepinDTKPreference::themeTypeChanged, _d_dconfig, [applyThemeType] {
         applyThemeType(true);
     });
 }
@@ -1781,8 +1780,7 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
         if (isDisable)
             return false;
 
-        static bool shouldEnable = _d_dconfig->value(DTK_ENABLE_ANIMATIONS, false).toBool();
-        return shouldEnable;
+        return _d_dconfig->enableDtkAnimations();
     }
     default:
         return DGuiApplicationHelperPrivate::attributes.testFlag(attribute);
@@ -1823,7 +1821,7 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
 
     d->initPaletteType();
     d->setPaletteType(paletteType, true);
-    _d_dconfig->setValue(APP_THEME_TYPE, paletteType);
+    _d_dconfig->setThemeType(static_cast<int>(paletteType));
 }
 
 /*!
