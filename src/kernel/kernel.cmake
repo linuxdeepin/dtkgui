@@ -7,4 +7,5 @@ file(GLOB KERNEL_SOURCE
 set(kernel_SRC 
   ${KERNEL_HEADER}
   ${KERNEL_SOURCE}
+  ${CMAKE_CURRENT_LIST_DIR}/orgdeepindtkpreference.hpp
 )
