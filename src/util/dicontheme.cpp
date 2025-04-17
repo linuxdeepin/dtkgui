@@ -6,6 +6,7 @@
 #include "private/dbuiltiniconengine_p.h"
 #include "private/dciiconengine_p.h"
 #include "private/diconproxyengine_p.h"
+#include <private/qicon_p.h>
 #ifndef DTK_DISABLE_LIBXDG
 #include "private/xdgiconproxyengine_p.h"
 #else
