@@ -1,3 +1,9 @@
+dtkgui (5.7.14) unstable; urgency=medium
+
+  * build: compiling failed with Qt 6.9
+
+ -- YeShanShan <yeshanshan@uniontech.com>  Thu, 17 Apr 2025 21:51:32 +0800
+
 dtkgui (5.7.13) unstable; urgency=medium
 
   * Release 5.7.13
