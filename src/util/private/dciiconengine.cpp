@@ -8,6 +8,7 @@
 
 #include <QPainter>
 #include <QPixmap>
+#include <QPixmapCache>
 
 #include <private/qhexstring_p.h>
 #include <private/qiconloader_p.h>
