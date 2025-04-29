@@ -119,8 +119,8 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
 #define DTK_ANIMATIONS_ENV "D_DTK_DISABLE_ANIMATIONS"
-Q_GLOBAL_STATIC(OrgDeepinDTKPreference, _d_dconfig, DTK_CORE_NAMESPACE::DConfig::globalThread(), nullptr,
-                "org.deepin.dtk.preference", DTK_CORE_NAMESPACE::DSGApplication::id(), {}, false, nullptr)
+Q_GLOBAL_STATIC_WITH_ARGS(OrgDeepinDTKPreference, _d_dconfig, (DTK_CORE_NAMESPACE::DConfig::globalThread(), nullptr,
+                                                               "org.deepin.dtk.preference", DTK_CORE_NAMESPACE::DSGApplication::id(), {}, false, nullptr))
 
 /*!
  @private
