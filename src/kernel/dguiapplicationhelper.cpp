@@ -1821,7 +1821,8 @@ void DGuiApplicationHelper::setPaletteType(DGuiApplicationHelper::ColorType pale
 
     d->initPaletteType();
     d->setPaletteType(paletteType, true);
-    _d_dconfig->setThemeType(static_cast<int>(paletteType));
+    if (!DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::DontSaveApplicationTheme))
+        _d_dconfig->setThemeType(static_cast<int>(paletteType));
 }
 
 /*!
