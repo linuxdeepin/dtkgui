@@ -1,3 +1,14 @@
+dtkgui (5.7.15) unstable; urgency=medium
+
+  * fix: correct bitwise operation in preference handling
+  * fix: prevent theme saving when DontSaveApplicationTheme is set
+  * refactor: improve thread safety in OrgDeepinDTKPreference
+  * fix: build failed in qt5
+  * feat: use dconfig2cpp for read/write the DConfig
+  * fix: fix build on Qt 6.8
+
+ -- YeShanShan <yeshanshan@uniontech.com>  Thu, 08 May 2025 17:53:09 +0800
+
 dtkgui (5.7.14) unstable; urgency=medium
 
   * build: compiling failed with Qt 6.9
