@@ -124,6 +124,7 @@ public:
     static QStringList userManualPaths(const QString &appName);
     bool hasUserManual() const;
 
+    static bool loadTranslator(const QString &fileName, const QString &appName, const QList<QLocale> &localeFallback = QList<QLocale>() << QLocale::system());
     static bool loadTranslator(const QString &fileName, const QList<QString> &translateDirs, const QList<QLocale> &localeFallback);
     static bool loadTranslator(const QList<QLocale> &localeFallback = QList<QLocale>() << QLocale::system());
 
