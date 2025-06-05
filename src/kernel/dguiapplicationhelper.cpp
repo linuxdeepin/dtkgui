@@ -59,6 +59,7 @@
 #include <qpa/qplatformtheme.h>
 
 #ifdef Q_OS_LINUX
+#include <pwd.h>
 #include <unistd.h>
 #endif
 
