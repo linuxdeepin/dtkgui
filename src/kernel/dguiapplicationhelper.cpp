@@ -1672,7 +1672,7 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
             auto translator = new QTranslator(qApp);
             // QTranslator::load(locale, filename, prefix, directory, suffix) automatically handles
             // locale fallback (e.g., zh_CN -> zh -> C) and file existence checking
-            if (translator->load(locale, fileName, QString(), dir)) {
+            if (translator->load(locale, fileName, QString('_'), dir)) {
                 qCDebug(dgAppHelper) << "load translate" << fileName << "for locale" << locale.name() << "from" << dir;
                 qApp->installTranslator(translator);
                 qApp->setProperty("dapp_locale", locale.name());
