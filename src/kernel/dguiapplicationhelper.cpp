@@ -63,6 +63,10 @@
 #include <unistd.h>
 #endif
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 9, 1))
+#include <pwd.h>
+#endif
+
 #include "orgdeepindtkpreference.hpp"
 
 #ifdef Q_OS_UNIX
