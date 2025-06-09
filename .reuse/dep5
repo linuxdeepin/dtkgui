@@ -49,7 +49,7 @@ Copyright: None
 License: CC0-1.0
 
 # Project file
-Files: *.pro *.prf *.pri *.qrc *CMakeLists.txt *.cmake *.in
+Files: *.pro *.prf *.pri *.qrc *CMakeLists.txt *.cmake *.in VERSION
 Copyright: None
 License: CC0-1.0
 
