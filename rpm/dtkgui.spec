@@ -1,6 +1,6 @@
 Name:           dtkgui
-Version:        5.5.17
-Release:        1%{?dist}
+Version: 5.7.17
+Release: 1
 Summary:        Deepin dtkgui
 License:        LGPLv3+
 URL:            https://github.com/linuxdeepin/dtkgui
