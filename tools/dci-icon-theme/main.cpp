@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QGuiApplication>
+#include <QCoreApplication>
 #include <QImageReader>
 #include <QCommandLineParser>
 #include <QDirIterator>
@@ -10,12 +10,8 @@
 #include <QDebug>
 
 #include <DDciFile>
-#include <DIconTheme>
-#include <DGuiApplicationHelper>
-#include <DPlatformTheme>
 
 DCORE_USE_NAMESPACE
-DGUI_USE_NAMESPACE
 
 #define MAX_SCALE 10
 #define INVALIDE_QUALITY -2
@@ -219,8 +215,6 @@ int main(int argc, char *argv[])
                                   ,
                                        "csv file");
     QCommandLineOption fixDarkTheme("fix-dark-theme", "Create symlinks from light theme for dark theme files.");
-    QCommandLineOption iconFinder("find", "Find dci icon file path");
-    QCommandLineOption themeOpt({"t","theme"}, "Give a theme name to find dci icon file path", "theme name");
     QCommandLineOption scaleQuality({"O","scale-quality"}, "Quility of dci scaled icon image\n"
                                                 "The value may like <scale size>=<quality value>  e.g. 2=98:3=95\n"
                                                 "The quality factor must be in the range 0 to 100 or -1.\n"
@@ -228,9 +222,13 @@ int main(int argc, char *argv[])
                                                 "and -1 to use the image handler default settings.\n"
                                                 "The higher the quality, the larger the dci icon file size", "scale quality");
 
-    QGuiApplication a(argc, argv);
+    QCoreApplication a(argc, argv);
+
     a.setApplicationName("dci-icon-theme");
-    a.setApplicationVersion("0.0.6");
+    a.setApplicationVersion(QString("%1.%2.%3")
+                                .arg(DTK_VERSION_MAJOR)
+                                .arg(DTK_VERSION_MINOR)
+                                .arg(DTK_VERSION_PATCH));
 
     QCommandLineParser cp;
     cp.setApplicationDescription("dci-icon-theme tool is a command tool that generate dci icons from common icons.\n"
@@ -238,12 +236,10 @@ int main(int argc, char *argv[])
                                  "\t dci-icon-theme /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -O 3=95\n"
                                  "\t dci-icon-theme -m *.png /usr/share/icons/hicolor/256x256/apps -o ~/Desktop/hicolor -O 3=95\n"
                                  "\t dci-icon-theme --fix-dark-theme <input dci files directory> -o <output directory path> \n"
-                                 "\t dci-icon-theme --find <icon name>\n"
-                                 "\t dci-icon-theme --find <icon name> -t bloom\n"
                                  "\t dci-icon-theme <input file directory> -o <output directory path> -s <csv file> -O <qualities>\n"""
                                  );
 
-    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, iconFinder, themeOpt, scaleQuality});
+    cp.addOptions({fileFilter, outputDirectory, symlinkMap, fixDarkTheme, scaleQuality});
     cp.addPositionalArgument("source", "Search the given directory and it's subdirectories, "
                                        "get the files conform to rules of --match.",
                              "~/dci-png-icons");
@@ -254,25 +250,9 @@ int main(int argc, char *argv[])
     if (a.arguments().size() == 1)
         cp.showHelp(-1);
 
-    bool isIconFinder = cp.isSet(iconFinder);
     if (cp.positionalArguments().isEmpty()) {
-        qWarning() << "Not give a" << (isIconFinder ? "icon name." : "source directory.");
+        qWarning() << "Not give a source directory.";
         cp.showHelp(-2);
-    }
-
-    QString iconThemeName;
-    if (cp.isSet(themeOpt)) {
-        iconThemeName = cp.value(themeOpt);
-    } else {
-        iconThemeName = DGuiApplicationHelper::instance()->applicationTheme()->iconThemeName();
-    }
-
-    if (isIconFinder) {
-        QString iconName = cp.positionalArguments().value(0);
-
-        QString iconPath = DIconTheme::findDciIconFile(iconName, iconThemeName);
-        qInfo() << iconName << "[" << iconThemeName << "]:" << iconPath;
-        return 0;
     }
 
     if (!cp.isSet(outputDirectory)) {
