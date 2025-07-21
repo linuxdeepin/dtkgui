@@ -60,6 +60,7 @@
 
 #ifdef Q_OS_LINUX
 #include <pwd.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -1492,6 +1493,18 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
         lockfile = QDir::cleanPath(QDir::tempPath());
         lockfile += QLatin1Char('/') + socket_key;
     }
+
+#ifdef Q_OS_LINUX
+    struct stat st{};
+    auto ret = ::lstat("/proc/self/ns/pid", &st);
+    if (ret < 0) {
+      qCWarning(dgAppHelper)
+          << "failed to get pid namespace:" << ::strerror(errno);
+      return false;
+    }
+    lockfile += QStringLiteral("_%1").arg(st.st_ino);
+#endif
+
     lockfile += QStringLiteral(".lock");
     static QScopedPointer <QLockFile> lock(new QLockFile(lockfile));
     // 同一个进程多次调用本接口使用最后一次设置的 key
