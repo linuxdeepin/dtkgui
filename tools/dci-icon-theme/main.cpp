@@ -9,9 +9,24 @@
 #include <QBuffer>
 #include <QDebug>
 
+#include <QtConcurrent/QtConcurrent>
 #include <DDciFile>
+#include <stdexcept>
+#include <atomic>
 
 DCORE_USE_NAMESPACE
+
+// Custom exception for DCI processing errors
+class DciProcessingError : public std::runtime_error {
+public:
+    explicit DciProcessingError(const QString &message, int code = -1) 
+        : std::runtime_error(message.toStdString()), errorCode(code) {}
+    
+    int getErrorCode() const { return errorCode; }
+    
+private:
+    int errorCode;
+};
 
 #define MAX_SCALE 10
 #define INVALIDE_QUALITY -2
@@ -24,7 +39,7 @@ static inline void initQuality() {
 static inline void dciChecker(bool result, std::function<const QString()> cb) {
     if (!result) {
         qWarning() << "Failed on writing dci file" << cb();
-        exit(-6);
+        throw DciProcessingError("Failed on writing dci file", -6);
     }
 }
 
@@ -37,7 +52,7 @@ static inline QByteArray webpImageData(const QImage &image, int quality) {
     return data;
 }
 
-static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QString &targetDir, int scale/* = 2*/)
+static bool writeScaledImage(DDciFile &dci, const QImage &image, const QString &targetDir, int scale/* = 2*/)
 {
     QString sizeDir = targetDir.mid(1, targetDir.indexOf("/", 1) - 1);
     bool ok = false;
@@ -46,19 +61,15 @@ static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QStr
         baseSize = 256;
 
     int size = scale * baseSize;
-    QImageReader image(imageFile);
-    if (!image.canRead()) {
-        qWarning() << "Ignore the null image file:" << imageFile;
-        return false;
-    }
-
-    if (image.supportsOption(QImageIOHandler::ScaledSize)) {
-        image.setScaledSize(QSize(size, size));
+    QImage img;
+    if (image.width() == size) {
+        img = image;
+    } else {
+        img = image.scaledToWidth(size, Qt::SmoothTransformation);
     }
 
     dciChecker(dci.mkdir(targetDir + QString("/%1").arg(scale)), [&]{return dci.lastErrorString();});
-    const QImage &img = image.read().scaledToWidth(size, Qt::SmoothTransformation);
-    int quality =  quality4Scaled[scale - 1];
+    int quality = quality4Scaled[scale - 1];
     const QByteArray &data = webpImageData(img, quality);
     dciChecker(dci.writeFile(targetDir + QString("/%1/1.webp").arg(scale), data), [&]{return dci.lastErrorString();});
 
@@ -67,11 +78,18 @@ static bool writeScaledImage(DDciFile &dci, const QString &imageFile, const QStr
 
 static bool writeImage(DDciFile &dci, const QString &imageFile, const QString &targetDir)
 {
+    QImageReader reader(imageFile);
+    if (!reader.canRead()) {
+        qWarning() << "Ignore the null image file:" << imageFile;
+        return false;
+    }
+
+    auto image = reader.read();
     for (int i = 0; i < MAX_SCALE; ++i) {
         if (quality4Scaled[i] == INVALIDE_QUALITY)
             continue;
 
-        if (!writeScaledImage(dci, imageFile, targetDir, i + 1))
+        if (!writeScaledImage(dci, image, targetDir, i + 1))
             return false;
     }
 
@@ -127,7 +145,7 @@ QMultiHash<QString, QString> parseIconFileSymlinkMap(const QString &csvFile) {
     QFile file(csvFile);
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "Failed on open symlink map file:" << csvFile;
-        exit(-7);
+        throw DciProcessingError("Failed on open symlink map file", -7);
     }
 
     QMultiHash<QString, QString> map;
@@ -311,12 +329,17 @@ int main(int argc, char *argv[])
 
     QMultiHash<QString, QString> symlinksMap;
     if (cp.isSet(symlinkMap)) {
-        symlinksMap = parseIconFileSymlinkMap(cp.value(symlinkMap));
+        try {
+            symlinksMap = parseIconFileSymlinkMap(cp.value(symlinkMap));
+        } catch (const DciProcessingError &e) {
+            qWarning() << "Error parsing symlink map:" << e.what();
+            return e.getErrorCode();
+        }
     }
 
     const QStringList nameFilter = cp.isSet(fileFilter) ? cp.values(fileFilter) : QStringList();
     const auto sourceDirectory = cp.positionalArguments();
-    for (const auto &sd : qAsConst(sourceDirectory)) {
+    for (const auto &sd : sourceDirectory) {
         QDir sourceDir(sd);
         if (!sourceDir.exists()) {
             qWarning() << "Ignore the non-exists directory:" << sourceDir;
@@ -349,6 +372,8 @@ int main(int argc, char *argv[])
             }
         }
 
+        // Collect all files first, grouped by icon name to avoid concurrent access to same DCI file
+        QMap<QString, QList<QFileInfo>> iconGroups;
         QDirIterator di(sourceDir.absolutePath(), nameFilter,
                         QDir::NoDotAndDotDot | QDir::Files,
                         QDirIterator::Subdirectories);
@@ -360,7 +385,12 @@ int main(int argc, char *argv[])
                 continue;
 
             if (cp.isSet(fixDarkTheme)) {
-                doFixDarkTheme(file, outputDir, symlinksMap);
+                try {
+                    doFixDarkTheme(file, outputDir, symlinksMap);
+                } catch (const DciProcessingError &e) {
+                    qWarning() << "Error fixing dark theme for file" << file.absoluteFilePath() << ":" << e.what();
+                    return e.getErrorCode();
+                }
                 continue;
             }
 
@@ -369,46 +399,82 @@ int main(int argc, char *argv[])
                 continue;
             }
 
-            QString dirName = file.absoluteDir().dirName();
-            bool isNum = false;
-            dirName.toInt(&isNum);
-            dirName.prepend("/");
+            iconGroups[file.completeBaseName()].append(file);
+        }
+        
+        // Process with proper exception handling
+        std::atomic<bool> hasError{false};
+        int errorCode = 0;
+        
+        // Process icon groups concurrently (each group shares same DCI file)
+        QList<QString> iconNames = iconGroups.keys();
+        QtConcurrent::blockingMap(iconNames, [&](const QString &iconName) {
+            if (hasError.load()) return; // Skip if already has error
+            
+            try {
+                const QList<QFileInfo> &files = iconGroups[iconName];
+                const QString dciFilePath(outputDir.absoluteFilePath(iconName) + surfix + ".dci");
+                QScopedPointer<DDciFile> dciFile;
+        
+                for (const QFileInfo &file : files) {
+                    QString dirName = file.absoluteDir().dirName();
+                    bool isNum = false;
+                    dirName.toInt(&isNum);
+                    dirName.prepend("/");
+                    
+                    // Initialize DCI file once per icon group
+                    if (dciFile.isNull()) {
+                        if (QFileInfo::exists(dciFilePath)) {
+                            dciFile.reset(new DDciFile(dciFilePath));
+                        }
+                        if (dciFile.isNull() || !dciFile->isValid()) {
+                            dciFile.reset(new DDciFile);
+                        }
+                    }
+                    if (dciFile->exists(dirName)) {
+                        qWarning() << "Skip exists dci file:" << dciFilePath << dirName << dciFile->list(dirName);
+                        continue;
+                    }
 
-            QScopedPointer<DDciFile> dciFile;
-            const QString dciFilePath(outputDir.absoluteFilePath(file.completeBaseName()) + surfix + ".dci");
-            if (QFileInfo::exists(dciFilePath)) {
-                dciFile.reset(new DDciFile(dciFilePath));
-                if (dciFile->isValid() && dciFile->exists(dirName)) {
-                     qWarning() << "Skip exists dci file:" << dciFilePath << dirName << dciFile->list(dirName);
-                     continue;
+                    qInfo() << "Writing to dci file:" << file.absoluteFilePath() << "==>" << dciFilePath;
+
+                    QString sizeDir = isNum ? dirName : "/256";  // "/256"
+                    QString normalLight = sizeDir + "/normal.light";         //  "/256/normal.light"
+                    QString normalDark = sizeDir + "/normal.dark";          //   "/256/normal.dark"
+
+                    dciChecker(dciFile->mkdir(sizeDir), [&]{return dciFile->lastErrorString();});
+                    dciChecker(dciFile->mkdir(normalLight), [&]{return dciFile->lastErrorString();});
+                    if (!writeImage(*dciFile, file.filePath(), normalLight))
+                        continue;
+                    
+                    dciChecker(dciFile->mkdir(normalDark), [&]{return dciFile->lastErrorString();});
+                    QFileInfo darkIcon(file.dir().absoluteFilePath("dark/" + file.fileName()));
+                    if (darkIcon.exists()) {
+                        writeImage(*dciFile, darkIcon.filePath(), normalDark);
+                    } else {
+                        dciChecker(recursionLink(*dciFile, normalLight, normalDark), [&]{return dciFile->lastErrorString();});
+                    }
                 }
+                
+                // Write DCI file once per icon group
+                if (!dciFile.isNull()) {
+                    dciChecker(dciFile->writeToFile(dciFilePath), [&]{return dciFile->lastErrorString();});
+                    
+                    // Create symlinks for all files in this group
+                    for (const QFileInfo &file : files) {
+                        makeLink(file, outputDir, dciFilePath, symlinksMap);
+                    }
+                }
+            } catch (const DciProcessingError &e) {
+                qWarning() << "Error processing icon group" << iconName << ":" << e.what();
+                hasError.store(true);
+                errorCode = e.getErrorCode();
             }
+        });
 
-            qInfo() << "Writing to dci file:" << file.absoluteFilePath() << "==>" << dciFilePath;
-
-            if (dciFile.isNull() || !dciFile->isValid())
-                dciFile.reset(new DDciFile);
-
-            QString sizeDir = isNum ? dirName : "/256";  // "/256"
-            QString normalLight = sizeDir + "/normal.light";         //  "/256/normal.light"
-            QString normalDark = sizeDir + "/normal.dark";          //   "/256/normal.dark"
-
-            dciChecker(dciFile->mkdir(sizeDir), [&]{return dciFile->lastErrorString();});
-            dciChecker(dciFile->mkdir(normalLight), [&]{return dciFile->lastErrorString();});
-            if (!writeImage(*dciFile, file.filePath(), normalLight))
-                continue;
-
-            dciChecker(dciFile->mkdir(normalDark), [&]{return dciFile->lastErrorString();});
-            QFileInfo darkIcon(file.dir().absoluteFilePath("dark/" + file.fileName()));
-            if (darkIcon.exists()) {
-                writeImage(*dciFile, darkIcon.filePath(), normalDark);
-            } else {
-                dciChecker(recursionLink(*dciFile, normalLight, normalDark), [&]{return dciFile->lastErrorString();});
-            }
-
-            dciChecker(dciFile->writeToFile(dciFilePath), [&]{return dciFile->lastErrorString();});
-
-            makeLink(file, outputDir, dciFilePath, symlinksMap);
+        if (hasError.load()) {
+            qWarning() << "Encountered errors during DCI file writing. Exiting with error code:" << errorCode;
+            return errorCode;
         }
     }
 
