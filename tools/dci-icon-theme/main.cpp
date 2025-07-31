@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <QCoreApplication>
+#include <QGuiApplication>
 #include <QImageReader>
 #include <QCommandLineParser>
 #include <QDirIterator>
@@ -240,7 +240,7 @@ int main(int argc, char *argv[])
                                                 "and -1 to use the image handler default settings.\n"
                                                 "The higher the quality, the larger the dci icon file size", "scale quality");
 
-    QCoreApplication a(argc, argv);
+    QGuiApplication a(argc, argv);
 
     a.setApplicationName("dci-icon-theme");
     a.setApplicationVersion(QString("%1.%2.%3")
