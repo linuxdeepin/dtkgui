@@ -8,7 +8,7 @@ add_executable(${TARGET_NAME}
 )
 
 target_link_libraries(${TARGET_NAME} PRIVATE
-    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::Concurrent
     ${LIB_NAME}
 )
