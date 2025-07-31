@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.7.20] - 2025-07-31
+
+### Added
+
+- Add pid namespace isolation to setSingleInstance
+- Add concurrent processing for DCI icon conversion
+
+### Changed
+
+- Update REUSE license file for CHANGELOG
+- Move icon finder functionality to separate tool
+- Switch to QGuiApplication for SVG rendering
+
 ## [5.7.19] - 2025-07-03
 
 ### Fixed
