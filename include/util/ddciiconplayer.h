@@ -106,6 +106,7 @@ public:
 
     QImage currentImage() const;
     void play(DDciIcon::Mode mode);
+    void play(DDciIcon::Mode mode, DDciIconImagePlayer::Flags flags);
     void stop();
     void abort();
 

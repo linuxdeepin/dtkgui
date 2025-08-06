@@ -1075,10 +1075,15 @@ QImage DDciIconPlayer::currentImage() const
     return d->image;
 }
 
-void DDciIconPlayer::play(DDciIcon::Mode mode)
+void DDciIconPlayer::play(DDciIcon::Mode mode, DDciIconImagePlayer::Flags flags)
 {
     D_D(DDciIconPlayer);
-    d->play(mode, DDciIconImagePlayer::IgnoreLastImageLoop);
+    d->play(mode, flags);
+}
+
+void DDciIconPlayer::play(DDciIcon::Mode mode)
+{
+    play(mode, DDciIconImagePlayer::IgnoreLastImageLoop);
 }
 
 void DDciIconPlayer::stop()
