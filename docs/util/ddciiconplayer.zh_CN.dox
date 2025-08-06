@@ -171,6 +171,11 @@
 @details 为指定的图标模式计算要显示的内容，这可能会导致 currentImage 发生变化。这是个一次性行为，不会影响下一次调用 setMode 后的结果。
 @param[in] mode 指定要播放的图标模式，如果此模式支持动画，会触发此模式自身的动画播放（与 setMode 导致的动画不同的是，此动画不涉及两种模式变化时的过渡规则），否则将修改 currentImage 为此模式对应的静态图片资源。
 
+@fn Dtk::Gui::DDciIconPlayer::play(DDciIcon::Mode mode, DDciIconImagePlayer::Flags flags)
+@details 为指定的图标模式和播放参数计算要显示的内容。
+@param[in] mode 指定要播放的图标模式。
+@param[in] flags 播放参数
+
 @fn Dtk::Gui::DDciIconPlayer::stop()
 @details 如果当前正在播放动画，则停止当前动画的播放，但不会影响队列中下一个动画的播放。可能会导致 DDciIconPlayer::state 发生变化。
 @sa DDciIconPlayer::abort
