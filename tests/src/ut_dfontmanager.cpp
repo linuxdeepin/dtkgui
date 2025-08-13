@@ -21,7 +21,7 @@ TEST(ut_DFontManager, StaticFunction)
     ASSERT_TRUE(DFontManager::fontPixelSize(tF) > 0);
 }
 
-class TDFontManager : public DTestWithParam<int>
+class GTEST_API_ TDFontManager : public DTestWithParam<int>
 {
 protected:
     void SetUp();

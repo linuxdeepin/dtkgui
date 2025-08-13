@@ -95,11 +95,19 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
             isTouchDown = false;
         }
         if (isTouchDown && event->type() == QEvent::MouseButtonPress) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            touchBeginPosition = static_cast<QMouseEvent*>(event)->globalPosition();
+#else
             touchBeginPosition = static_cast<QMouseEvent*>(event)->globalPos();
+#endif
         }
         // add some redundancy to distinguish trigger between system menu and system move
         if (event->type() == QEvent::MouseMove) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            QPointF currentPos = static_cast<QMouseEvent*>(event)->globalPosition();
+#else
             QPointF currentPos = static_cast<QMouseEvent*>(event)->globalPos();
+#endif
             QPointF delta = touchBeginPosition  - currentPos;
             if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
                 return DVtableHook::callOriginalFun(w, &QWindow::event, event);
@@ -123,8 +131,13 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
         self->m_windowMoving = false;
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (is_mouse_move && !event->isAccepted()
+            && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPosition().toPoint())) {
+#else
     if (is_mouse_move && !event->isAccepted()
             && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
+#endif
         if (!self->m_windowMoving && self->m_enableSystemMove) {
             self->m_windowMoving = true;
 

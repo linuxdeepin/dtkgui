@@ -10,7 +10,7 @@
 DGUI_USE_NAMESPACE
 
 class DummySettingsPrivate;
-class DummySettings : public DPlatformSettings
+class Q_DECL_HIDDEN DummySettings : public DPlatformSettings
 {
 public:
     explicit DummySettings(const QString &domain = QString());

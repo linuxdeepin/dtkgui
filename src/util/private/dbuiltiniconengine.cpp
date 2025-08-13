@@ -304,6 +304,8 @@ QString DBuiltinIconEngine::iconName()
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 QList<QSize> DBuiltinIconEngine::availableSizes(QIcon::Mode mode, QIcon::State state)
 {
+    Q_UNUSED(mode);
+    Q_UNUSED(state);
     ensureLoaded();
 
     QList<QSize> sizes;

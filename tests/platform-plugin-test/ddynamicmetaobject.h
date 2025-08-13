@@ -16,7 +16,7 @@
 DGUI_BEGIN_NAMESPACE
 
 class DPlatformSettings;
-class DDynamicMetaObject : public QAbstractDynamicMetaObject
+class Q_DECL_HIDDEN DDynamicMetaObject : public QAbstractDynamicMetaObject
 {
 public:
     explicit DDynamicMetaObject(QObject *base, DPlatformSettings *settings, bool global_settings);

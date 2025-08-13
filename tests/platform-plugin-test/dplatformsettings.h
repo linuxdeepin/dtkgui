@@ -15,7 +15,7 @@ QT_END_NAMESPACE
 
 DGUI_BEGIN_NAMESPACE
 
-class DPlatformSettings
+class Q_DECL_HIDDEN DPlatformSettings
 {
 public:
     virtual ~DPlatformSettings() {}

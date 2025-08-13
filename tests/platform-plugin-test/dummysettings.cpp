@@ -5,7 +5,7 @@
 #include "dummysettings.h"
 #include <QDebug>
 
-class DummySettingsPrivate : public QObject
+class Q_DECL_HIDDEN DummySettingsPrivate : public QObject
 {
 public:
     DummySettingsPrivate(DummySettings *q, const QString &domain, QObject *parent = nullptr);

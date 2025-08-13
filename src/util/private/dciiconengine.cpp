@@ -162,9 +162,10 @@ const
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 QList<QSize> DDciIconEngine::availableSizes(QIcon::Mode mode, QIcon::State state)
 {
+    Q_UNUSED(state);
     ensureIconTheme();
 
-    const auto availableSizes = m_dciIcon.availableSizes(dciTheme(), DDciIcon::Normal);
+    const auto availableSizes = m_dciIcon.availableSizes(dciTheme(), dciMode(mode));
     QList<QSize> sizes;
     sizes.reserve(availableSizes.size());
 

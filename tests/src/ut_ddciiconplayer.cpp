@@ -90,7 +90,7 @@ TEST(ut_DDciIconImage, render)
     }
 }
 
-class ut_DDciIconPlayer : public DTest
+class GTEST_API_ ut_DDciIconPlayer : public DTest
 {
 protected:
     ut_DDciIconPlayer()

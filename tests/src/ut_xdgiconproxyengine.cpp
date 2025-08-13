@@ -18,7 +18,7 @@
 
 DGUI_USE_NAMESPACE
 
-class ut_XdgIconProxyEngine : public testing::Test
+class GTEST_API_ ut_XdgIconProxyEngine : public testing::Test
 {
 protected:
     void SetUp() override;

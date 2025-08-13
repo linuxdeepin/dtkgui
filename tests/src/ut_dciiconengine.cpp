@@ -14,7 +14,7 @@
 
 DGUI_USE_NAMESPACE
 
-class ut_DDciIconEngine : public testing::Test
+class GTEST_API_ ut_DDciIconEngine : public testing::Test
 {
 protected:
     void SetUp() override;

@@ -280,6 +280,7 @@ DPalette DPlatformTheme::fetchPalette(const DPalette &base, bool *ok) const
 
 void DPlatformTheme::setPalette(const DPalette &palette)
 {
+    Q_UNUSED(palette);
 #define SET_PALETTE(Role) \
     set##Role(palette.color(QPalette::Normal, DPalette::Role))
 #if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)

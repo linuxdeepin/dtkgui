@@ -15,7 +15,7 @@
 DGUI_USE_NAMESPACE
 DCORE_USE_NAMESPACE
 
-class ut_DNativeSettings : public testing::Test
+class GTEST_API_ ut_DNativeSettings : public testing::Test
 {
 public:
     static void SetUpTestSuite();

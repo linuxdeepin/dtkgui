@@ -275,9 +275,8 @@ void DIconProxyEngine::ensureEngine()
     }
 #endif
     if (!m_iconEngine && !nonCache[theme].contains(m_iconName)) {
-        qWarning("create icon [%s] engine failed.[theme:%s] nonCache[theme].size[%d]",
-                      m_iconName.toUtf8().data(),
-                      theme.toUtf8().data(), nonCache[theme].size());
+        qWarning() << "create icon [" << m_iconName << "] engine failed."
+                   << "theme:" << theme << "and nonCache's size:" << nonCache.size();
         nonCache[theme].insert(m_iconName);
         return;
     }
