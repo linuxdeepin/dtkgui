@@ -18,6 +18,7 @@
 
 MinimalIntegration::MinimalIntegration(const QStringList &parameters)
 {
+    Q_UNUSED(parameters);
     m_primaryScreen = new MinimalScreen();
 
     m_primaryScreen->mGeometry = QRect(0, 0, 240, 320);

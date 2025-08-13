@@ -658,7 +658,11 @@ static const DDciIconEntry::ScalableLayer &findScalableLayer(const DDciIconEntry
     const DDciIconEntry::ScalableLayer *maxLayer = nullptr;
     const int imagePixelRatio = qCeil(devicePixelRatio);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    for (const auto &i : std::as_const(entry->scalableLayers)) {
+#else
     for (const auto &i : qAsConst(entry->scalableLayers)) {
+#endif
         if (!maxLayer || i.imagePixelRatio > maxLayer->imagePixelRatio)
             maxLayer = &i;
         if (i.imagePixelRatio > imagePixelRatio)
@@ -1137,7 +1141,11 @@ int DDciIconImage::currentImageNumber() const
 void DDciIconImagePrivate::init()
 {
     readers.reserve(layers.size());
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    for (const auto &layer : std::as_const(layers)) {
+#else
     for (const auto &layer : qAsConst(layers)) {
+#endif
         ReaderData *data = new ReaderData;
         Q_ASSERT(data);
         auto buffer = new QBuffer();

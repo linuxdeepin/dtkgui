@@ -9,7 +9,7 @@
 
 DGUI_USE_NAMESPACE
 
-class ut_DDciIcon : public DTest
+class GTEST_API_ ut_DDciIcon : public DTest
 {
 public:
     ut_DDciIcon()

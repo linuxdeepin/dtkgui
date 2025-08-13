@@ -127,6 +127,15 @@ void DDynamicMetaObject::init(const QMetaObject *metaObject)
 
         QMetaPropertyBuilder op;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        switch (mp.metaType().id()) {
+        case QMetaType::QByteArray:
+        case QMetaType::QString:
+        case QMetaType::QColor:
+        case QMetaType::Int:
+        case QMetaType::Double:
+        case QMetaType::Bool:
+#else
         switch (mp.type()) {
         case QVariant::Type::ByteArray:
         case QVariant::Type::String:
@@ -134,6 +143,7 @@ void DDynamicMetaObject::init(const QMetaObject *metaObject)
         case QVariant::Type::Int:
         case QVariant::Type::Double:
         case QVariant::Type::Bool:
+#endif
             op = ob.addProperty(mp);
             break;
         default:

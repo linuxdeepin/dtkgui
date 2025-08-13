@@ -250,14 +250,14 @@ QColor DXCBPlatformInterface::darkActiveColor() const
     return qvariant_cast<QColor>(value);
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
+#define GET_COLOR(Role) qvariant_cast<QColor>(getSetting(QByteArrayLiteral(#Role)))
 static QColor getSetting(const QByteArray &key)
 {
+    Q_UNUSED(key);
     qWarning() << "Not implemented, key:" << key;
     return {};
 }
-
-#define GET_COLOR(Role) qvariant_cast<QColor>(getSetting(QByteArrayLiteral(#Role)))
-#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 QColor DXCBPlatformInterface::window() const
 {
     return GET_COLOR(window);
@@ -541,13 +541,14 @@ void DXCBPlatformInterface::setDarkActiveColor(const QColor &activeColor)
     d->theme->setSetting("Qt/DarkActiveColor", activeColor);
 }
 
+#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
+#define SET_COLOR(Role) setSetting(QByteArrayLiteral(#Role), Role)
 static void setSetting(const QByteArray &key, const QColor &color)
 {
+    Q_UNUSED(key);
+    Q_UNUSED(color);
     qWarning() << "Not implemented, key: " << key << "value: " << color;
 }
-
-#define SET_COLOR(Role) setSetting(QByteArrayLiteral(#Role), Role)
-#if DTK_VERSION < DTK_VERSION_CHECK(6, 0, 0, 0)
 void DXCBPlatformInterface::setWindow(const QColor &window)
 {
     SET_COLOR(window);

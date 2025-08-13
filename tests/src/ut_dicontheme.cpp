@@ -20,8 +20,9 @@ TEST(ut_DIconTheme, builtinIcon)
     // icon2 只可能是从外部找到的图标，不会与 icon1 相同
     ASSERT_TRUE(icon1.cacheKey() != icon2.cacheKey());
 #ifndef DTK_DISABLE_LIBXDG
-    if (!icon2.isNull())
+    if (!icon2.isNull()) {
         ASSERT_TRUE(DIconTheme::isXdgIcon(icon2));
+    }
 #endif
 }
 
@@ -36,8 +37,9 @@ TEST(ut_DIconTheme, cachedTheme)
     // icon2 只可能是从外部找到的图标，不会与 icon1 相同
     ASSERT_TRUE(icon1.cacheKey() != icon2.cacheKey());
 #ifndef DTK_DISABLE_LIBXDG
-    if (!icon2.isNull())
+    if (!icon2.isNull()) {
         ASSERT_TRUE(DIconTheme::isXdgIcon(icon2));
+    }
 #endif
 
     const QIcon icon1_cached1 = DIconTheme::cached()->findQIcon("edit");

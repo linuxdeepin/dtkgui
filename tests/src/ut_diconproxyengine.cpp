@@ -23,7 +23,7 @@ private:
     void virtual_hook(int id, void *data) override;
 */
 
-class ut_DIconProxyEngine : public testing::Test
+class GTEST_API_ ut_DIconProxyEngine : public testing::Test
 {
 protected:
     void SetUp() override;

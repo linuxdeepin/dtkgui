@@ -17,7 +17,7 @@ DGUI_USE_NAMESPACE
 #define ICONNAME "icon_Layout"
 #define ICONSIZE 16
 
-class ut_DBuiltinIconEngine : public testing::Test
+class GTEST_API_ ut_DBuiltinIconEngine : public testing::Test
 {
 protected:
     void SetUp() override;

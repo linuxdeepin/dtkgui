@@ -14,14 +14,14 @@ DGUI_BEGIN_NAMESPACE
 #define WmClass "_d_WmClass"
 #define ProcessId "_d_ProcessId"
 
-class TDForeignWindow : public DTest
+class GTEST_API_ TDForeignWindow : public DTest
 {
 protected:
     virtual void SetUp()
     {
         const QVector<quint32> &currentIdList = DWindowManagerHelper::instance()->currentWorkspaceWindowIdList();
         foreignWindows.clear();
-        for (quint32 currentId : qAsConst(currentIdList)) {
+        for (const auto &currentId : currentIdList) {
             foreignWindows.append(DForeignWindow::fromWinId(currentId));
         }
     }
@@ -36,13 +36,13 @@ protected:
 
 TEST_F(TDForeignWindow, wmClass)
 {
-    for (auto foreignWindow : qAsConst(foreignWindows))
+    for (auto foreignWindow : foreignWindows)
         ASSERT_NE(foreignWindow->wmClass(), QString());
 }
 
 TEST_F(TDForeignWindow, pid)
 {
-    for (auto foreignWindow : qAsConst(foreignWindows))
+    for (auto foreignWindow : foreignWindows)
         ASSERT_NE(foreignWindow->pid(), 0);
 }
 
@@ -51,7 +51,7 @@ TEST_F(TDForeignWindow, event)
     QDynamicPropertyChangeEvent wmevent(WmClass);
     QDynamicPropertyChangeEvent pidevent(ProcessId);
 
-    for (auto foreignWindow : qAsConst(foreignWindows)) {
+    for (auto foreignWindow : foreignWindows) {
         QSignalSpy wmspy(foreignWindow, SIGNAL(wmClassChanged()));
         ASSERT_TRUE(foreignWindow->event(&wmevent));
         ASSERT_EQ(wmspy.count(), 1);

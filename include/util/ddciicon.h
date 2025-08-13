@@ -77,7 +77,8 @@ public:
         Light = 0,
         Dark = 1
     };
-    D_DECL_DEPRECATED enum IconAttibute {
+    // IconAttibute is deprecated, please use IconAttribute instead.
+    enum IconAttibute {
         HasPalette = 0x001
     };
     using IconAttribute = DDciIcon::IconAttibute;

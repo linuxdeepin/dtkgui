@@ -18,7 +18,7 @@ DGUI_BEGIN_NAMESPACE
 #define DXCB_PLUGIN_KEY "dxcb"
 #define DXCB_PLUGIN_SYMBOLIC_PROPERTY "_d_isDxcb"
 
-#define DEFINE_CONST_CHAR(Name) const char _##Name[] = "_d_" #Name
+#define DEFINE_CONST_CHAR(Name) [[maybe_unused]] const char _##Name[] = "_d_" #Name
 
 DEFINE_CONST_CHAR(useDxcb);
 DEFINE_CONST_CHAR(redirectContent);

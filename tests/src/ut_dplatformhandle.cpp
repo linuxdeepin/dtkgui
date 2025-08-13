@@ -106,13 +106,21 @@ TEST_F(TDPlatformHandle, testFunction)
     DPlatformHandle::setDisableWindowOverrideCursor(window, true);
     QVariant windowRadius = window->property(WINDOWRADIUS);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (windowRadius.isValid() && windowRadius.canConvert<int>()) {
+#else
     if (windowRadius.isValid() && windowRadius.canConvert(QVariant::Int)) {
+#endif
         ASSERT_EQ(pHandle->windowRadius(), windowRadius.toInt());
     }
 
     QVariant borderWidth = window->property(BORDERWIDTH);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (borderWidth.isValid() && borderWidth.canConvert<int>()) {
+#else
     if (borderWidth.isValid() && borderWidth.canConvert(QVariant::Int)) {
+#endif
         ASSERT_EQ(pHandle->borderWidth(), borderWidth.toInt());
     } else {
         ASSERT_EQ(pHandle->borderWidth(), 0);
@@ -120,7 +128,11 @@ TEST_F(TDPlatformHandle, testFunction)
 
     QVariant borderColor = window->property(BORDRCOLOR);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (borderColor.isValid() && borderColor.canConvert<QColor>()) {
+#else
     if (borderColor.isValid() && borderColor.canConvert(QVariant::Color)) {
+#endif
         ASSERT_EQ(pHandle->borderColor(), borderColor.value<QColor>());
     } else {
         ASSERT_FALSE(pHandle->borderColor().isValid());
@@ -128,7 +140,11 @@ TEST_F(TDPlatformHandle, testFunction)
 
     QVariant shadowRadius = window->property(SHADOWRADIUS);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (shadowRadius.isValid() && shadowRadius.canConvert<int>()) {
+#else
     if (shadowRadius.isValid() && shadowRadius.canConvert(QVariant::Int)) {
+#endif
         ASSERT_EQ(pHandle->shadowRadius(), shadowRadius.toInt());
     } else {
         ASSERT_FALSE(pHandle->borderColor().isValid());
@@ -136,7 +152,11 @@ TEST_F(TDPlatformHandle, testFunction)
 
     QVariant shadowOffset = window->property(SHADOWOFFSET);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (shadowOffset.isValid() && shadowOffset.canConvert<QPoint>()) {
+#else
     if (shadowOffset.isValid() && shadowOffset.canConvert(QVariant::Point)) {
+#endif
         ASSERT_EQ(pHandle->shadowOffset(), shadowOffset.value<QPoint>());
     } else {
         ASSERT_TRUE(pHandle->shadowOffset().isNull());
@@ -144,7 +164,11 @@ TEST_F(TDPlatformHandle, testFunction)
 
     QVariant shadowColor = window->property(SHADOWCOLOR);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (shadowColor.isValid() && shadowColor.canConvert<QColor>()) {
+#else
     if (shadowColor.isValid() && shadowColor.canConvert(QVariant::Color)) {
+#endif
         ASSERT_EQ(pHandle->shadowColor(), shadowColor.value<QColor>());
     } else {
         ASSERT_FALSE(pHandle->shadowColor().isValid());
@@ -160,7 +184,11 @@ TEST_F(TDPlatformHandle, testFunction)
 
     QVariant frameMask = window->property(FRAMEMASK);
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (frameMask.isValid() && frameMask.canConvert<QRegion>()) {
+#else
     if (frameMask.isValid() && frameMask.canConvert(QVariant::Region)) {
+#endif
         ASSERT_EQ(pHandle->frameMask(), frameMask.value<QRegion>());
     } else {
         ASSERT_TRUE(pHandle->frameMask().isEmpty());
@@ -175,35 +203,55 @@ TEST_F(TDPlatformHandle, testFunction)
     }
 
     QVariant translucentBackground = window->property(TRANSLUCENTBACKGROUND);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (translucentBackground.isValid() && translucentBackground.canConvert<bool>()) {
+#else
     if (translucentBackground.isValid() && translucentBackground.canConvert(QVariant::Bool)) {
+#endif
         ASSERT_EQ(pHandle->translucentBackground(), translucentBackground.toBool());
     } else {
         ASSERT_FALSE(pHandle->translucentBackground());
     }
 
     QVariant enableSystemResize = window->property(ENABLESYSTEMRESIZE);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (enableSystemResize.isValid() && enableSystemResize.canConvert<bool>()) {
+#else
     if (enableSystemResize.isValid() && enableSystemResize.canConvert(QVariant::Bool)) {
+#endif
         ASSERT_EQ(pHandle->enableSystemResize(), enableSystemResize.toBool());
     } else {
         ASSERT_FALSE(pHandle->enableSystemResize());
     }
 
     QVariant enableSystemMove = window->property(ENABLESYSTEMMOVE);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (enableSystemMove.isValid() && enableSystemMove.canConvert<bool>()) {
+#else
     if (enableSystemMove.isValid() && enableSystemMove.canConvert(QVariant::Bool)) {
+#endif
         ASSERT_EQ(pHandle->enableSystemMove(), enableSystemMove.toBool());
     } else {
         ASSERT_FALSE(pHandle->enableSystemMove());
     }
 
     QVariant enableBlurWindow = window->property(ENABLEBLURWINDOW);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (enableBlurWindow.isValid() && enableBlurWindow.canConvert<bool>()) {
+#else
     if (enableBlurWindow.isValid() && enableBlurWindow.canConvert(QVariant::Bool)) {
+#endif
         ASSERT_EQ(pHandle->enableBlurWindow(), enableBlurWindow.toBool());
     } else {
         ASSERT_FALSE(pHandle->enableBlurWindow());
     }
 
     QVariant autoInputMaskByClipPath = window->property(AUTOINPUTMASKBYCLIPPATH);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (autoInputMaskByClipPath.isValid() && autoInputMaskByClipPath.canConvert<bool>()) {
+#else
     if (autoInputMaskByClipPath.isValid() && autoInputMaskByClipPath.canConvert(QVariant::Bool)) {
+#endif
         ASSERT_EQ(pHandle->autoInputMaskByClipPath(), autoInputMaskByClipPath.toBool());
     } else {
         ASSERT_FALSE(pHandle->autoInputMaskByClipPath());
