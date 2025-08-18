@@ -1501,14 +1501,27 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     }
 
 #ifdef Q_OS_LINUX
-    struct stat st{};
-    auto ret = ::lstat("/proc/self/ns/pid", &st);
-    if (ret < 0) {
-      qCWarning(dgAppHelper)
-          << "failed to get pid namespace:" << ::strerror(errno);
-      return false;
+    auto info = QFileInfo{"/proc/self/ns/pid"};
+    // maybe kernel doesn't support namespace
+    while (info.exists()) {
+      auto pidns = QFileInfo{info.symLinkTarget()}.fileName();
+      if (pidns.isEmpty()) {
+        break;
+      }
+
+      // maybe format has been changed
+      auto start = pidns.indexOf('[');
+      auto end = pidns.indexOf(']');
+      if (start == -1 || end == -1) {
+        break;
+      }
+
+      auto num = pidns.mid(start + 1, end - start - 1);
+
+      // append pid namespace
+      lockfile += QStringLiteral("_%1").arg(num);
+      break;
     }
-    lockfile += QStringLiteral("_%1").arg(st.st_ino);
 #endif
 
     lockfile += QStringLiteral(".lock");
