@@ -49,7 +49,7 @@ DFontManager::~DFontManager()
   \value T4
   系统级别为 T4 的字体大小, 默认是20 px
   \value T5
-  系统级别为 T5 的字体大小, 默认是17 px
+  系统级别为 T5 的字体大小, 默认是16 px
   \value T6
   系统级别为 T6 的字体大小, 默认是14 px
   \value T7
@@ -60,6 +60,8 @@ DFontManager::~DFontManager()
   系统级别为 T9 的字体大小, 默认是11 px
   \value T10
   系统级别为 T10 的字体大小, 默认是10 px
+  \value T11
+  系统级别为 T11 的字体大小, 默认是8 px
 
   \omitvalue NSizeTypes
  */

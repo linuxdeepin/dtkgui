@@ -44,6 +44,7 @@ public:
         T8,
         T9,
         T10,
+        T11,
         NSizeTypes
     };
     Q_ENUM(SizeType)
@@ -109,6 +110,10 @@ public:
     inline const QFont t10() const
     {
         return get(T10);
+    }
+    inline const QFont t11() const
+    {
+        return get(T11);
     }
 
 Q_SIGNALS:

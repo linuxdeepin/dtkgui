@@ -76,4 +76,5 @@ TEST_F(TDFontManager, testFontSize)
     ASSERT_EQ(manager->t8().pixelSize(), manager->fontPixelSize(DFontManager::T8));
     ASSERT_EQ(manager->t9().pixelSize(), manager->fontPixelSize(DFontManager::T9));
     ASSERT_EQ(manager->t10().pixelSize(), manager->fontPixelSize(DFontManager::T10));
+    ASSERT_EQ(manager->t11().pixelSize(), manager->fontPixelSize(DFontManager::T11));
 }

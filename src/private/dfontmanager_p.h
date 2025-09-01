@@ -17,7 +17,7 @@ class DFontManagerPrivate : public DTK_CORE_NAMESPACE::DObjectPrivate
 public:
     DFontManagerPrivate(DFontManager *qq);
 
-    int fontPixelSize[DFontManager::NSizeTypes] = {40, 30, 24, 20, 17, 14, 13, 12, 11, 10};
+    int fontPixelSize[DFontManager::NSizeTypes] = {40, 30, 24, 20, 16, 14, 13, 12, 11, 10, 8};
     int baseFontSizeType = DFontManager::T6;
     // 字号的差值
     int fontPixelSizeDiff = 0;
