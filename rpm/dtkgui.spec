@@ -1,5 +1,5 @@
 Name:           dtkgui
-Version:        5.7.21
+Version:        5.7.22
 Release:        1%{?dist}
 Summary:        Deepin dtkgui
 License:        LGPLv3+
