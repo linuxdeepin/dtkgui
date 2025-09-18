@@ -456,7 +456,10 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
         const_cast<DGuiApplicationHelperPrivate *>(this)->setPaletteType(DGuiApplicationHelper::ColorType(ct), emitSignal);
     };
 
-    applyThemeType(false);
+    // 读取配置文件中的主题类型并立即应用
+    DTK_CORE_NAMESPACE::DConfig dconfig("org.deepin.dtk.preference");
+    int ct = dconfig.value("themeType", DGuiApplicationHelper::UnknownType).toInt();
+    const_cast<DGuiApplicationHelperPrivate *>(this)->setPaletteType(DGuiApplicationHelper::ColorType(ct), false);
 
     QObject::connect(_d_dconfig.operator ()(), &OrgDeepinDTKPreference::themeTypeChanged, _d_dconfig, [applyThemeType] {
         applyThemeType(true);
