@@ -13,8 +13,14 @@
 #include <qpa/qplatformwindow.h>
 #include <qpa/qwindowsysteminterface.h>
 
+#include <QtGlobal>
+
 #include <private/qgenericunixeventdispatcher_p.h>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+#include <private/qdesktopunixservices_p.h>
+#else
 #include <private/qgenericunixservices_p.h>
+#endif
 
 MinimalIntegration::MinimalIntegration(const QStringList &parameters)
 {
@@ -54,7 +60,11 @@ QAbstractEventDispatcher *MinimalIntegration::createEventDispatcher() const
 QPlatformServices *MinimalIntegration::services() const
 {
     if (!m_services)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+        m_services.reset(new QDesktopUnixServices);
+#else
         m_services.reset(new QGenericUnixServices);
+#endif
     return m_services.get();
 }
 
