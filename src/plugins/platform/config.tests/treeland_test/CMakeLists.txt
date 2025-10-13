@@ -28,6 +28,11 @@ if("${QT_VERSION_MAJOR}" STREQUAL "6")
     qt6_generate_wayland_protocol_client_sources(${PROJECT_NAME} FILES
         ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
     )
+
+    if (${Qt6Core_VERSION} VERSION_GREATER_EQUAL "6.10.0")
+        set(QT_NO_PRIVATE_MODULE_WARNING ON)
+        find_package(Qt6 REQUIRED COMPONENTS GuiPrivate CorePrivate WaylandClientPrivate)
+    endif()
 else()
     # ECM setup
     include(FeatureSummary)

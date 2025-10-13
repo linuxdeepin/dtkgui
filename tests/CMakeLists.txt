@@ -1,6 +1,13 @@
 set(BIN_NAME ut-DtkGui)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Test)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Gui Widgets DBus Network Test)
+if ("${QT_VERSION_MAJOR}" STREQUAL "6")
+    if (${Qt6Core_VERSION} VERSION_GREATER_EQUAL "6.10.0")
+        set(QT_NO_PRIVATE_MODULE_WARNING ON)
+        find_package(Qt6 REQUIRED COMPONENTS CorePrivate GuiPrivate WaylandClientPrivate)
+    endif()
+endif()
+
 find_package(GTest REQUIRED)
 
 file(GLOB test_SRC
@@ -44,7 +51,7 @@ target_link_libraries(${BIN_NAME} PRIVATE
     m
 )
 
-if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND) 
+if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
 target_link_libraries(${BIN_NAME} PRIVATE
     PkgConfig::libraw
     FreeImage::FreeImage
@@ -52,7 +59,7 @@ target_link_libraries(${BIN_NAME} PRIVATE
 endif()
 
 if(NOT DTK_DISABLE_LIBXDG)
-    target_link_libraries(${BIN_NAME} PRIVATE 
+    target_link_libraries(${BIN_NAME} PRIVATE
         Qt${QT_VERSION_MAJOR}XdgIconLoader
     )
 endif()
