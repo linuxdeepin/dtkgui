@@ -392,7 +392,12 @@ void DGuiApplicationHelperPrivate::notifyAppThemeChanged()
 
 void DGuiApplicationHelperPrivate::notifyAppThemeChangedByEvent()
 {
+   // https://github.com/qt/qtbase/commit/68a9c5fe513e147e4cffd29b50a4714813df411e
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+    QWindowSystemInterfacePrivate::ThemeChangeEvent event;
+#else
     QWindowSystemInterfacePrivate::ThemeChangeEvent event(nullptr);
+#endif
     // 此事件会促使QGuiApplication重新从QPlatformTheme中获取系统级别的QPalette.
     // 而在deepin平台下, 系统级别的QPalette来源自 \a applicationPalette()
     QGuiApplicationPrivate::processThemeChanged(&event);
@@ -509,13 +514,13 @@ DGuiApplicationHelper::SizeMode DGuiApplicationHelperPrivate::fetchSizeMode(bool
 /*!
   \enum DGuiApplicationHelper::ColorType
   DGuiApplicationHelper::ColorType 定义了主题类型.
-  
+
   \var DGuiApplicationHelper::ColorType DGuiApplicationHelper::UnknownType
   未知主题(浅色主题或深色主题)
-  
+
   \var DGuiApplicationHelper::ColorType DGuiApplicationHelper::LightType
   浅色主题
-  
+
   \var DGuiApplicationHelper::ColorType DGuiApplicationHelper::DarkType
   深色主题
  */
@@ -523,28 +528,28 @@ DGuiApplicationHelper::SizeMode DGuiApplicationHelperPrivate::fetchSizeMode(bool
 /*!
   \enum DGuiApplicationHelper::Attribute
   DGuiApplicationHelper::Attribute 定义了功能属性
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::UseInactiveColorGroup
   如果开启，当窗口处于Inactive状态时就会使用QPalette::Inactive的颜色，否则窗口将没有任何颜色变化。
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::ColorCompositing
   是否采用半透明样式的调色板。
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::ReadOnlyLimit
   区分只读枚举。
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::IsDeepinPlatformTheme
   获取当前是否使用deepin的platformtheme插件，platformtheme插件可以为Qt程序提供特定的控件样式，默认使用chameleon主题。
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::IsDXcbPlatform
   获取当前使用的是不是dtk的xcb窗口插件，dxcb插件提供了窗口圆角和阴影功能。
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::IsXWindowPlatform
   获取当前是否运行在X11环境中。
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::IsTableEnvironment
   获取当前是否运行在deepin平板环境中，检测XDG_CURRENT_DESKTOP环境变量是不是tablet结尾。
-  
+
   \var DGuiApplicationHelper::Attribute DGuiApplicationHelper::IsDeepinEnvironment
   获取当前是否运行在deepin桌面环境中，检测XDG_CURRENT_DESKTOP环境变量是不是deepin。
  */
@@ -1723,7 +1728,7 @@ bool DGuiApplicationHelper::loadTranslator(const QString &fileName, const QList<
         if (locale.language() != QLocale::English) // English does not need translation
             localeNames << locale.name();
     }
-    
+
     if (!localeNames.isEmpty()) {
         qWarning() << fileName << "can not find qm files for locales" << localeNames;
     }

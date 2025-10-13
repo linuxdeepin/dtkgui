@@ -18,11 +18,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set build option
 option(DTK_DISABLE_LIBXDG "Disable libxdg" OFF)
-find_package(Qt${QT_VERSION_MAJOR}XdgIconLoader)
-if (NOT Qt${QT_VERSION_MAJOR}XdgIconLoader_FOUND)
-    message(WARNING " XdgIconLoader Not Found, DISABLE LIBXDG !")
-    set (DTK_DISABLE_LIBXDG ON)
-endif()
 option(DTK_DISABLE_LIBRSVG "Disable librsvg" OFF)
 option(DTK_DISABLE_EX_IMAGE_FORMAT "Disable libraw and freeimage" OFF)
 
@@ -119,6 +114,15 @@ find_package(PkgConfig REQUIRED)
 find_package(Dtk${DTK_VERSION_MAJOR} REQUIRED Core)
 find_package(DtkBuildHelper REQUIRED)
 pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
+
+# Only use libxdg under Qt5
+if(NOT DTK_DISABLE_LIBXDG AND ${QT_VERSION_MAJOR} STREQUAL "5")
+  find_package(Qt5XdgIconLoader REQUIRED)
+  if (NOT Qt5XdgIconLoader_FOUND)
+      message(WARNING " XdgIconLoader Not Found, DISABLE LIBXDG !")
+      set (DTK_DISABLE_LIBXDG ON)
+  endif()
+endif()
 
 # Check optional image handler dependencies.
 find_package(FreeImage)

@@ -1,5 +1,10 @@
 if("${QT_VERSION_MAJOR}" STREQUAL "6")
-    find_package(Qt6 REQUIRED COMPONENTS Core Widgets WaylandClient)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets WaylandClient)
+
+    if (${Qt6Core_VERSION} VERSION_GREATER_EQUAL "6.10.0")
+        set(QT_NO_PRIVATE_MODULE_WARNING ON)
+        find_package(Qt6 REQUIRED COMPONENTS CorePrivate GuiPrivate WaylandClientPrivate)
+    endif()
 else()
     find_package(Qt5 REQUIRED COMPONENTS WaylandClient XkbCommonSupport)
 endif()
