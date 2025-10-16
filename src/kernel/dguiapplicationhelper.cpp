@@ -1502,11 +1502,6 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     }
 
     socket_key += key;
-    QString lockfile = socket_key;
-    if (!lockfile.startsWith(QLatin1Char('/'))) {
-        lockfile = QDir::cleanPath(QDir::tempPath());
-        lockfile += QLatin1Char('/') + socket_key;
-    }
 
 #ifdef Q_OS_LINUX
     auto info = QFileInfo{"/proc/self/ns/pid"};
@@ -1527,10 +1522,16 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
       auto num = pidns.mid(start + 1, end - start - 1);
 
       // append pid namespace
-      lockfile += QStringLiteral("_%1").arg(num);
+      socket_key += QStringLiteral("_%1").arg(num);
       break;
     }
 #endif
+
+    QString lockfile = socket_key;
+    if (!lockfile.startsWith(QLatin1Char('/'))) {
+        lockfile = QDir::cleanPath(QDir::tempPath());
+        lockfile += QLatin1Char('/') + socket_key;
+    }
 
     lockfile += QStringLiteral(".lock");
     static QScopedPointer <QLockFile> lock(new QLockFile(lockfile));
