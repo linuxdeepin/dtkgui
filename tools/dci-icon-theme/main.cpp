@@ -43,6 +43,37 @@ static inline void dciChecker(bool result, std::function<const QString()> cb) {
     }
 }
 
+// TODO 应该使用xdg图标查找规范解析index.theme来查找尺寸
+static uint foundSize(const QFileInfo &fileInfo) {
+    QDir dir = fileInfo.absoluteDir();
+
+    // 解析尺寸
+    auto parseSize = [](const QString &dirName) -> uint {
+        bool ok;
+        if (int size = dirName.toUInt(&ok); ok) {
+            return size;
+        }
+
+        if (dirName.contains('x') && dirName.split('x').size() == 2) {
+            if (int size = dirName.split('x').first().toUInt(&ok); ok) {
+                return size;
+            }
+        }
+
+        return 0;
+    };
+
+    if (uint size = parseSize(dir.dirName())) {
+        return size;
+    }
+
+    // 尝试找上一级目录
+    if (!dir.cdUp())
+        return 0;
+
+    return parseSize(dir.dirName());
+}
+
 static inline QByteArray webpImageData(const QImage &image, int quality) {
     QByteArray data;
     QBuffer buffer(&data);
@@ -293,10 +324,6 @@ int main(int argc, char *argv[])
 #endif
         QStringList qualityList = cp.value(scaleQuality).split(":", behavior);
 
-#ifdef QT_DEBUG
-            surfix = cp.value(scaleQuality).prepend("-");
-#endif
-
         for (const QString &kv : qualityList) {
             auto sq = kv.split("=");
             if (sq.size() != 2) {
@@ -418,10 +445,9 @@ int main(int argc, char *argv[])
         
                 for (const QFileInfo &file : files) {
                     QString dirName = file.absoluteDir().dirName();
-                    bool isNum = false;
-                    dirName.toInt(&isNum);
-                    dirName.prepend("/");
-                    
+                    uint iconSize = foundSize(file);
+                    dirName = iconSize > 0 ? QString("/%1").arg(iconSize) : dirName.prepend("/");
+
                     // Initialize DCI file once per icon group
                     if (dciFile.isNull()) {
                         if (QFileInfo::exists(dciFilePath)) {
@@ -438,9 +464,14 @@ int main(int argc, char *argv[])
 
                     qInfo() << "Writing to dci file:" << file.absoluteFilePath() << "==>" << dciFilePath;
 
-                    QString sizeDir = isNum ? dirName : "/256";  // "/256"
+                    QString sizeDir = iconSize > 0 ? dirName : "/256";  // "/256" as default
                     QString normalLight = sizeDir + "/normal.light";         //  "/256/normal.light"
                     QString normalDark = sizeDir + "/normal.dark";          //   "/256/normal.dark"
+
+                    if (dciFile->exists(sizeDir)) {
+                        qWarning() << "Skip exists dci file:" << dciFilePath << sizeDir << dciFile->list(sizeDir);
+                        continue;
+                    }
 
                     dciChecker(dciFile->mkdir(sizeDir), [&]{return dciFile->lastErrorString();});
                     dciChecker(dciFile->mkdir(normalLight), [&]{return dciFile->lastErrorString();});
