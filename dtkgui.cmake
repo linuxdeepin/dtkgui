@@ -115,12 +115,16 @@ find_package(Dtk${DTK_VERSION_MAJOR} REQUIRED Core)
 find_package(DtkBuildHelper REQUIRED)
 pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
 
-# Only use libxdg under Qt5
-if(NOT DTK_DISABLE_LIBXDG AND ${QT_VERSION_MAJOR} STREQUAL "5")
-  find_package(Qt5XdgIconLoader REQUIRED)
-  if (NOT Qt5XdgIconLoader_FOUND)
-      message(WARNING " XdgIconLoader Not Found, DISABLE LIBXDG !")
-      set (DTK_DISABLE_LIBXDG ON)
+if(NOT DTK_DISABLE_LIBXDG)
+  # Only use libxdg under Qt5
+  if (${QT_VERSION_MAJOR} STREQUAL "5")
+    find_package(Qt5XdgIconLoader REQUIRED)
+    if (NOT Qt5XdgIconLoader_FOUND)
+        message(WARNING " XdgIconLoader Not Found, DISABLE LIBXDG !")
+        set (DTK_DISABLE_LIBXDG ON)
+    endif()
+  else()
+    set (DTK_DISABLE_LIBXDG ON)
   endif()
 endif()
 
