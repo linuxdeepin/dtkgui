@@ -101,6 +101,23 @@ public:
     QImageReader reader;
 };
 
+static QPixmap compositedPixmap(QIcon::Mode mode, QPixmap &pm, QIconLoaderEngineEntry *entry, QPainter *painter = nullptr) {
+    ImageEntry::Type type = static_cast<ImageEntry *>(entry)->type;
+    if (type == ImageEntry::TextType || (type == ImageEntry::ActionType && mode != QIcon::Normal)) {
+        QPainter pa(&pm);
+        QColor color;
+        pa.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        if (painter) {
+            color = painter->pen().brush().color();
+        } else {
+            auto palette = qApp->palette();
+            color = (mode == QIcon::Selected) ? palette.highlightedText().color() : palette.windowText().color();
+        }
+        pa.fillRect(pm.rect(), color);
+    }
+    return pm;
+}
+
 class Q_DECL_HIDDEN DirImageEntry : public ImageEntry
 {
 public:
@@ -219,12 +236,14 @@ QPixmap DBuiltinIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
     ensureLoaded();
 
     QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, size);
-    if (entry)
+    if (entry) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
-        return entry->pixmap(size, mode, state, devicePixelRatio(nullptr));
+        auto pm = entry->pixmap(size, mode, state, devicePixelRatio(nullptr));
 #else
-        return entry->pixmap(size, mode, state);
+        auto pm = entry->pixmap(size, mode, state);
 #endif
+        return compositedPixmap(mode, pm, entry);
+    }
 
     return QPixmap();
 }
@@ -253,12 +272,7 @@ void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
 #else
     QPixmap pm = entry->pixmap(pixmapSize, mode, state);
 #endif
-    ImageEntry::Type type = static_cast<ImageEntry *>(entry)->type;
-    if (type == ImageEntry::TextType || (type == ImageEntry::ActionType && mode != QIcon::Normal)) {
-        QPainter pa(&pm);
-        pa.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        pa.fillRect(pm.rect(), painter->pen().brush());
-    }
+    pm = compositedPixmap(mode, pm, entry, painter);
 
     pm.setDevicePixelRatio(scale);
     painter->drawPixmap(rect, pm);
@@ -442,6 +456,9 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
         arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state, arg.scale) : QPixmap();
 #else
         arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state) : QPixmap();
+        if (!arg.pixmap.isNull()) {
+            arg.pixmap = compositedPixmap(arg.mode, arg.pixmap, entry);
+        }
 #endif
     }
     break;
