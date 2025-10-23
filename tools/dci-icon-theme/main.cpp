@@ -30,6 +30,7 @@ private:
 
 #define MAX_SCALE 10
 #define INVALIDE_QUALITY -2
+#define SCALABLE_SIZE 256
 static int quality4Scaled[MAX_SCALE] = {};
 static inline void initQuality() {
     for (int i = 0; i < MAX_SCALE; ++i)
@@ -44,11 +45,11 @@ static inline void dciChecker(bool result, std::function<const QString()> cb) {
 }
 
 // TODO 应该使用xdg图标查找规范解析index.theme来查找尺寸
-static uint foundSize(const QFileInfo &fileInfo) {
+static int foundSize(const QFileInfo &fileInfo) {
     QDir dir = fileInfo.absoluteDir();
 
     // 解析尺寸
-    auto parseSize = [](const QString &dirName) -> uint {
+    auto parseSize = [](const QString &dirName) -> int {
         bool ok;
         if (int size = dirName.toUInt(&ok); ok) {
             return size;
@@ -60,10 +61,14 @@ static uint foundSize(const QFileInfo &fileInfo) {
             }
         }
 
+        if (dirName == "scalable") {
+            return SCALABLE_SIZE;
+        }
+
         return 0;
     };
 
-    if (uint size = parseSize(dir.dirName())) {
+    if (int size = parseSize(dir.dirName()); size > 0) {
         return size;
     }
 
@@ -83,14 +88,8 @@ static inline QByteArray webpImageData(const QImage &image, int quality) {
     return data;
 }
 
-static bool writeScaledImage(DDciFile &dci, const QImage &image, const QString &targetDir, int scale/* = 2*/)
+static bool writeScaledImage(DDciFile &dci, const QImage &image, const QString &targetDir, const int baseSize, int scale/* = 2*/)
 {
-    QString sizeDir = targetDir.mid(1, targetDir.indexOf("/", 1) - 1);
-    bool ok = false;
-    int baseSize = sizeDir.toInt(&ok);
-    if (!ok)
-        baseSize = 256;
-
     int size = scale * baseSize;
     QImage img;
     if (image.width() == size) {
@@ -109,20 +108,28 @@ static bool writeScaledImage(DDciFile &dci, const QImage &image, const QString &
 
 static bool writeImage(DDciFile &dci, const QString &imageFile, const QString &targetDir)
 {
+    QString sizeDir = targetDir.mid(1, targetDir.indexOf("/", 1) - 1);
+    bool ok = false;
+    int baseSize = sizeDir.toInt(&ok);
+    if (!ok)
+        baseSize = 256;
+
     QImageReader reader(imageFile);
     if (!reader.canRead()) {
         qWarning() << "Ignore the null image file:" << imageFile;
         return false;
     }
 
-    auto image = reader.read();
     for (int i = 0; i < MAX_SCALE; ++i) {
         if (quality4Scaled[i] == INVALIDE_QUALITY)
             continue;
+        int scale = i + 1;
 
-        if (!writeScaledImage(dci, image, targetDir, i + 1))
+        reader.setScaledSize(QSize(baseSize * scale, baseSize * scale));
+        auto image = reader.read();
+        if (!writeScaledImage(dci, image, targetDir, baseSize, scale))
             return false;
-    }
+        }
 
     return true;
 }
@@ -504,8 +511,8 @@ int main(int argc, char *argv[])
         });
 
         if (hasError.load()) {
-            qWarning() << "Encountered errors during DCI file writing. Exiting with error code:" << errorCode;
-            return errorCode;
+            qWarning() << "Encountered errors during DCI file writing" << errorCode;
+            continue;
         }
     }
 
