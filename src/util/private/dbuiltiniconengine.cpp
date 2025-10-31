@@ -101,6 +101,23 @@ public:
     QImageReader reader;
 };
 
+static QPixmap compositedPixmap(QIcon::Mode mode, QPixmap &pm, QIconLoaderEngineEntry *entry, QPainter *painter = nullptr) {
+    ImageEntry::Type type = static_cast<ImageEntry *>(entry)->type;
+    if (type == ImageEntry::TextType || (type == ImageEntry::ActionType && mode != QIcon::Normal)) {
+        QPainter pa(&pm);
+        QColor color;
+        pa.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        if (painter) {
+            color = painter->pen().brush().color();
+        } else {
+            auto palette = qApp->palette();
+            color = (mode == QIcon::Selected) ? palette.highlightedText().color() : palette.windowText().color();
+        }
+        pa.fillRect(pm.rect(), color);
+    }
+    return pm;
+}
+
 class Q_DECL_HIDDEN DirImageEntry : public ImageEntry
 {
 public:
@@ -219,14 +236,32 @@ QPixmap DBuiltinIconEngine::pixmap(const QSize &size, QIcon::Mode mode,
     ensureLoaded();
 
     QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, size);
-    if (entry)
+    if (entry) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
-        return entry->pixmap(size, mode, state, devicePixelRatio(nullptr));
+        auto pm = entry->pixmap(size, mode, state, devicePixelRatio(nullptr));
 #else
-        return entry->pixmap(size, mode, state);
+        auto pm = entry->pixmap(size, mode, state);
 #endif
+        return compositedPixmap(mode, pm, entry);
+    }
 
     return QPixmap();
+}
+
+static QIconLoaderEngineEntry *perfectEntryForSize(const QThemeIconInfo &info, const QSize &size, qreal scale = 1)
+{
+    const int numEntries = info.entries.size();
+    const int iconsize = qMin(size.width(), size.height());
+    for (int i = 0; i < numEntries; ++i) {
+        const auto &entry = info.entries.at(i);
+        if (static_cast<int>(entry->dir.size * scale) == iconsize)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            return entry.get();
+#else
+            return info.entries.at(i);
+#endif
+    }
+    return nullptr;
 }
 
 void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
@@ -237,9 +272,13 @@ void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
     const qreal scale = devicePixelRatio(painter);
     QSize pixmapSize = rect.size() * scale;
 
-    QIconLoaderEngineEntry *entry = QIconLoaderEngine::entryForSize(m_info, pixmapSize);
-    if (!entry)
-        return;
+    // Search perfect entry first
+    QIconLoaderEngineEntry *entry = perfectEntryForSize(m_info, pixmapSize, scale);
+    if (!entry) {
+         entry = QIconLoaderEngine::entryForSize(m_info, pixmapSize);
+         if (!entry)
+             return;
+    }
 
     // 如果有 background 则绘制背景图先
     QString bgFileName = entry->filename + QStringLiteral(".background");
@@ -253,12 +292,7 @@ void DBuiltinIconEngine::paint(QPainter *painter, const QRect &rect,
 #else
     QPixmap pm = entry->pixmap(pixmapSize, mode, state);
 #endif
-    ImageEntry::Type type = static_cast<ImageEntry *>(entry)->type;
-    if (type == ImageEntry::TextType || (type == ImageEntry::ActionType && mode != QIcon::Normal)) {
-        QPainter pa(&pm);
-        pa.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        pa.fillRect(pm.rect(), painter->pen().brush());
-    }
+    pm = compositedPixmap(mode, pm, entry, painter);
 
     pm.setDevicePixelRatio(scale);
     painter->drawPixmap(rect, pm);
@@ -442,6 +476,9 @@ void DBuiltinIconEngine::virtual_hook(int id, void *data)
         arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state, arg.scale) : QPixmap();
 #else
         arg.pixmap = entry ? entry->pixmap(arg.size, arg.mode, arg.state) : QPixmap();
+        if (!arg.pixmap.isNull()) {
+            arg.pixmap = compositedPixmap(arg.mode, arg.pixmap, entry);
+        }
 #endif
     }
     break;
