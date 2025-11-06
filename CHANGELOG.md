@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.7.26] - 2025-11-06
+
+### Changed
+
+- Improve icon theme generation with scalable support
+- Chore: New release 5.7.25
+
+### Fixed
+
+- 修复DTK搜索框图标颜色不跟随主题变化
+- 没有匹配最佳尺寸的图标
+
 ## [5.7.25] - 2025-10-30
 
 ### Changed
