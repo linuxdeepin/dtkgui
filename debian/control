@@ -1,46 +1,117 @@
 Source: dtkgui
 Section: libdevel
 Priority: optional
-Maintainer: Deepin Packages Builder <packages@deepin.com>
-Build-Depends: debhelper-compat (= 12), pkg-config,
- qtbase5-private-dev, qtbase5-dev-tools, doxygen, graphviz, qttools5-dev,
- libdtkcore-dev, librsvg2-dev, libfreeimage-dev, libraw-dev, libgtest-dev, libgmock-dev,
- libqt5xdg-dev, libqt5xdgiconloader-dev, cmake, qt5-image-formats-plugins, libqt5waylandclient5-dev,
- extra-cmake-modules, qtwayland5-dev-tools, qtwayland5-private-dev, libkf5wayland-dev, treeland-protocols
+Maintainer: Shanshan Ye <yeshanshan@uniontech.com>
+Build-Depends: debhelper-compat (= 12),
+    cmake,
+    pkg-config,
+    libgtest-dev,
+    libgmock-dev,
+    libdtkcommon-dev,
+    librsvg2-dev,
+    libfreeimage-dev,
+    libraw-dev,
+    treeland-protocols,
+    extra-cmake-modules,
+    libdtkcore-dev <!nodtk5>,
+    qtbase5-dev-tools <!nodtk5>,
+    qtbase5-private-dev <!nodtk5>,
+    qttools5-dev <!nodtk5>,
+    libqt5xdg-dev <!nodtk5>,
+    libqt5xdgiconloader-dev <!nodtk5>,
+    libqt5waylandclient5-dev <!nodtk5>,
+    qtwayland5-dev-tools <!nodtk5>,
+    qtwayland5-private-dev <!nodtk5>,
+    libkf5wayland-dev <!nodtk5>,
+    qt5-image-formats-plugins <!nodtk5>,
+    libdtk6core-dev <!nodtk6>,
+    qt6-base-dev-tools <!nodtk6>,
+    qt6-base-dev <!nodtk6>,
+    qt6-base-private-dev <!nodtk6>,
+    qt6-tools-dev <!nodtk6>,
+    qt6-wayland-dev-tools <!nodtk6>,
+    qt6-wayland-dev <!nodtk6>,
+    qt6-wayland-private-dev <!nodtk6>,
+    doxygen <!nodoc>,
+    graphviz <!nodoc>
 Standards-Version: 3.9.8
+
+Package: libdtk6gui
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libdtkdata,
+ qt6-image-formats-plugins
+Multi-Arch: same
+Build-Profiles: <!nodtk6>
+Description: Development ToolKit Gui Library (DTK6 with Qt6)
+ DTK Gui is the base library of deepin Qt/C++ applications.
+ .
+ This package contains the shared libraries for DTK6 applications.
+
+Package: libdtk6gui-bin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ libdtk6gui( =${binary:Version})
+Build-Profiles: <!nodtk6>
+Description: Development ToolKit Gui Utilities (DTK6 with Qt6)
+ DTK Gui is the base library of deepin Qt/C++ applications.
+ .
+ This package contains the utilities of DTK6 Gui.
+
+Package: libdtk6gui-dev
+Architecture: any
+Depends: libdtk6gui( =${binary:Version}),
+ libdtkcommon-dev(>=5.6.16), libdtk6core-dev
+Build-Profiles: <!nodtk6>
+Description: Development ToolKit Gui Devel Library (DTK6 with Qt6)
+ DTK Gui is the base library of deepin Qt/C++ applications.
+ .
+ This package contains the header files and development library symbolic links of DTK6 Gui.
+
+Package: libdtk6gui-doc
+Build-Profiles: <!nodtk6 !nodoc>
+Architecture: any
+Depends: ${misc:Depends}
+Description: Development ToolKit Gui (Document)
+ DTK Gui is the base library of deepin Qt/C++ applications.
+ .
+ This package contains the qt Document of DTK6 Gui.
 
 Package: libdtkgui5
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, libdtkdata,
  qt5-image-formats-plugins
 Multi-Arch: same
-Description: Deepin Tool Kit Gui library
- DtkGui is base library of Deepin Qt/C++ applications.
+Build-Profiles: <!nodtk5>
+Description: Development ToolKit Gui Library (DTK5 with Qt5)
+ DTK Gui is the base library of deepin Qt/C++ applications.
  .
- This package contains the shared libraries.
+ This package contains the shared libraries for DTK5 applications.
 
 Package: libdtkgui5-bin
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
  libdtkgui5( =${binary:Version})
-Description: Deepin Tool Kit Gui Utilities
- DtkGui is base devel library of Deepin Qt/C++ applications.
+Build-Profiles: <!nodtk5>
+Description: Development ToolKit Gui Utilities (DTK5 with Qt5)
+ DTK Gui is the base library of deepin Qt/C++ applications.
  .
- This package contains the utilities of DtkGui
+ This package contains the utilities of DTK5 Gui.
 
 Package: libdtkgui-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libdtkgui5( =${binary:Version}), libdtkcommon-dev(>=5.6.16)
-Description: Deepin Tool Kit Gui Devel library
- DtkGui is base devel library of Deepin Qt/C++ applications.
+Depends: libdtkgui5( =${binary:Version}),
+ libdtkcommon-dev(>=5.6.16), libdtkcore-dev
+Build-Profiles: <!nodtk5>
+Description: Development ToolKit Gui Devel Library (DTK5 with Qt5)
+ DTK Gui is the base library of deepin Qt/C++ applications.
  .
- This package contains the header files and static libraries of DtkGui
+ This package contains the header files and development library symbolic links of DTK5 Gui.
 
 Package: libdtkgui-doc
-Build-Profiles: <!nodoc>
+Build-Profiles: <!nodtk5 !nodoc>
 Architecture: any
 Depends: ${misc:Depends}
-Description: Deepin Tool Kit Gui (Document)
- DtkGui is base devel library of Deepin Qt/C++ applications.
+Description: Development ToolKit Gui (Document)
+ DTK Gui is the base library of deepin Qt/C++ applications.
  .
  This package contains the qt Document of DtkGui

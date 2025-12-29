@@ -1,5 +1,5 @@
 set(BIN_NAME dci-icon-theme)
-set(TARGET_NAME ${BIN_NAME}${DTK_VERSION_MAJOR})
+set(TARGET_NAME ${BIN_NAME}${DTK_NAME_SUFFIX})
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Concurrent REQUIRED)
 

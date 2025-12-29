@@ -1,22 +1,28 @@
 cmake_minimum_required(VERSION 3.25)
 
-file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" DTK_FILE_VERSION)
-string(STRIP "${DTK_FILE_VERSION}" DTK_FILE_VERSION)
-set(DTK_VERSION "${DTK_FILE_VERSION}" CACHE STRING "define project version")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" FILE_VERSION)
+string(STRIP "${FILE_VERSION}" FILE_VERSION)
+
 project(DtkGui
-  VERSION ${DTK_VERSION}
+  VERSION ${FILE_VERSION}
   DESCRIPTION "DTK Gui module"
   HOMEPAGE_URL "https://github.com/linuxdeepin/dtkgui"
   LANGUAGES CXX C
 )
 
-if("${PROJECT_VERSION_MAJOR}" STREQUAL "5")
-    set(QT_VERSION_MAJOR "5")
-elseif("${PROJECT_VERSION_MAJOR}" STREQUAL "6")
-    set(QT_VERSION_MAJOR "6")
-    set(DTK_VERSION_MAJOR "6")
+# 引入 DTK5/DTK6 构建选项
+option(DTK5 "Build DTK5." ON)
+if(DTK5)
+    set(DTK_VERSION_MAJOR "5")
+    set(DTK_NAME_SUFFIX "")     # DTK5 产品名称后缀为空
 else()
-    message(SEND_ERROR "not support Prject Version ${PROJECT_VERSION}.")
+    set(DTK_VERSION_MAJOR "6")
+    set(DTK_NAME_SUFFIX "6")    # DTK6 产品名称后缀为 "6"
 endif()
+
+set(DTK_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(DTK_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(DTK_VERSION "${DTK_VERSION_MAJOR}.${DTK_VERSION_MINOR}.${DTK_VERSION_PATCH}")
+set(QT_VERSION_MAJOR ${DTK_VERSION_MAJOR})
 
 include(dtkgui.cmake)

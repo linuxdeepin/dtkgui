@@ -6,7 +6,7 @@ if("${QT_VERSION_MAJOR}" STRLESS "6")
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED EventDispatcherSupport ServiceSupport)
 endif()
 
-find_package(Dtk${DTK_VERSION_MAJOR}Core REQUIRED)
+find_package(Dtk${DTK_NAME_SUFFIX}Core REQUIRED)
 
 file(GLOB plugin_SRC
     minimal.json
@@ -21,7 +21,7 @@ target_link_libraries(${test-plugin} PRIVATE
     Qt${QT_VERSION_MAJOR}::CorePrivate
     Qt${QT_VERSION_MAJOR}::Gui
     Qt${QT_VERSION_MAJOR}::GuiPrivate
-    Dtk${DTK_VERSION_MAJOR}::Core)
+    Dtk${DTK_NAME_SUFFIX}::Core)
 
 if("${QT_VERSION_MAJOR}" STRLESS "6")
     target_link_libraries(${test-plugin} PRIVATE

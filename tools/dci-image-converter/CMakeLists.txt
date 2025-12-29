@@ -1,5 +1,5 @@
 set(BIN_NAME dci-image-converter)
-set(TARGET_NAME ${BIN_NAME}${DTK_VERSION_MAJOR})
+set(TARGET_NAME ${BIN_NAME}${DTK_NAME_SUFFIX})
 
 add_executable(${TARGET_NAME}
     main.cpp

@@ -1,5 +1,5 @@
 set(BIN image-handler)
-set(TARGET_NAME ${BIN}${DTK_VERSION_MAJOR})
+set(TARGET_NAME ${BIN}${DTK_NAME_SUFFIX})
 
 add_executable(${TARGET_NAME}
     main.cpp

@@ -1,5 +1,5 @@
 set(BIN_NAME deepin-gui-settings)
-set(TARGET_NAME ${BIN_NAME}${DTK_VERSION_MAJOR})
+set(TARGET_NAME ${BIN_NAME}${DTK_NAME_SUFFIX})
 
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 

@@ -28,7 +28,7 @@ build() {
     -DQCH_INSTALL_DESTINATION=share/doc/qt \
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_BUILD_TYPE=Release
+    -DDTK5=ON
     ninja
     # INFO: Another cmake option is DTK_DISABLE_EX_IMAGE_FORMAT
     # If you not want to support RAW images, set it to off

@@ -32,8 +32,12 @@ add_executable(${BIN_NAME}
 
 add_dependencies(${BIN_NAME} ${test-plugin})
 
-target_compile_options(${BIN_NAME} PRIVATE -fno-access-control -fsanitize=address)
-target_link_options(${BIN_NAME} PRIVATE -fsanitize=address)
+target_compile_options(${BIN_NAME} PRIVATE -fno-access-control)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(${BIN_NAME} PRIVATE -fsanitize=address)
+    target_link_options(${BIN_NAME} PRIVATE -fsanitize=address)
+endif()
 
 target_link_libraries(${BIN_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Gui
@@ -42,7 +46,7 @@ target_link_libraries(${BIN_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::DBus
     Qt${QT_VERSION_MAJOR}::Network
     Qt${QT_VERSION_MAJOR}::Test
-    Dtk${DTK_VERSION_MAJOR}::Core
+    Dtk${DTK_NAME_SUFFIX}::Core
     PkgConfig::librsvg
     GTest::GTest
     ${LIB_NAME}

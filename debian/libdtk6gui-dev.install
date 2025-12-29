@@ -1,0 +1,5 @@
+usr/lib/*/libdtk6gui.so
+usr/include/dtk6/*
+usr/lib/*/pkgconfig/dtk6gui.pc
+usr/lib/*/cmake/Dtk6Gui/*
+usr/lib/*/qt6/*
