@@ -1,5 +1,5 @@
-usr/lib/*/lib*.so
-usr/include
-usr/lib/*/pkgconfig/*.pc
-usr/lib/*/cmake/*/*.cmake
+usr/lib/*/libdtkgui.so
+usr/include/dtk5/*
+usr/lib/*/pkgconfig/dtkgui.pc
+usr/lib/*/cmake/DtkGui/*
 usr/lib/*/qt5/*

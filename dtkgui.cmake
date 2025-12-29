@@ -1,6 +1,6 @@
-message(STATUS "Current Qt Version: ${QT_VERSION_MAJOR}")
+message(STATUS "Compiling with DTK major version: ${DTK_VERSION_MAJOR}, Qt major version: ${QT_VERSION_MAJOR}")
 
-set(LIB_NAME dtk${DTK_VERSION_MAJOR}gui)
+set(LIB_NAME dtk${DTK_NAME_SUFFIX}gui)
 
 # Set install path
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -30,11 +30,11 @@ else()
   set (BUILD_DOCS OFF CACHE BOOL "Generate doxygen-based documentation")
 endif()
 
-set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/dtk${PROJECT_VERSION_MAJOR}/DGui")
-set(TOOL_INSTALL_DIR "${CMAKE_INSTALL_LIBEXECDIR}/dtk${PROJECT_VERSION_MAJOR}/DGui/bin")
+set(INCLUDE_INSTALL_DIR "${CMAKE_INSTALL_INCLUDEDIR}/dtk${DTK_VERSION_MAJOR}/DGui")
+set(TOOL_INSTALL_DIR "${CMAKE_INSTALL_LIBEXECDIR}/dtk${DTK_VERSION_MAJOR}/DGui/bin")
 set(LIBRARY_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}")
 set(MKSPECS_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/qt${QT_VERSION_MAJOR}/mkspecs/modules" CACHE STRING "Install dir for qt pri module files")
-set(CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/Dtk${DTK_VERSION_MAJOR}Gui")
+set(CONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/Dtk${DTK_NAME_SUFFIX}Gui")
 set(PKGCONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra -fopenmp")
@@ -59,25 +59,25 @@ endforeach()
 
 # Generate cmake config file
 configure_package_config_file(misc/DtkGuiConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_VERSION_MAJOR}GuiConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_NAME_SUFFIX}GuiConfig.cmake
     INSTALL_DESTINATION "${CONFIG_INSTALL_DIR}"
     PATH_VARS TOOL_INSTALL_DIR
 )
 # Generate cmake version file
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_VERSION_MAJOR}GuiConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_NAME_SUFFIX}GuiConfigVersion.cmake"
     VERSION ${DTK_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 # Install cmake config file and version file to CONFIG_INSTALL_DIR
 install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_VERSION_MAJOR}GuiConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_VERSION_MAJOR}GuiConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_NAME_SUFFIX}GuiConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/Dtk${DTK_NAME_SUFFIX}GuiConfigVersion.cmake
     DESTINATION "${CONFIG_INSTALL_DIR}"
 )
 # Install pkgconfig file
-configure_file(misc/dtkgui.pc.in dtk${DTK_VERSION_MAJOR}gui.pc @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dtk${DTK_VERSION_MAJOR}gui.pc DESTINATION "${PKGCONFIG_INSTALL_DIR}")
+configure_file(misc/dtkgui.pc.in dtk${DTK_NAME_SUFFIX}gui.pc @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/dtk${DTK_NAME_SUFFIX}gui.pc DESTINATION "${PKGCONFIG_INSTALL_DIR}")
 # Install pri module
 configure_file(misc/qt_lib_dtkgui.pri.in qt_lib_dtkgui.pri @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qt_lib_dtkgui.pri DESTINATION "${MKSPECS_INSTALL_DIR}")
@@ -111,7 +111,7 @@ install(FILES DtkGuis DESTINATION "${INCLUDE_INSTALL_DIR}")
 # Find common dependencies
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui DBus Network)
 find_package(PkgConfig REQUIRED)
-find_package(Dtk${DTK_VERSION_MAJOR} REQUIRED Core)
+find_package(Dtk${DTK_NAME_SUFFIX} REQUIRED Core)
 find_package(DtkBuildHelper REQUIRED)
 pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
 

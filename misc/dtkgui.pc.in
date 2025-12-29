@@ -4,9 +4,9 @@ libdir=${prefix}/@LIBRARY_INSTALL_DIR@
 includedir=${prefix}/@INCLUDE_INSTALL_DIR@
 tooldir=${prefix}/@PACKAGE_TOOL_INSTALL_DIR@
 
-Name: dtk@DTK_VERSION_MAJOR@gui
-Description: Deepin Tool Kit dtkgui header files
-Version: @PROJECT_VERSION@
-Libs: -L${libdir} -ldtk@DTK_VERSION_MAJOR@gui
+Name: dtk@DTK_NAME_SUFFIX@gui
+Description: Development ToolKit Gui Devel Library
+Version: @DTK_VERSION@
+Libs: -L${libdir} -ldtk@DTK_NAME_SUFFIX@gui
 Cflags: -I${includedir}
-Requires: dtk@DTK_VERSION_MAJOR@core
+Requires: dtk@DTK_NAME_SUFFIX@core
