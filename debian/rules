@@ -13,11 +13,6 @@ DEB_CMAKE_EXTRA_FLAGS += -DCMAKE_SKIP_BUILD_RPATH=ON
 
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
-# x.y.z -> DTK5_VERSION=5.y.z, DTK6_VERSION=6.y.z
-DTK5_VERSION := $(shell echo $(DEB_VERSION_UPSTREAM) | sed -E 's/^[0-9]+(\.|[^0-9]|$$)/5\1/')
-DTK6_VERSION := $(shell echo $(DEB_VERSION_UPSTREAM) | sed -E 's/^[0-9]+(\.|[^0-9]|$$)/6\1/')
-
-DTK5_MAJOR_MINOR := $(shell echo $(DTK5_VERSION) | cut -d '.' -f 1,2)
 BUILD_DOCS := $(if $(filter nodoc,$(DEB_BUILD_PROFILES)),OFF,ON)
 BUILD_DTK5 := $(if $(filter nodtk5,$(DEB_BUILD_PROFILES)),OFF,ON)
 BUILD_DTK6 := $(if $(filter nodtk6,$(DEB_BUILD_PROFILES)),OFF,ON)
@@ -57,14 +52,6 @@ ifeq ($(BUILD_DTK5),ON)
 endif
 ifeq ($(BUILD_DTK6),ON)
 	dh_auto_install --builddirectory=build6
-endif
-
-override_dh_makeshlibs:
-ifeq ($(BUILD_DTK5),ON)
-	dh_makeshlibs -V "libdtkgui5 (>= $(DTK5_MAJOR_MINOR))" -plibdtkgui5
-endif
-ifeq ($(BUILD_DTK6),ON)
-	dh_makeshlibs -V "libdtk6gui (>= $(DTK6_VERSION))" -plibdtk6gui
 endif
 
 override_dh_link:
