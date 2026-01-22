@@ -111,7 +111,7 @@ install(FILES DtkGuis DESTINATION "${INCLUDE_INSTALL_DIR}")
 # Find common dependencies
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui DBus Network)
 find_package(PkgConfig REQUIRED)
-find_package(Dtk${DTK_NAME_SUFFIX} REQUIRED Core)
+find_package(Dtk${DTK_NAME_SUFFIX} REQUIRED Core Tools)
 find_package(DtkBuildHelper REQUIRED)
 pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
 
