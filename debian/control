@@ -13,7 +13,9 @@ Build-Depends: debhelper-compat (= 12),
     libraw-dev,
     treeland-protocols,
     extra-cmake-modules,
+    libdtkdata,
     libdtkcore-dev <!nodtk5>,
+    libdtkcore5-bin <!nodtk5>,
     qtbase5-dev-tools <!nodtk5>,
     qtbase5-private-dev <!nodtk5>,
     qttools5-dev <!nodtk5>,
@@ -25,6 +27,7 @@ Build-Depends: debhelper-compat (= 12),
     libkf5wayland-dev <!nodtk5>,
     qt5-image-formats-plugins <!nodtk5>,
     libdtk6core-dev <!nodtk6>,
+    libdtk6core-bin <!nodtk6>,
     qt6-base-dev-tools <!nodtk6>,
     qt6-base-dev <!nodtk6>,
     qt6-base-private-dev <!nodtk6>,
@@ -38,7 +41,7 @@ Standards-Version: 3.9.8
 
 Package: libdtk6gui
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libdtkdata,
+Depends: ${shlibs:Depends}, ${misc:Depends},
  qt6-image-formats-plugins
 Multi-Arch: same
 Build-Profiles: <!nodtk6>
@@ -78,7 +81,7 @@ Description: Development ToolKit Gui (Document)
 
 Package: libdtkgui5
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libdtkdata,
+Depends: ${shlibs:Depends}, ${misc:Depends},
  qt5-image-formats-plugins
 Multi-Arch: same
 Build-Profiles: <!nodtk5>
