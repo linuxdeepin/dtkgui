@@ -186,7 +186,7 @@ bool DForeignWindow::event(QEvent *e)
         }
     }
 
-    return false;
+    return QWindow::event(e);
 }
 
 DGUI_END_NAMESPACE
