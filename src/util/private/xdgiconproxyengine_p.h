@@ -48,6 +48,9 @@ public:
     QIconEngine *clone() const override;
     bool read(QDataStream &in) override;
     bool write(QDataStream &out) const override;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    bool isNull() override;
+#endif
     void virtual_hook(int id, void *data) override;
 
 private:

@@ -260,20 +260,20 @@ void DIconProxyEngine::ensureEngine()
     if (!m_iconEngine && Q_UNLIKELY(!m_option.testFlag(DIconTheme::IgnoreBuiltinIcons)) ) {
         m_iconEngine = createDBuiltinIconEngine(m_iconName);
     }
-#ifdef DTK_DISABLE_LIBXDG
+#ifndef DTK_DISABLE_LIBXDG
+    if (!m_iconEngine) {
+        m_iconEngine = createXdgProxyIconEngine(m_iconName);
+    }
+#endif
+    // Fallback to Qt's native icon engine for icons only found in /usr/share/pixmaps
+    // or other non-themed locations that XdgIconLoader cannot render correctly
+    // (e.g. xscreensaver). Also serves as fallback when libxdg is disabled.
     if (!m_iconEngine) {
         QPlatformTheme * const platformTheme = QGuiApplicationPrivate::platformTheme();
         if (platformTheme) {
             m_iconEngine = platformTheme->QPlatformTheme::createIconEngine(m_iconName);
-        } else {
-            qWarning() << "PlatformTheme not found!";
         }
     }
-#else
-    if (!m_iconEngine ) {
-        m_iconEngine = createXdgProxyIconEngine(m_iconName);
-    }
-#endif
     if (!m_iconEngine && !nonCache[theme].contains(m_iconName)) {
         qWarning() << "create icon [" << m_iconName << "] engine failed."
                    << "theme:" << theme << "and nonCache's size:" << nonCache.size();
