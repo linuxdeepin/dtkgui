@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -16,6 +16,18 @@ DGUI_BEGIN_NAMESPACE
 
 DTreelandPlatformInterface::DTreelandPlatformInterface(DPlatformTheme *platformTheme)
     : DPlatformInterface(platformTheme)
+    , m_manager(nullptr)
+    , m_activeColor(QColor())
+    , m_titleHeight(0)
+    , m_fontName(QByteArray())
+    , m_monoFontName(QByteArray())
+    , m_iconThemeName(QByteArray())
+    , m_cursorThemeName(QByteArray())
+    , m_fontPointSize(0.0)
+    , m_windowRadius(0)
+    , m_scrollBarPolicy(0)
+    , m_themeName(QByteArray())
+    , m_blurOpacity(0)
 {
     m_manager = PersonalizationManager::instance();
     connect(m_manager, &PersonalizationManager::activeChanged, this, [this](){
@@ -63,6 +75,23 @@ QColor DTreelandPlatformInterface::activeColor() const
 QByteArray DTreelandPlatformInterface::themeName() const
 {
     return m_themeName;
+}
+
+int DTreelandPlatformInterface::windowRadius() const
+{
+    return m_windowRadius;
+}
+
+int DTreelandPlatformInterface::windowRadius(int defaultValue) const
+{
+    return m_windowRadius > 0 ? m_windowRadius : defaultValue;
+}
+
+void DTreelandPlatformInterface::setWindowRadius(int windowRadius)
+{
+    if (m_appearanceContext) {
+        m_appearanceContext->set_round_corner_radius(windowRadius);
+    }
 }
 
 void DTreelandPlatformInterface::setIconThemeName(const QByteArray &iconThemeName)
