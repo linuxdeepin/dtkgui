@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -34,6 +34,11 @@ public:
     qreal fontPointSize() const override;
     QColor activeColor() const override;
     QByteArray themeName() const override;
+
+    int windowRadius() const override;
+    int windowRadius(int defaultValue = 12) const override;
+
+    void setWindowRadius(int windowRadius) override;
 
     void setIconThemeName(const QByteArray &iconThemeName) override;
     void setFontName(const QByteArray &fontName) override;
