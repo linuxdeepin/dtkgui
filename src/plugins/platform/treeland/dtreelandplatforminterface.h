@@ -33,6 +33,7 @@ public:
     QByteArray monoFontName() const override;
     qreal fontPointSize() const override;
     QColor activeColor() const override;
+    QColor darkActiveColor() const override;
     QByteArray themeName() const override;
 
     int windowRadius() const override;
