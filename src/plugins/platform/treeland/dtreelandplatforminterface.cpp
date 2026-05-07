@@ -72,6 +72,12 @@ QColor DTreelandPlatformInterface::activeColor() const
     return m_activeColor;
 }
 
+QColor DTreelandPlatformInterface::darkActiveColor() const
+{
+    // treeland does not provide dark active color, return active color as fallback
+    return m_activeColor;
+}
+
 QByteArray DTreelandPlatformInterface::themeName() const
 {
     return m_themeName;
