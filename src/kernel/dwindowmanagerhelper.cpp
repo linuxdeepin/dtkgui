@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -26,6 +26,10 @@
 
 #ifndef DTK_DISABLE_TREELAND
 #include "plugins/platform/treeland/dtreelandwindowmanagerhelper.h"
+#include <private/qguiapplication_p.h>
+#include <private/qwaylandwindow_p.h>
+#include <private/qwaylandshellsurface_p.h>
+#include <private/qwaylandintegration_p.h>
 #endif
 
 DGUI_BEGIN_NAMESPACE
@@ -524,6 +528,20 @@ void DWindowManagerHelper::setWmClassName(const QByteArray &name)
  */
 void DWindowManagerHelper::popupSystemWindowMenu(const QWindow *window)
 {
+#ifndef DTK_DISABLE_TREELAND
+    if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
+        if (window && window->handle()) {
+            if (auto *wlWindow = dynamic_cast<QtWaylandClient::QWaylandWindow*>(window->handle())) {
+                if (auto *shellSurface = wlWindow->shellSurface()) {
+                    auto *wlIntegration = static_cast<QtWaylandClient::QWaylandIntegration*>(
+                        QGuiApplicationPrivate::platformIntegration());
+                    shellSurface->showWindowMenu(wlIntegration->display()->defaultInputDevice());
+                }
+            }
+        }
+        return;
+    }
+#endif
     return callPlatformFunction<void, void(*)(quint32)>(_popupSystemWindowMenu, quint32(window->handle()->winId()));
 }
 
