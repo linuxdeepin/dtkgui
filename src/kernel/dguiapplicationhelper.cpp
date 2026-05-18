@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2019 - 2023 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2019 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -115,7 +115,10 @@ Q_LOGGING_CATEGORY(dgAppHelper, "dtk.dguihelper", QtInfoMsg)
 
 Q_GLOBAL_STATIC(QLocalServer, _d_singleServer)
 
-static quint8 _d_singleServerVersion = 1;
+// Protocol changelog:
+//   v1: version + pid + arguments
+//   v2: version + pid + arguments + envs (KEY=VALUE pairs, filtered by whitelist)
+static quint8 _d_singleServerVersion = 2;
 Q_GLOBAL_STATIC(DFontManager, _globalFM)
 
 #define WINDOW_THEME_KEY "_d_platform_theme"
@@ -123,6 +126,25 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 #define DTK_ANIMATIONS_ENV "D_DTK_DISABLE_ANIMATIONS"
 Q_GLOBAL_STATIC_WITH_ARGS(OrgDeepinDTKPreference, _d_dconfig, (DTK_CORE_NAMESPACE::DConfig::globalThread(), nullptr,
                                                                "org.deepin.dtk.preference", DTK_CORE_NAMESPACE::DSGApplication::id(), {}, false, nullptr))
+
+// Keys allowed to be forwarded between single-instance client and server.
+static const QStringList s_singleInstanceForwardEnvKeys = {
+    QStringLiteral("XDG_ACTIVATION_TOKEN")
+};
+
+// Returns a filtered env list in KEY=VALUE format based on the allowed key list.
+static QStringList filteredSingleInstanceEnvs()
+{
+    QStringList result;
+    result.reserve(s_singleInstanceForwardEnvKeys.size());
+    for (const QString &key : s_singleInstanceForwardEnvKeys) {
+        // Use qgetenv directly to avoid constructing a full QProcessEnvironment
+        const QByteArray value = qgetenv(key.toLocal8Bit().constData());
+        if (!value.isNull())
+            result << key + QLatin1Char('=') + QString::fromLocal8Bit(value);
+    }
+    return result;
+}
 
 /*!
  @private
@@ -1555,16 +1577,26 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
         if (socket.waitForConnected(DGuiApplicationHelperPrivate::waitTime) &&
                 socket.waitForReadyRead(DGuiApplicationHelperPrivate::waitTime)) {
             // 读取数据
-            qint8 version;
+            quint8 version;
             qint64 pid;
             QStringList arguments;
+            QStringList envs;
 
             QDataStream ds(&socket);
             ds >> version >> pid >> arguments;
+            // Only read envs field when server supports v2+ protocol
+            if (version >= 2)
+                ds >> envs;
             qCInfo(dgAppHelper) << "Process is started: pid=" << pid << "arguments=" << arguments;
 
+            if (ds.status() != QDataStream::Ok) {
+                qCWarning(dgAppHelper) << "Invalid data received from primary instance, aborting.";
+                return false;
+            }
+
             // 把自己的信息告诉第一个实例
-            ds << _d_singleServerVersion << qApp->applicationPid() << qApp->arguments();
+            ds << _d_singleServerVersion << qApp->applicationPid() << qApp->arguments()
+               << filteredSingleInstanceEnvs();
             socket.flush();
         }
 
@@ -1586,20 +1618,48 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
             QDataStream ds(instance);
             ds << _d_singleServerVersion // 协议版本
                << qApp->applicationPid() // 进程id
-               << qApp->arguments(); // 启动时的参数
+               << qApp->arguments() // 启动时的参数
+               << filteredSingleInstanceEnvs(); // 环境变量（仅转发许可列表中的 key）
 
             QObject::connect(instance, &QLocalSocket::readyRead, qApp, [instance] {
                 // 读取数据
                 QDataStream ds(instance);
 
-                qint8 version;
+                quint8 version;
                 qint64 pid;
                 QStringList arguments;
+                QStringList envs;
 
                 ds >> version >> pid >> arguments;
+                // Only read envs field when client supports v2+ protocol
+                if (version >= 2)
+                    ds >> envs;
                 instance->close();
 
                 qCInfo(dgAppHelper) << "New instance: pid=" << pid << "arguments=" << arguments;
+
+                if (ds.status() != QDataStream::Ok) {
+                    qCWarning(dgAppHelper) << "Invalid data received from new instance, aborting.";
+                    return;
+                }
+
+                // Apply environment variables forwarded from the new client instance.
+                // Only process KEY=VALUE pairs sent by v2+ clients; re-validate each key
+                // against the whitelist to prevent env injection via malformed socket data.
+                if (version >= 2) {
+                    for (const QString &envItem : std::as_const(envs)) {
+                        const int eqPos = envItem.indexOf(QLatin1Char('='));
+                        if (eqPos < 1) // skip entries with no '=' or an empty key
+                            continue;
+                        const QString keyStr = envItem.left(eqPos);
+                        if (!s_singleInstanceForwardEnvKeys.contains(keyStr))
+                            continue; // reject keys not in the whitelist
+                        const QByteArray keyBa = keyStr.toLocal8Bit();
+                        const QByteArray valueBa = envItem.mid(eqPos + 1).toLocal8Bit();
+                        qputenv(keyBa.constData(), valueBa);
+                        qCInfo(dgAppHelper) << "Applied env from new instance:" << keyBa;
+                    }
+                }
 
                 // 通知新进程的信息
                 if (_globalHelper.exists() && _globalHelper->helper())
