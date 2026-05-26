@@ -36,6 +36,9 @@ target_include_directories(${LIB_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/util/private>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/DtkGui>
 )
+target_include_directories(${LIB_NAME} PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+)
 
 target_link_libraries(${LIB_NAME}
 PUBLIC
