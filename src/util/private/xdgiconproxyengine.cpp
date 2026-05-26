@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 - 2023 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -17,13 +17,24 @@
 #include <cxxabi.h>
 #include <qmath.h>
 #if XDG_ICON_VERSION_MAR >= 3
-#define private public
 #include <private/xdgiconloader/xdgiconloader_p.h>
-#undef private
+#include "util/dprivateaccessor_p.h"
+
+D_DECLARE_PRIVATE_CONST_METHOD(XdgIconLoader_followColorScheme_tag, XdgIconLoader, followColorScheme, bool);
+D_DECLARE_PRIVATE_METHOD(XdgIconLoaderEngine_ensureLoaded_tag, XdgIconLoaderEngine, ensureLoaded, void);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+D_DECLARE_PRIVATE_METHOD(XdgIconLoaderEngine_virtualHook_tag, XdgIconLoaderEngine, virtual_hook, void, int, void *);
+#endif
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+D_DECLARE_PRIVATE_METHOD(XdgIconLoaderEngine_entryForSize_tag, XdgIconLoaderEngine, entryForSize, QIconLoaderEngineEntry *, const QSize &, int);
+#else
+D_DECLARE_PRIVATE_MEMBER(XdgIconLoaderEngine_m_info_tag, XdgIconLoaderEngine, m_info, QThemeIconInfo);
+D_DECLARE_PRIVATE_METHOD(XdgIconLoaderEngine_entryForSize_tag, XdgIconLoaderEngine, entryForSize, QIconLoaderEngineEntry *, const QThemeIconInfo &, const QSize &, int);
+#endif
 
 static inline bool XdgIconFollowColorScheme()
 {
-    return XdgIconLoader::instance()->followColorScheme();
+    return D_PRIVATE_CALL(*XdgIconLoader::instance(), XdgIconLoader_followColorScheme_tag{});
 }
 
 static inline QString rgba(const QColor &c)
@@ -299,11 +310,11 @@ void XdgIconProxyEngine::paint(QPainter *painter, const QRect &rect, QIcon::Mode
 
 QPixmap XdgIconProxyEngine::pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state)
 {
-    engine->ensureLoaded();
+    D_PRIVATE_CALL(*engine, XdgIconLoaderEngine_ensureLoaded_tag{});
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    QIconLoaderEngineEntry *entry = engine->entryForSize(size);
+    QIconLoaderEngineEntry *entry = D_PRIVATE_CALL(*engine, XdgIconLoaderEngine_entryForSize_tag{}, size, 1);
 #else
-    QIconLoaderEngineEntry *entry = engine->entryForSize(engine->m_info ,size);
+    QIconLoaderEngineEntry *entry = D_PRIVATE_CALL(*engine, XdgIconLoaderEngine_entryForSize_tag{}, D_PRIVATE_MEMBER(*engine, XdgIconLoaderEngine_m_info_tag{}), size, 1);
 #endif
 
     if (!entry) {
@@ -361,7 +372,7 @@ bool XdgIconProxyEngine::isNull()
     // null when all entries originate from the unthemed fallback. The caller
     // (DIconProxyEngine) will then use Qt's native QIconLoaderEngine which handles
     // pixmap-only icons correctly.
-    for (const auto &entry : engine->m_info.entries) {
+    for (const auto &entry : D_PRIVATE_MEMBER(*engine, XdgIconLoaderEngine_m_info_tag{}).entries) {
         if (entry->dir.size > 0)
             return false;
     }
@@ -373,16 +384,16 @@ void XdgIconProxyEngine::virtual_hook(int id, void *data)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
     if (id == QIconEngine::ScaledPixmapHook) {
-        engine->ensureLoaded();
+        D_PRIVATE_CALL(*engine, XdgIconLoaderEngine_ensureLoaded_tag{});
 
         QIconEngine::ScaledPixmapArgument &arg = *reinterpret_cast<QIconEngine::ScaledPixmapArgument *>(data);
         // QIcon::pixmap() multiplies size by the device pixel ratio.
         const int integerScale = qCeil(arg.scale);
         
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-        QIconLoaderEngineEntry *entry = engine->entryForSize(arg.size / integerScale, integerScale);
+        QIconLoaderEngineEntry *entry = D_PRIVATE_CALL(*engine, XdgIconLoaderEngine_entryForSize_tag{}, arg.size / integerScale, integerScale);
 #else
-        QIconLoaderEngineEntry *entry = engine->entryForSize(engine->m_info, arg.size / integerScale, integerScale);
+        QIconLoaderEngineEntry *entry = D_PRIVATE_CALL(*engine, XdgIconLoaderEngine_entryForSize_tag{}, D_PRIVATE_MEMBER(*engine, XdgIconLoaderEngine_m_info_tag{}), arg.size / integerScale, integerScale);
 #endif
         // 先禁用缩放，因为此size是已经缩放过的
         bool useHighDpiPixmap = qGuiApp->testAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -395,7 +406,11 @@ void XdgIconProxyEngine::virtual_hook(int id, void *data)
     }
 #endif
 
-    return engine->virtual_hook(id, data);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    return D_PRIVATE_CALL(*engine, XdgIconLoaderEngine_virtualHook_tag{}, id, data);
+#else
+    engine->virtual_hook(id, data);
+#endif
 }
 
 DGUI_END_NAMESPACE

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2023 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2023 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -19,9 +19,7 @@
 
 #include <private/qiconloader_p.h>
 #if (XDG_ICON_VERSION_MAR >= 3)
-#define private public
 #include <private/xdgiconloader/xdgiconloader_p.h>
-#undef private
 #endif
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformtheme.h>

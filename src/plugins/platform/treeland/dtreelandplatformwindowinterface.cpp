@@ -1,12 +1,11 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#define protected public
 #include <QWindow>
-#undef protected
 
 #include "dtreelandplatformwindowinterface.h"
+#include "util/dprivateaccessor_p.h"
 
 #include <QWaylandClientExtension>
 #include <QStyleHints>
@@ -21,7 +20,15 @@
 
 DCORE_USE_NAMESPACE
 
+D_DECLARE_PRIVATE_METHOD(QWindow_event_tag, QWindow, event, bool, QEvent *);
+
 DGUI_BEGIN_NAMESPACE
+
+static inline auto qWindowEventMember()
+{
+    return get(QWindow_event_tag{});
+}
+
 class Q_DECL_HIDDEN MoveWindowHelper : public QObject
 {
 public:
@@ -64,9 +71,9 @@ void MoveWindowHelper::updateEnableSystemMoveFromProperty()
     m_enableSystemMove = !v.isValid() || v.toBool();
 
     if (m_enableSystemMove) {
-        DVtableHook::overrideVfptrFun(m_window, &QWindow::event, &MoveWindowHelper::windowEvent);
+        DVtableHook::overrideVfptrFun(m_window, qWindowEventMember(), &MoveWindowHelper::windowEvent);
     } else if (DVtableHook::hasVtable(m_window)) {
-        DVtableHook::resetVfptrFun(m_window, &QWindow::event);
+        DVtableHook::resetVfptrFun(m_window, qWindowEventMember());
     }
 }
 
@@ -75,12 +82,12 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
     MoveWindowHelper *self = mapped.value(w);
 
     if (!self)
-        return DVtableHook::callOriginalFun(w, &QWindow::event, event);
+        return DVtableHook::callOriginalFun(w, qWindowEventMember(), event);
 
     // TODO Crashed when delete by Vtable.
     if (event->type() == QEvent::DeferredDelete) {
         DVtableHook::resetVtable(w);
-        return w->event(event);
+        return D_PRIVATE_CALL(*w, QWindow_event_tag{}, event);
     }
 
     // m_window 的 event 被 override 以后，在 windowEvent 里面获取到的 this 就成 m_window 了，
@@ -110,7 +117,7 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
 #endif
             QPointF delta = touchBeginPosition  - currentPos;
             if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
-                return DVtableHook::callOriginalFun(w, &QWindow::event, event);
+                return DVtableHook::callOriginalFun(w, qWindowEventMember(), event);
             }
         }
     }
@@ -121,7 +128,7 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
         self->m_windowMoving = false;
     }
 
-    if (!DVtableHook::callOriginalFun(w, &QWindow::event, event))
+    if (!DVtableHook::callOriginalFun(w, qWindowEventMember(), event))
         return false;
 
     // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
