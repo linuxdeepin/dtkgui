@@ -124,6 +124,7 @@ Q_GLOBAL_STATIC(DFontManager, _globalFM)
 #define WINDOW_THEME_KEY "_d_platform_theme"
 
 #define DTK_ANIMATIONS_ENV "D_DTK_DISABLE_ANIMATIONS"
+#define DTK_DISABLE_INWINDOWBLUR_ENV "D_DTK_DISABLE_INWINDOWBLUR"
 Q_GLOBAL_STATIC_WITH_ARGS(OrgDeepinDTKPreference, _d_dconfig, (DTK_CORE_NAMESPACE::DConfig::globalThread(), nullptr,
                                                                "org.deepin.dtk.preference", DTK_CORE_NAMESPACE::DSGApplication::id(), {}, false, nullptr))
 
@@ -1885,6 +1886,13 @@ bool DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::Attribute attri
             return false;
 
         return _d_dconfig->enableDtkAnimations();
+    }
+    case HasInWindowBlur: {
+        static bool isDisable = qEnvironmentVariableIsSet(DTK_DISABLE_INWINDOWBLUR_ENV);
+        if (isDisable)
+            return false;
+
+        return !_d_dconfig->disableInWindowBlur();
     }
     default:
         return DGuiApplicationHelperPrivate::attributes.testFlag(attribute);

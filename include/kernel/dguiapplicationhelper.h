@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -63,6 +63,7 @@ public:
         IsWaylandPlatform       = ReadOnlyLimit << 6,
         IsTreelandPlatform Q_DECL_ENUMERATOR_DEPRECATED_X("Use DGuiApplicationHelper::IsWaylandPlatform instead") = IsWaylandPlatform,
         HasAnimations            = ReadOnlyLimit << 7,
+        HasInWindowBlur          = ReadOnlyLimit << 8,
     };
     Q_ENUM(Attribute)
     Q_DECLARE_FLAGS(Attributes, Attribute)
