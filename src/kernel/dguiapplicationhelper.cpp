@@ -489,7 +489,7 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
     int ct = dconfig.value("themeType", DGuiApplicationHelper::UnknownType).toInt();
     const_cast<DGuiApplicationHelperPrivate *>(this)->setPaletteType(DGuiApplicationHelper::ColorType(ct), false);
 
-    QObject::connect(_d_dconfig.operator ()(), &OrgDeepinDTKPreference::themeTypeChanged, _d_dconfig, [applyThemeType] {
+    QObject::connect(_d_dconfig.operator ()(), &OrgDeepinDTKPreference::themeTypeChanged, q_func(), [applyThemeType] {
         applyThemeType(true);
     });
 }
