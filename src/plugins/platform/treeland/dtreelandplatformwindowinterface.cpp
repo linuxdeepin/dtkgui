@@ -44,6 +44,7 @@ private:
     QWindow *m_window;
     bool m_windowMoving;
     bool m_enableSystemMove;
+    QPointF m_pressPoint;
 };
 
 QHash<const QWindow*, MoveWindowHelper*> MoveWindowHelper::mapped;
@@ -51,6 +52,8 @@ QHash<const QWindow*, MoveWindowHelper*> MoveWindowHelper::mapped;
 MoveWindowHelper::MoveWindowHelper(QWindow *window)
     : QObject(window)
     , m_window(window)
+    , m_windowMoving(false)
+    , m_enableSystemMove(false)
 {
     mapped[window] = this;
     updateEnableSystemMoveFromProperty();
@@ -73,6 +76,8 @@ void MoveWindowHelper::updateEnableSystemMoveFromProperty()
     if (m_enableSystemMove) {
         DVtableHook::overrideVfptrFun(m_window, qWindowEventMember(), &MoveWindowHelper::windowEvent);
     } else if (DVtableHook::hasVtable(m_window)) {
+        m_windowMoving = false;
+        m_pressPoint = QPointF();
         DVtableHook::resetVfptrFun(m_window, qWindowEventMember());
     }
 }
@@ -90,61 +95,78 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
         return D_PRIVATE_CALL(*w, QWindow_event_tag{}, event);
     }
 
-    // m_window 的 event 被 override 以后，在 windowEvent 里面获取到的 this 就成 m_window 了，
-    // 而不是 DNoTitlebarWlWindowHelper，所以此处 windowEvent 改为 static 并传 self 进来
-    {
-        static bool isTouchDown = false;
-        static QPointF touchBeginPosition;
-        if (event->type() == QEvent::TouchBegin) {
-            isTouchDown = true;
-        }
-        if (event->type() == QEvent::TouchEnd || event->type() == QEvent::MouseButtonRelease) {
-            isTouchDown = false;
-        }
-        if (isTouchDown && event->type() == QEvent::MouseButtonPress) {
+    // get touch begin position
+    static bool isTouchDown = false;
+    static QPointF touchBeginPosition;
+
+    if (event->type() == QEvent::TouchBegin) {
+        isTouchDown = true;
+    }
+    if (event->type() == QEvent::TouchEnd || event->type() == QEvent::MouseButtonRelease) {
+        isTouchDown = false;
+    }
+    if (isTouchDown && event->type() == QEvent::MouseButtonPress) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-            touchBeginPosition = static_cast<QMouseEvent*>(event)->globalPosition();
+        touchBeginPosition = static_cast<QMouseEvent*>(event)->globalPosition();
 #else
-            touchBeginPosition = static_cast<QMouseEvent*>(event)->globalPos();
+        touchBeginPosition = static_cast<QMouseEvent*>(event)->globalPos();
 #endif
-        }
-        // add some redundancy to distinguish trigger between system menu and system move
-        if (event->type() == QEvent::MouseMove) {
+    }
+    // add some redundancy to distinguish trigger between system menu and system move
+    if (event->type() == QEvent::MouseMove) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-            QPointF currentPos = static_cast<QMouseEvent*>(event)->globalPosition();
+        QPointF currentPos = static_cast<QMouseEvent*>(event)->globalPosition();
 #else
-            QPointF currentPos = static_cast<QMouseEvent*>(event)->globalPos();
+        QPointF currentPos = static_cast<QMouseEvent*>(event)->globalPos();
 #endif
-            QPointF delta = touchBeginPosition  - currentPos;
-            if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
-                return DVtableHook::callOriginalFun(w, qWindowEventMember(), event);
-            }
+        QPointF delta = touchBeginPosition - currentPos;
+        if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
+            return DVtableHook::callOriginalFun(w, qWindowEventMember(), event);
         }
     }
 
-    bool is_mouse_move = event->type() == QEvent::MouseMove && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
+    bool is_mouse_move = event->type() == QEvent::MouseMove
+        && static_cast<QMouseEvent*>(event)->buttons() == Qt::LeftButton;
 
     if (event->type() == QEvent::MouseButtonRelease) {
         self->m_windowMoving = false;
+        self->m_pressPoint = QPointF();
     }
 
-    if (!DVtableHook::callOriginalFun(w, qWindowEventMember(), event))
-        return false;
+    bool ret = DVtableHook::callOriginalFun(w, qWindowEventMember(), event);
 
     // workaround for kwin: Qt receives no release event when kwin finishes MOVE operation,
     // which makes app hang in windowMoving state. when a press happens, there's no sense of
-    // keeping the moving state, we can just reset ti back to normal.
+    // keeping the moving state, we can just reset it back to normal.
     if (event->type() == QEvent::MouseButtonPress) {
         self->m_windowMoving = false;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        self->m_pressPoint = static_cast<QMouseEvent*>(event)->globalPosition();
+#else
+        self->m_pressPoint = static_cast<QMouseEvent*>(event)->globalPos();
+#endif
     }
 
+    if (is_mouse_move && !event->isAccepted() && !self->m_pressPoint.isNull()) {
+        QMouseEvent *me = static_cast<QMouseEvent*>(event);
+        QRect windowRect = QRect(QPoint(0, 0), w->size());
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    if (is_mouse_move && !event->isAccepted()
-            && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPosition().toPoint())) {
+        if (!windowRect.contains(me->scenePosition().toPoint())) {
 #else
-    if (is_mouse_move && !event->isAccepted()
-            && w->geometry().contains(static_cast<QMouseEvent*>(event)->globalPos())) {
+        if (!windowRect.contains(me->localPos().toPoint())) {
 #endif
+            return ret;
+        }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        QPointF delta = me->globalPosition() - self->m_pressPoint;
+#else
+        QPointF delta = me->globalPos() - self->m_pressPoint;
+#endif
+        if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
+            return ret;
+        }
+
         if (!self->m_windowMoving && self->m_enableSystemMove) {
             self->m_windowMoving = true;
 
@@ -155,11 +177,11 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
 #else
                 static_cast<QPlatformWindow *>(w->handle())->startSystemMove();
 #endif
-    }
+            }
         }
     }
 
-    return true;
+    return ret;
 }
 
 QMap<QWindow *, DTreeLandPlatformWindowHelper*> DTreeLandPlatformWindowHelper::windowMap;
