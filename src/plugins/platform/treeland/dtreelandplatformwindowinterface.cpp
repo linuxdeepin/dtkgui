@@ -264,15 +264,8 @@ void DTreeLandPlatformWindowHelper::onActiveChanged()
 
 void DTreeLandPlatformWindowHelper::onSurfaceCreated()
 {
-    if (m_isNoTitlebar) {
-        doSetEnabledNoTitlebar();
-    }
-    if (m_radius > 0) {
-        doSetWindowRadius();
-    }
-    if (m_isWindowBlur) {
-        doSetEnabledBlurWindow();
-    }
+    m_dirty = m_initialized;
+    scheduleApply();
 }
 
 void DTreeLandPlatformWindowHelper::onSurfaceDestroyed()
@@ -313,38 +306,87 @@ PersonalizationWindowContext *DTreeLandPlatformWindowHelper::windowContext() con
 
 void DTreeLandPlatformWindowHelper::setEnabledNoTitlebar(bool enable)
 {
-    m_isNoTitlebar = enable;
-    doSetEnabledNoTitlebar();
+    updateFeature(m_noTitlebar, enable, NoTitlebar);
 }
+
 void DTreeLandPlatformWindowHelper::setWindowRadius(int windowRadius)
 {
-    m_radius = windowRadius;
-    doSetWindowRadius();
+    updateFeature(m_radius, windowRadius, Radius);
 }
+
+void DTreeLandPlatformWindowHelper::setBorderWidth(int borderWidth)
+{
+    updateFeature(m_borderWidth, borderWidth, Border);
+}
+
+void DTreeLandPlatformWindowHelper::setBorderColor(const QColor &borderColor)
+{
+    updateFeature(m_borderColor, borderColor, Border);
+}
+
+void DTreeLandPlatformWindowHelper::setShadowRadius(int shadowRadius)
+{
+    updateFeature(m_shadowRadius, shadowRadius, Shadow);
+}
+
+void DTreeLandPlatformWindowHelper::setShadowOffset(const QPoint &shadowOffset)
+{
+    updateFeature(m_shadowOffset, shadowOffset, Shadow);
+}
+
+void DTreeLandPlatformWindowHelper::setShadowColor(const QColor &shadowColor)
+{
+    updateFeature(m_shadowColor, shadowColor, Shadow);
+}
+
 void DTreeLandPlatformWindowHelper::setEnableBlurWindow(bool enableBlurWindow)
 {
-    m_isWindowBlur = enableBlurWindow;
-    doSetEnabledBlurWindow();
+    updateFeature(m_blur, enableBlurWindow, Blur);
 }
 
-void DTreeLandPlatformWindowHelper::doSetEnabledNoTitlebar()
+void DTreeLandPlatformWindowHelper::setPlatformHandle(DPlatformHandle *handle)
 {
-    if (auto context = windowContext()) {
-        context->set_titlebar(m_isNoTitlebar ? PersonalizationWindowContext::enable_mode_disable : PersonalizationWindowContext::enable_mode_enable);
-    }
+    m_platformHandle = handle;
 }
 
-void DTreeLandPlatformWindowHelper::doSetWindowRadius()
+void DTreeLandPlatformWindowHelper::scheduleApply()
 {
-    if (auto context = windowContext()) {
-        context->set_round_corner_radius(m_radius);
-    }
+    if (m_applyScheduled)
+        return;
+    m_applyScheduled = true;
+    QMetaObject::invokeMethod(this, &DTreeLandPlatformWindowHelper::applyPending, Qt::QueuedConnection);
 }
 
-void DTreeLandPlatformWindowHelper::doSetEnabledBlurWindow()
+void DTreeLandPlatformWindowHelper::applyPending()
 {
+    m_applyScheduled = false;
+
     if (auto context = windowContext()) {
-        context->set_blend_mode(m_isWindowBlur ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
+        if (m_dirty & NoTitlebar) {
+            m_dirty &= ~NoTitlebar;
+            context->set_titlebar(m_noTitlebar ? PersonalizationWindowContext::enable_mode_disable : PersonalizationWindowContext::enable_mode_enable);
+        }
+        if (m_dirty & Radius) {
+            m_dirty &= ~Radius;
+            context->set_round_corner_radius(m_radius);
+        }
+        if (m_dirty & Blur) {
+            m_dirty &= ~Blur;
+            context->set_blend_mode(m_blur ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
+        }
+        if (m_dirty & Border) {
+            m_dirty &= ~Border;
+            context->set_border(m_borderWidth,
+                                m_borderColor.red(), m_borderColor.green(),
+                                m_borderColor.blue(), m_borderColor.alpha());
+        }
+        if (m_dirty & Shadow) {
+            m_dirty &= ~Shadow;
+            context->set_shadow(m_shadowRadius,
+                                m_shadowOffset.x(), m_shadowOffset.y(),
+                                m_shadowColor.red(), m_shadowColor.green(),
+                                m_shadowColor.blue(), m_shadowColor.alpha());
+        }
     }
 }
 
@@ -355,6 +397,9 @@ DTreeLandPlatformWindowInterface::DTreeLandPlatformWindowInterface(QWindow *wind
     if (!MoveWindowHelper::mapped.value(window)) {
         Q_UNUSED(new MoveWindowHelper(window))
     }
+    if (auto helper = DTreeLandPlatformWindowHelper::get(window)) {
+        helper->setPlatformHandle(platformHandle);
+    }
 }
 
 DTreeLandPlatformWindowInterface::~DTreeLandPlatformWindowInterface()
@@ -363,9 +408,7 @@ DTreeLandPlatformWindowInterface::~DTreeLandPlatformWindowInterface()
 
 void DTreeLandPlatformWindowInterface::setEnabled(bool enabled)
 {
-    if (setEnabledNoTitlebar(enabled)) {
-        return;
-    }
+    setEnabledNoTitlebar(enabled);
 }
 
 bool DTreeLandPlatformWindowInterface::isEnabled() const
@@ -375,56 +418,129 @@ bool DTreeLandPlatformWindowInterface::isEnabled() const
 
 bool DTreeLandPlatformWindowInterface::isEnabledNoTitlebar() const
 {
-    return m_isNoTitlebar;
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->isEnabledNoTitlebar();
+    return false;
 }
 
 bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
 {
-    if (m_isNoTitlebar == enable) {
-        return true;
-    }
-    m_isNoTitlebar = enable;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setEnabledNoTitlebar(enable);
+        return true;
     }
-    return true;
+    return false;
 }
 
 int DTreeLandPlatformWindowInterface::windowRadius() const
 {
-    return m_radius;
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->windowRadius();
+    return 0;
 }
 
 void DTreeLandPlatformWindowInterface::setWindowRadius(int windowRadius)
 {
-    if (m_radius == windowRadius) {
-        return;
-    }
-    m_radius = windowRadius;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
-        helper->setWindowRadius(m_radius);
+        helper->setWindowRadius(windowRadius);
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->windowRadiusChanged();
     }
-    if (m_platformHandle) {
-        Q_EMIT m_platformHandle->windowRadiusChanged();
+}
+
+int DTreeLandPlatformWindowInterface::borderWidth() const
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->borderWidth();
+    return 0;
+}
+
+void DTreeLandPlatformWindowInterface::setBorderWidth(int borderWidth)
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setBorderWidth(borderWidth);
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->borderWidthChanged();
+    }
+}
+
+QColor DTreeLandPlatformWindowInterface::borderColor() const
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->borderColor();
+    return {};
+}
+
+void DTreeLandPlatformWindowInterface::setBorderColor(const QColor &borderColor)
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setBorderColor(borderColor);
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->borderColorChanged();
+    }
+}
+
+int DTreeLandPlatformWindowInterface::shadowRadius() const
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->shadowRadius();
+    return 0;
+}
+
+void DTreeLandPlatformWindowInterface::setShadowRadius(int shadowRadius)
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setShadowRadius(shadowRadius);
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->shadowRadiusChanged();
+    }
+}
+
+QPoint DTreeLandPlatformWindowInterface::shadowOffset() const
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->shadowOffset();
+    return {};
+}
+
+void DTreeLandPlatformWindowInterface::setShadowOffset(const QPoint &shadowOffset)
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setShadowOffset(shadowOffset);
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->shadowOffsetChanged();
+    }
+}
+
+QColor DTreeLandPlatformWindowInterface::shadowColor() const
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->shadowColor();
+    return {};
+}
+
+void DTreeLandPlatformWindowInterface::setShadowColor(const QColor &shadowColor)
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setShadowColor(shadowColor);
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->shadowColorChanged();
     }
 }
 
 bool DTreeLandPlatformWindowInterface::enableBlurWindow() const
 {
-    return m_isWindowBlur;
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return helper->enableBlurWindow();
+    return false;
 }
 
 void DTreeLandPlatformWindowInterface::setEnableBlurWindow(bool enable)
 {
-    if (m_isWindowBlur == enable) {
-        return;
-    }
-    m_isWindowBlur = enable;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setEnableBlurWindow(enable);
-    }
-    if (m_platformHandle) {
-        Q_EMIT m_platformHandle->enableBlurWindowChanged();
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->enableBlurWindowChanged();
     }
 }
 DGUI_END_NAMESPACE
