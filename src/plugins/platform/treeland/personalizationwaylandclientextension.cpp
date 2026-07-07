@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -73,6 +73,18 @@ PersonalizationWindowContext::PersonalizationWindowContext(struct ::treeland_per
 
 }
 
+PersonalizationWindowContext::~PersonalizationWindowContext()
+{
+    if (isInitialized())
+        destroy();
+}
+
+PersonalizationAppearanceContext::~PersonalizationAppearanceContext()
+{
+    if (isInitialized())
+        destroy();
+}
+
 PersonalizationAppearanceContext::PersonalizationAppearanceContext(struct ::treeland_personalization_appearance_context_v1 *context, DTreelandPlatformInterface *interface)
     : QWaylandClientExtensionTemplate<PersonalizationAppearanceContext>(treeland_personalization_appearance_context_v1_interface.version)
     , QtWayland::treeland_personalization_appearance_context_v1(context)
@@ -116,6 +128,12 @@ void PersonalizationAppearanceContext::treeland_personalization_appearance_conte
 void PersonalizationAppearanceContext::treeland_personalization_appearance_context_v1_window_opacity(uint32_t opacity)
 {
     m_interface->m_blurOpacity = opacity;
+}
+
+PersonalizationFontContext::~PersonalizationFontContext()
+{
+    if (isInitialized())
+        destroy();
 }
 
 PersonalizationFontContext::PersonalizationFontContext(struct ::treeland_personalization_font_context_v1 *context, DTreelandPlatformInterface *interface)

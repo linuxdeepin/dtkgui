@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -48,6 +48,7 @@ class PersonalizationWindowContext : public QWaylandClientExtensionTemplate<Pers
     Q_OBJECT
 public:
     explicit PersonalizationWindowContext(struct ::treeland_personalization_window_context_v1 *context);
+    ~PersonalizationWindowContext() override;
 };
 
 class PersonalizationAppearanceContext : public QWaylandClientExtensionTemplate<PersonalizationAppearanceContext>,
@@ -56,6 +57,7 @@ class PersonalizationAppearanceContext : public QWaylandClientExtensionTemplate<
     Q_OBJECT
 public:
     explicit PersonalizationAppearanceContext(struct ::treeland_personalization_appearance_context_v1 *context, DTreelandPlatformInterface *interface);
+    ~PersonalizationAppearanceContext() override;
 
 protected:
     void treeland_personalization_appearance_context_v1_round_corner_radius(int32_t radius) override;
@@ -73,6 +75,7 @@ class PersonalizationFontContext : public QWaylandClientExtensionTemplate<Person
     Q_OBJECT
 public:
     explicit PersonalizationFontContext(struct ::treeland_personalization_font_context_v1 *context, DTreelandPlatformInterface *interface);
+    ~PersonalizationFontContext() override;
 
 protected:
     void treeland_personalization_font_context_v1_font(const QString &font_name) override;

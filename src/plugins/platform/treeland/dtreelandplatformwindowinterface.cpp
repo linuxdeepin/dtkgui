@@ -220,7 +220,10 @@ DTreeLandPlatformWindowHelper::DTreeLandPlatformWindowHelper(QWindow *window)
 
 DTreeLandPlatformWindowHelper::~DTreeLandPlatformWindowHelper()
 {
-    // see tst_qwindow.cpp tst_QWindow::qobject_castOnDestruction()
+    if (m_windowContext) {
+        m_windowContext->deleteLater();
+        m_windowContext = nullptr;
+    }
     windowMap.remove(static_cast<QWindow*>(parent()));
 }
 
