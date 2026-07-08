@@ -344,6 +344,11 @@ void DTreeLandPlatformWindowHelper::setEnableBlurWindow(bool enableBlurWindow)
     updateFeature(m_blur, enableBlurWindow, Blur);
 }
 
+void DTreeLandPlatformWindowHelper::setWindowEffect(DPlatformHandle::EffectScenes effectScene)
+{
+    updateFeature(m_effectScene, effectScene, WindowEffect);
+}
+
 void DTreeLandPlatformWindowHelper::setPlatformHandle(DPlatformHandle *handle)
 {
     m_platformHandle = handle;
@@ -386,6 +391,18 @@ void DTreeLandPlatformWindowHelper::applyPending()
                                 m_shadowOffset.x(), m_shadowOffset.y(),
                                 m_shadowColor.red(), m_shadowColor.green(),
                                 m_shadowColor.blue(), m_shadowColor.alpha());
+        }
+        if (m_dirty & WindowEffect) {
+            m_dirty &= ~WindowEffect;
+            if (m_effectScene.testFlag(DPlatformHandle::EffectNoRadius)) {
+                context->set_round_corner_radius(0);
+            }
+            if (m_effectScene.testFlag(DPlatformHandle::EffectNoShadow)) {
+                context->set_shadow(0, 0, 0, 0, 0, 0, 0);
+            }
+            if (m_effectScene.testFlag(DPlatformHandle::EffectNoBorder)) {
+                context->set_border(0, 0, 0, 0, 0);
+            }
         }
     }
 }
@@ -541,6 +558,22 @@ void DTreeLandPlatformWindowInterface::setEnableBlurWindow(bool enable)
         helper->setEnableBlurWindow(enable);
         if (m_platformHandle)
             Q_EMIT m_platformHandle->enableBlurWindowChanged();
+    }
+}
+
+DPlatformHandle::EffectScene DTreeLandPlatformWindowInterface::windowEffect()
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
+        return static_cast<DPlatformHandle::EffectScene>(static_cast<int>(helper->windowEffect()));
+    return {};
+}
+
+void DTreeLandPlatformWindowInterface::setWindowEffect(DPlatformHandle::EffectScenes effectScene)
+{
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setWindowEffect(effectScene);
+        if (m_platformHandle)
+            Q_EMIT m_platformHandle->windowEffectChanged();
     }
 }
 DGUI_END_NAMESPACE

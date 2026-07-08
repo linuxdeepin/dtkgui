@@ -20,11 +20,12 @@ public:
     ~DTreeLandPlatformWindowHelper() override;
 
     enum Feature {
-        NoTitlebar  = 1 << 0,
-        Radius      = 1 << 1,
-        Blur        = 1 << 2,
-        Border      = 1 << 3,
-        Shadow      = 1 << 4,
+        NoTitlebar   = 1 << 0,
+        Radius       = 1 << 1,
+        Blur         = 1 << 2,
+        Border       = 1 << 3,
+        Shadow       = 1 << 4,
+        WindowEffect = 1 << 5,
     };
     Q_DECLARE_FLAGS(Features, Feature)
 
@@ -39,6 +40,7 @@ public:
     void setShadowOffset(const QPoint &shadowOffset);
     void setShadowColor(const QColor &shadowColor);
     void setEnableBlurWindow(bool enableBlurWindow);
+    void setWindowEffect(DPlatformHandle::EffectScenes effectScene);
     void setPlatformHandle(DPlatformHandle *handle);
 
     bool isEnabledNoTitlebar() const { return m_noTitlebar; }
@@ -49,6 +51,7 @@ public:
     QPoint shadowOffset() const { return m_shadowOffset; }
     QColor shadowColor() const { return m_shadowColor; }
     bool enableBlurWindow() const { return m_blur; }
+    DPlatformHandle::EffectScenes windowEffect() const { return m_effectScene; }
 
 private slots:
     void onActiveChanged();
@@ -82,6 +85,7 @@ private:
     int m_shadowRadius = 0;
     QPoint m_shadowOffset;
     QColor m_shadowColor;
+    DPlatformHandle::EffectScenes m_effectScene;
     Features m_initialized;
     Features m_dirty;
     bool m_applyScheduled = false;
@@ -116,6 +120,9 @@ public:
 
     bool enableBlurWindow() const override;
     void setEnableBlurWindow(bool enableBlurWindow) override;
+
+    DPlatformHandle::EffectScene windowEffect() override;
+    void setWindowEffect(DPlatformHandle::EffectScenes effectScene) override;
 };
 
 DGUI_END_NAMESPACE
