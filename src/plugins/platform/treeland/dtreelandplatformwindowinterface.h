@@ -63,8 +63,6 @@ private:
 
     template<typename T>
     void updateFeature(T &member, const T &value, Feature flag) {
-        if (member == value)
-            return;
         member = value;
         m_initialized |= flag;
         m_dirty |= flag;

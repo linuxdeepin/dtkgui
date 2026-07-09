@@ -354,7 +354,7 @@ void DTreeLandPlatformWindowHelper::scheduleApply()
     if (m_applyScheduled)
         return;
     m_applyScheduled = true;
-    QMetaObject::invokeMethod(this, &DTreeLandPlatformWindowHelper::applyPending, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, &DTreeLandPlatformWindowHelper::applyPending);
 }
 
 void DTreeLandPlatformWindowHelper::applyPending()
