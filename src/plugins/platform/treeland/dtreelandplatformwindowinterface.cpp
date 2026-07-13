@@ -221,7 +221,7 @@ DTreeLandPlatformWindowHelper::DTreeLandPlatformWindowHelper(QWindow *window)
 DTreeLandPlatformWindowHelper::~DTreeLandPlatformWindowHelper()
 {
     if (m_windowContext) {
-        m_windowContext->deleteLater();
+        delete m_windowContext;
         m_windowContext = nullptr;
     }
     windowMap.remove(static_cast<QWindow*>(parent()));
@@ -255,8 +255,8 @@ void DTreeLandPlatformWindowHelper::initWaylandWindow()
 void DTreeLandPlatformWindowHelper::onActiveChanged()
 {
     if (PersonalizationManager::instance()->isActive()) {
-        qDebug() << "Personalization is actived, window" << window();
         if (window()->handle()) {
+            initWaylandWindow();
             onSurfaceCreated();
         }
     }
@@ -271,7 +271,7 @@ void DTreeLandPlatformWindowHelper::onSurfaceCreated()
 void DTreeLandPlatformWindowHelper::onSurfaceDestroyed()
 {
     if (m_windowContext) {
-        m_windowContext->deleteLater();
+        delete m_windowContext;
         m_windowContext = nullptr;
     }
 }
