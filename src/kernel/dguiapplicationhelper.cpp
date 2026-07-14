@@ -473,8 +473,9 @@ void DGuiApplicationHelperPrivate::initPaletteType() const
     if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::DontSaveApplicationTheme))
         return;
 
-    if (_d_dconfig.exists())
+    if (paletteTypeInited)
         return;
+    const_cast<DGuiApplicationHelperPrivate *>(this)->paletteTypeInited = true;
 
     auto applyThemeType = [this](bool emitSignal){
         int ct = _d_dconfig->themeType();

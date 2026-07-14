@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -41,6 +41,7 @@ public:
     void setPaletteType(DGuiApplicationHelper::ColorType ct, bool emitSignal);
     void initPaletteType() const;
 
+    bool paletteTypeInited = false;
     DGuiApplicationHelper::ColorType paletteType = DGuiApplicationHelper::UnknownType;
     // 系统级别的主题设置
     DPlatformTheme *systemTheme = nullptr;
