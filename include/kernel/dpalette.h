@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -76,7 +76,7 @@ public:
 protected:
     QScopedPointer<DPalettePrivate> d;
 
-    friend Q_GUI_EXPORT QDataStream &operator<<(QDataStream &s, const DPalette &p);
+    friend LIBDTKGUISHARED_EXPORT QDataStream &operator<<(QDataStream &s, const DPalette &p);
 };
 
 DGUI_END_NAMESPACE
@@ -86,12 +86,12 @@ QT_BEGIN_NAMESPACE
   DPalette stream functions
  *****************************************************************************/
 #ifndef QT_NO_DATASTREAM
-Q_GUI_EXPORT QDataStream &operator<<(QDataStream &ds, const DTK_GUI_NAMESPACE::DPalette &p);
-Q_GUI_EXPORT QDataStream &operator>>(QDataStream &ds, DTK_GUI_NAMESPACE::DPalette &p);
+LIBDTKGUISHARED_EXPORT QDataStream &operator<<(QDataStream &ds, const DTK_GUI_NAMESPACE::DPalette &p);
+LIBDTKGUISHARED_EXPORT QDataStream &operator>>(QDataStream &ds, DTK_GUI_NAMESPACE::DPalette &p);
 #endif // QT_NO_DATASTREAM
 
 #ifndef QT_NO_DEBUG_STREAM
-Q_GUI_EXPORT QDebug operator<<(QDebug, const DTK_GUI_NAMESPACE::DPalette &);
+LIBDTKGUISHARED_EXPORT QDebug operator<<(QDebug, const DTK_GUI_NAMESPACE::DPalette &);
 #endif
 
 QT_END_NAMESPACE

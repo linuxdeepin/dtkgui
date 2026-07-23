@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -7,7 +7,9 @@
 #include "dplatformtheme.h"
 #include "dwindowmanagerhelper.h"
 
+#ifndef Q_OS_WIN
 #include <private/qwaylandwindow_p.h>
+#endif
 
 #include <QGuiApplication>
 #include <QPlatformSurfaceEvent>

@@ -9,7 +9,13 @@ set(kernel_SRC
   ${KERNEL_SOURCE}
 )
 
-dtk_add_config_to_cpp(kernel_SRC /usr/share/dsg/configs/org.deepin.dtk.preference.json
+if(LINUX)
+  set(_PREF_CONFIG_JSON /usr/share/dsg/configs/org.deepin.dtk.preference.json)
+else()
+  set(_PREF_CONFIG_JSON ${CMAKE_INSTALL_PREFIX}/share/dsg/configs/org.deepin.dtk.preference.json)
+endif()
+
+dtk_add_config_to_cpp(kernel_SRC ${_PREF_CONFIG_JSON}
   OUTPUT_FILE_NAME orgdeepindtkpreference.hpp
   CLASS_NAME OrgDeepinDTKPreference
 )

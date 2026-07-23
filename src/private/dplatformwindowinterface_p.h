@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -12,7 +12,7 @@
 
 DGUI_BEGIN_NAMESPACE
 
-class LIBDTKCORESHARED_EXPORT DPlatformWindowInterface
+class LIBDTKGUISHARED_EXPORT DPlatformWindowInterface
 {
 public:
     explicit DPlatformWindowInterface(QWindow *window, DPlatformHandle *platformHandle);
@@ -76,7 +76,7 @@ protected:
     QPointer<DPlatformHandle> m_platformHandle;
 };
 
-class LIBDTKCORESHARED_EXPORT DPlatformWindowInterfaceFactory {
+class LIBDTKGUISHARED_EXPORT DPlatformWindowInterfaceFactory {
 public:
     using Creator = DPlatformWindowInterface * (*)(QWindow *, DPlatformHandle*);
     static void registerInterface(Creator creator);
