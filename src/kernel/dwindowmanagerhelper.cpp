@@ -9,7 +9,7 @@
 #include <DGuiApplicationHelper>
 #include <QGuiApplication>
 
-
+#ifdef Q_OS_LINUX
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     #include <qpa/qplatformwindow_p.h>
     #define D_XCB_WINDOW_TYPE QNativeInterface::Private::QXcbWindow::WindowType
@@ -17,7 +17,7 @@
     #include <QtPlatformHeaders/QXcbWindowFunctions>
     #define D_XCB_WINDOW_TYPE QXcbWindowFunctions::WmWindowType
 #endif
-
+#endif
 
 #include <qpa/qplatformwindow.h>
 #include <qpa/qplatformnativeinterface.h>
@@ -492,6 +492,7 @@ DWindowManagerHelper::MotifDecorations DWindowManagerHelper::getMotifDecorations
  */
 void DWindowManagerHelper::setWmWindowTypes(QWindow *window, WmWindowTypes types)
 {
+#ifdef Q_OS_LINUX
     const int _types = static_cast<int>(types);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -503,6 +504,10 @@ void DWindowManagerHelper::setWmWindowTypes(QWindow *window, WmWindowTypes types
     }
 #else
     QXcbWindowFunctions::setWmWindowType(window, static_cast<D_XCB_WINDOW_TYPE>(_types));
+#endif
+#else
+    Q_UNUSED(window)
+    Q_UNUSED(types)
 #endif
 }
 

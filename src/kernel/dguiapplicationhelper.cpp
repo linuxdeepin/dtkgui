@@ -26,21 +26,12 @@
 #include <QDirIterator>
 #include <QDesktopServices>
 #include <QLibraryInfo>
+#include <DPathBuf>
 #include <QTimer>
 
-#ifdef Q_OS_UNIX
-#include <QDBusError>
-#include <QDBusReply>
-#include <QDBusInterface>
-#include <QDBusPendingCall>
-#include <QDBusConnection>
-#include <QDBusConnectionInterface>
-#include <QProcess>
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
 #endif
-#include <QDir>
-#include <QLockFile>
-#include <QDirIterator>
-#include <QDesktopServices>
 
 #ifdef Q_OS_UNIX
 #include <QDBusError>
@@ -50,7 +41,6 @@
 #include <QDBusConnection>
 #include <QDBusConnectionInterface>
 #include <QProcess>
-#include <DPathBuf>
 #endif
 
 #include <private/qguiapplication_p.h>
@@ -210,9 +200,11 @@ LoadManualServiceWorker::~LoadManualServiceWorker()
 
 void LoadManualServiceWorker::run()
 {
+#ifdef Q_OS_UNIX
     QDBusInterface("com.deepin.Manual.Search",
                    "/com/deepin/Manual/Search",
                    "com.deepin.Manual.Search");
+#endif
 }
 
 void LoadManualServiceWorker::checkManualServiceWakeUp()

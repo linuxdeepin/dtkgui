@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -14,7 +14,7 @@ DGUI_BEGIN_NAMESPACE
 
 class DPlatformTheme;
 
-class LIBDTKCORESHARED_EXPORT DPlatformInterface
+class LIBDTKGUISHARED_EXPORT DPlatformInterface
 {
 public:
     explicit DPlatformInterface(DPlatformTheme *platformTheme);
@@ -126,7 +126,7 @@ protected:
     DPlatformTheme *m_platformTheme;
 };
 
-class LIBDTKCORESHARED_EXPORT DPlatformInterfaceFactory {
+class LIBDTKGUISHARED_EXPORT DPlatformInterfaceFactory {
 public:
     using HelperCreator = DPlatformInterface * (*)(DPlatformTheme*);
     static void registerInterface(HelperCreator creator);

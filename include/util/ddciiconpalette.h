@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -63,7 +63,7 @@ DGUI_END_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 #ifndef QT_NO_DEBUG_STREAM
-Q_GUI_EXPORT QDebug operator<<(QDebug, const DTK_GUI_NAMESPACE::DDciIconPalette &);
+LIBDTKGUISHARED_EXPORT QDebug operator<<(QDebug, const DTK_GUI_NAMESPACE::DDciIconPalette &);
 #endif
 QT_END_NAMESPACE
 #endif // DDCIICONPALETTE_H

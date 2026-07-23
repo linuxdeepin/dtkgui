@@ -1,6 +1,9 @@
-// SPDX-FileCopyrightText: 2022 - 2023 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
+
+#include <QtGlobal>
+#ifdef Q_OS_LINUX
 
 #ifndef DTK_DISABLE_LIBRSVG
 #include <librsvg/rsvg.h>
@@ -435,3 +438,5 @@ void DSvgRenderer::render(QPainter *p, const QString &elementId, const QRectF &b
 }
 
 DGUI_END_NAMESPACE
+
+#endif // Q_OS_LINUX

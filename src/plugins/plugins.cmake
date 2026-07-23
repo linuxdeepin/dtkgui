@@ -32,13 +32,16 @@ else()
 endif()
 
 # Treeland
+if(LINUX)
+  try_compile(DEEPIN_WAYLAND_TEST_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}/treeland_test
+      ${CMAKE_CURRENT_LIST_DIR}/platform/config.tests/treeland_test treeland_test CMAKE_FLAGS -DQT_VERSION_MAJOR=${QT_VERSION_MAJOR})
 
-try_compile(DEEPIN_WAYLAND_TEST_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}/treeland_test
-    ${CMAKE_CURRENT_LIST_DIR}/platform/config.tests/treeland_test treeland_test CMAKE_FLAGS -DQT_VERSION_MAJOR=${QT_VERSION_MAJOR})
-
-if(NOT DEEPIN_WAYLAND_TEST_COMPILE_RESULT)
-    message("wayland_test failed, disable treeland support")
-    set(DTK_DISABLE_TREELAND ON)
+  if(NOT DEEPIN_WAYLAND_TEST_COMPILE_RESULT)
+      message("wayland_test failed, disable treeland support")
+      set(DTK_DISABLE_TREELAND ON)
+  endif()
+else()
+  set(DTK_DISABLE_TREELAND ON)
 endif()
 
 if(NOT DTK_DISABLE_TREELAND)

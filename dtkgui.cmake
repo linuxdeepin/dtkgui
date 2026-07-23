@@ -113,7 +113,9 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui DBus Network)
 find_package(PkgConfig REQUIRED)
 find_package(Dtk${DTK_NAME_SUFFIX} REQUIRED Core Tools)
 find_package(DtkBuildHelper REQUIRED)
-pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
+if(NOT DTK_DISABLE_LIBRSVG)
+  pkg_check_modules(librsvg REQUIRED IMPORTED_TARGET librsvg-2.0)
+endif()
 
 if(NOT DTK_DISABLE_LIBXDG)
   if (${QT_VERSION_MAJOR} STREQUAL "5")
@@ -136,6 +138,12 @@ find_package(FreeImage)
 pkg_check_modules(libraw IMPORTED_TARGET libraw)
 if(FreeImage_FOUND AND libraw_FOUND)
   set(EX_IMAGE_FORMAT_LIBS_FOUND ON)
+endif()
+
+# Export all symbols on Windows to avoid dllimport issues
+if(WIN32 AND NOT MSVC)
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--export-all-symbols")
+  add_definitions(-DLIBDTKGUI_LIBRARY)
 endif()
 
 set(OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR})

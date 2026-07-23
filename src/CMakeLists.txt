@@ -1,9 +1,15 @@
 if("${QT_VERSION_MAJOR}" STREQUAL "6")
-    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets WaylandClient)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+    if(LINUX)
+        find_package(Qt6 REQUIRED COMPONENTS WaylandClient)
+    endif()
 
     if (${Qt6Core_VERSION} VERSION_GREATER_EQUAL "6.10.0")
         set(QT_NO_PRIVATE_MODULE_WARNING ON)
-        find_package(Qt6 REQUIRED COMPONENTS CorePrivate GuiPrivate WaylandClientPrivate)
+        find_package(Qt6 REQUIRED COMPONENTS CorePrivate GuiPrivate)
+        if(LINUX)
+            find_package(Qt6 REQUIRED COMPONENTS WaylandClientPrivate)
+        endif()
     endif()
 else()
     find_package(Qt5 REQUIRED COMPONENTS WaylandClient XkbCommonSupport)
@@ -49,8 +55,10 @@ PRIVATE
     Qt${QT_VERSION_MAJOR}::GuiPrivate
     Qt${QT_VERSION_MAJOR}::CorePrivate
     Qt${QT_VERSION_MAJOR}::DBus
-    Qt${QT_VERSION_MAJOR}::WaylandClientPrivate
 )
+if(LINUX)
+    target_link_libraries(${LIB_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::WaylandClientPrivate)
+endif()
 
 if("${QT_VERSION_MAJOR}" STREQUAL "5")
 target_link_libraries(${LIB_NAME}
