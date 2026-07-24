@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -15,7 +15,6 @@ QT_BEGIN_NAMESPACE
 class QPainter;
 QT_END_NAMESPACE
 
-#ifdef Q_OS_LINUX
 DGUI_BEGIN_NAMESPACE
 class DSvgRendererPrivate;
 class DSvgRenderer : public QObject, public DTK_CORE_NAMESPACE::DObject
@@ -54,13 +53,5 @@ private:
     D_DECLARE_PRIVATE(DSvgRenderer)
 };
 DGUI_END_NAMESPACE
-#else
-
-#include <QSvgRenderer>
-DGUI_BEGIN_NAMESPACE
-typedef  QSvgRenderer DSvgRenderer;
-DGUI_END_NAMESPACE
-
-#endif
 
 #endif // DSVGRENDERER_H
