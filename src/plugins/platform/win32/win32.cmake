@@ -1,0 +1,10 @@
+file(GLOB WIN32_HEADER
+    ${CMAKE_CURRENT_LIST_DIR}/*.h
+)
+file(GLOB WIN32_SOURCE
+    ${CMAKE_CURRENT_LIST_DIR}/*.cpp
+)
+set(win32_SRC
+    ${WIN32_HEADER}
+    ${WIN32_SOURCE}
+)

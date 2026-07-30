@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022-2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -10,6 +10,9 @@
 #endif
 #ifndef DTK_DISABLE_TREELAND
 #include "plugins/platform/treeland/dtreelandplatformwindowinterface.h"
+#endif
+#ifdef Q_OS_WIN
+#include "plugins/platform/win32/dwin32platformwindowinterface.h"
 #endif
 
 DGUI_BEGIN_NAMESPACE
@@ -321,6 +324,10 @@ static DPlatformWindowInterface *createWindowInterface(QWindow *window, DPlatfor
         if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
             impl = new DTreeLandPlatformWindowInterface(window, platformHandle);
         }
+#endif
+
+#ifdef Q_OS_WIN
+        impl = new DWin32PlatformWindowInterface(window, platformHandle);
 #endif
     }
 
