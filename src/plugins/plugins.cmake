@@ -31,6 +31,16 @@ else()
     target_compile_definitions(${LIB_NAME} PRIVATE DTK_DISABLE_XCB)
 endif()
 
+# Win32
+if(WIN32)
+    message("Support Win32!")
+    include(plugins/platform/win32/win32.cmake)
+    target_sources(${LIB_NAME} PRIVATE
+        ${win32_SRC}
+    )
+    target_link_libraries(${LIB_NAME} PRIVATE dwmapi)
+endif()
+
 # Treeland
 if(LINUX)
   try_compile(DEEPIN_WAYLAND_TEST_COMPILE_RESULT ${CMAKE_CURRENT_BINARY_DIR}/treeland_test
