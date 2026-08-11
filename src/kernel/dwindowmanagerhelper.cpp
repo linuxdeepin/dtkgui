@@ -60,6 +60,9 @@ DEFINE_CONST_CHAR(getMWMDecorations);
 DEFINE_CONST_CHAR(connectWindowMotifWMHintsChanged);
 DEFINE_CONST_CHAR(popupSystemWindowMenu);
 DEFINE_CONST_CHAR(setWMClassName);
+DEFINE_CONST_CHAR(showSplitMenu);
+DEFINE_CONST_CHAR(hideSplitMenu);
+DEFINE_CONST_CHAR(isSplitMenuSupported);
 
 template<typename ReturnT, typename FunctionT, typename... Args>
 static inline ReturnT callPlatformFunction(const QByteArray &funcName,  Args... args)
@@ -548,6 +551,26 @@ void DWindowManagerHelper::popupSystemWindowMenu(const QWindow *window)
     }
 #endif
     return callPlatformFunction<void, void(*)(quint32)>(_popupSystemWindowMenu, quint32(window->handle()->winId()));
+}
+
+void DWindowManagerHelper::showSplitMenu(const QWindow *window, const QRect &buttonRect)
+{
+    if (!window || !window->handle())
+        return;
+
+    return callPlatformFunction<void, void(*)(quint32, const QRect &)>(_showSplitMenu,
+                                                                         quint32(window->handle()->winId()),
+                                                                         buttonRect);
+}
+
+void DWindowManagerHelper::hideSplitMenu(bool delay)
+{
+    return callPlatformFunction<void, void(*)(bool)>(_hideSplitMenu, delay);
+}
+
+bool DWindowManagerHelper::isSplitScreenMenuSupported() const
+{
+    return callPlatformFunction<bool, bool(*)()>(_isSplitMenuSupported);
 }
 
 /*!

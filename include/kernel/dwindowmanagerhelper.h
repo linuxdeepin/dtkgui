@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -93,6 +93,10 @@ public:
 
     static void popupSystemWindowMenu(const QWindow *window);
 
+    static void showSplitMenu(const QWindow *window, const QRect &buttonRect);
+    static void hideSplitMenu(bool delay);
+    bool isSplitScreenMenuSupported() const;
+
     bool hasBlurWindow() const;
     bool hasComposite() const;
     bool hasNoTitlebar() const;
@@ -111,6 +115,7 @@ Q_SIGNALS:
     void hasCompositeChanged();
     void hasNoTitlebarChanged();
     void hasWallpaperEffectChanged();
+    void splitScreenMenuSupportedChanged();
     void windowListChanged();
     void windowMotifWMHintsChanged(quint32 winId);
 
