@@ -28,7 +28,6 @@
 #include <QLibraryInfo>
 #include <DPathBuf>
 #include <QTimer>
-#include <QStyleHints>
 
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
@@ -1104,13 +1103,6 @@ DPalette DGuiApplicationHelper::fetchPalette(const DPlatformTheme *theme)
     if (theme_name.endsWith("dark")) {
         type = DarkType;
     }
-
-#ifdef Q_OS_WIN
-    auto styleHints = QGuiApplication::styleHints();
-    if (styleHints) {
-        type = (styleHints->colorScheme() == Qt::ColorScheme::Dark) ? DarkType : LightType;
-    }
-#endif
 
     bool ok = false;
     base_palette = theme->fetchPalette(standardPalette(type), &ok);
