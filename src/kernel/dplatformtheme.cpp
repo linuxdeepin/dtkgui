@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -11,6 +11,9 @@
 #endif
 #ifndef DTK_DISABLE_TREELAND
 #include "plugins/platform/treeland/dtreelandplatforminterface.h"
+#endif
+#ifdef Q_OS_WIN
+#include "plugins/platform/win32/dwin32platforminterface.h"
 #endif
 #include "private/dplatforminterface_p.h"
 #include "orgdeepindtkpreference.hpp"
@@ -100,6 +103,12 @@ DPlatformTheme::DPlatformTheme(quint32 window, QObject *parent)
 #ifndef DTK_DISABLE_TREELAND
         if (DGuiApplicationHelper::testAttribute(DGuiApplicationHelper::IsWaylandPlatform)) {
             d->platformInterface = new DTreelandPlatformInterface(this);
+        }
+#endif
+
+#ifdef Q_OS_WIN
+        if (!d->platformInterface) {
+            d->platformInterface = new DWin32PlatformInterface(this);
         }
 #endif
     }
