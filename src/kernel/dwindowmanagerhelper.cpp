@@ -497,10 +497,15 @@ void DWindowManagerHelper::setWmWindowTypes(QWindow *window, WmWindowTypes types
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     typedef QNativeInterface::Private::QXcbWindow  QXcbWindow_P;
-    if (auto w = dynamic_cast<QXcbWindow_P *>(window->handle())) {
-        w->setWindowType(static_cast<D_XCB_WINDOW_TYPE>(_types));
-    } else {
-        qWarning() << "cast" << window << "to platform window failed";
+    // _NET_WM_WINDOW_TYPE 是 X11 专属属性，仅在 XCB 平台窗口已创建时生效。
+    // 当 window 为空、handle 为空（平台窗口尚未创建，常见于 QML 组件完成阶段）
+    // 或为非 XCB 平台（如 Wayland/Treeland）时无法应用，静默忽略即可，
+    // 与 Qt5 下 QXcbWindowFunctions::setWmWindowType 及本类 setMotifFunctions/
+    // setMotifDecorations/popupSystemWindowMenu 的处理方式一致，避免对 QML 窗口产生噪声告警。
+    if (window) {
+        if (auto w = dynamic_cast<QXcbWindow_P *>(window->handle())) {
+            w->setWindowType(static_cast<D_XCB_WINDOW_TYPE>(_types));
+        }
     }
 #else
     QXcbWindowFunctions::setWmWindowType(window, static_cast<D_XCB_WINDOW_TYPE>(_types));
