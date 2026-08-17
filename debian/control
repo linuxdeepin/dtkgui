@@ -63,6 +63,7 @@ Description: Development ToolKit Gui Utilities (DTK6 with Qt6)
 Package: libdtk6gui-dev
 Architecture: any
 Depends: libdtk6gui( =${binary:Version}),
+ libdtk6gui-bin( =${binary:Version}),
  libdtkcommon-dev(>=5.6.16), libdtk6core-dev
 Build-Profiles: <!nodtk6>
 Description: Development ToolKit Gui Devel Library (DTK6 with Qt6)
@@ -103,6 +104,7 @@ Description: Development ToolKit Gui Utilities (DTK5 with Qt5)
 Package: libdtkgui-dev
 Architecture: any
 Depends: libdtkgui5( =${binary:Version}),
+ libdtkgui5-bin( =${binary:Version}),
  libdtkcommon-dev(>=5.6.16), libdtkcore-dev
 Build-Profiles: <!nodtk5>
 Description: Development ToolKit Gui Devel Library (DTK5 with Qt5)
