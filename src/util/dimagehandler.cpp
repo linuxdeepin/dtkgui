@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -439,24 +439,40 @@ void DImageHandlerPrivate::adjustImageToRealOrientation(QImage &image, ExifImage
     switch (orientation) {
             // TopLeft unnecessary rotate/flip
         case TopRight:  // Horizontal flip
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+            image = image.flipped(Qt::Horizontal);
+#else
             image = image.mirrored(true, false);
+#endif
             break;
         case BottomRight:
             rotateImage(image, 180);
             break;
         case BottomLeft:  // Vertical flip
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+            image = image.flipped(Qt::Vertical);
+#else
             image = image.mirrored(false, true);
+#endif
             break;
         case LeftTop:  // Clockwise 90 degrees and horizontal flip
             rotateImage(image, 90);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+            image = image.flipped(Qt::Horizontal);
+#else
             image = image.mirrored(true, false);
+#endif
             break;
         case RightTop:
             rotateImage(image, 90);
             break;
         case RightBottom:  // Clockwise 90 degrees and vertical flip
             rotateImage(image, 90);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+            image = image.flipped(Qt::Vertical);
+#else
             image = image.mirrored(false, true);
+#endif
             break;
         case LeftBottom:  // Counterclockwise 90 degrees
             rotateImage(image, -90);
@@ -1527,12 +1543,20 @@ QImage DImageHandler::replacePointColor(const QImage &img, QColor oldColor, QCol
 
 QImage DImageHandler::flipHorizontal(const QImage &img)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+    return img.flipped(Qt::Horizontal);
+#else
     return img.mirrored(true, false);
+#endif
 }
 
 QImage DImageHandler::flipVertical(const QImage &img)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+    return img.flipped(Qt::Vertical);
+#else
     return img.mirrored(false, true);
+#endif
 }
 
 DGUI_END_NAMESPACE
