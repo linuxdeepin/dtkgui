@@ -105,6 +105,39 @@ Q_LOGGING_CATEGORY(dgAppHelper, "dtk.dguihelper", QtInfoMsg)
 
 Q_GLOBAL_STATIC(QLocalServer, _d_singleServer)
 
+// 单实例锁文件，进程退出（aboutToQuit）时需提前释放，
+// 避免线程卡住导致进程未完全退出时新实例无法获取锁。
+// 文件名在 setSingleInstance 中设置（多次调用使用最后一次的 key）
+class SingleInstanceLock
+{
+public:
+    SingleInstanceLock() = default;
+    ~SingleInstanceLock()
+    {
+        unlock();
+    }
+
+    void reset(const QString &fileName)
+    {
+        unlock();
+        lock.reset(new QLockFile(fileName));
+    }
+
+    bool isNull() const { return lock.isNull(); }
+    QLockFile *data() const { return lock.data(); }
+
+    void unlock()
+    {
+        if (lock)
+            lock->unlock();
+    }
+
+private:
+    QScopedPointer<QLockFile> lock;
+};
+
+Q_GLOBAL_STATIC(SingleInstanceLock, _d_singleInstanceLock)
+
 // Protocol changelog:
 //   v1: version + pid + arguments
 //   v2: version + pid + arguments + envs (KEY=VALUE pairs, filtered by whitelist)
@@ -1550,15 +1583,18 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
     }
 
     lockfile += QStringLiteral(".lock");
-    static QScopedPointer <QLockFile> lock(new QLockFile(lockfile));
     // 同一个进程多次调用本接口使用最后一次设置的 key
     // FIX dcc 使用不同的 key 两次调用 setSingleInstance 后无法启动的问题
+    if (_d_singleInstanceLock->isNull())
+        _d_singleInstanceLock->reset(lockfile);
+
+    QLockFile *lock = _d_singleInstanceLock->data();
     qint64 pid = -1;
     QString hostname, appname;
     if (lock->isLocked() && lock->getLockInfo(&pid, &hostname, &appname) && pid == getpid()) {
         qCWarning(dgAppHelper) << "call setSingleInstance again within the same process";
-        lock->unlock();
-        lock.reset(new QLockFile(lockfile));
+        _d_singleInstanceLock->reset(lockfile);
+        lock = _d_singleInstanceLock->data();
     }
 
     if (!lock->tryLock()) {
@@ -1602,6 +1638,23 @@ bool DGuiApplicationHelper::setSingleInstance(const QString &key, DGuiApplicatio
         return false;
     } else {
         qCDebug(dgAppHelper) << "===> listen <===" << _d_singleServer->serverName() << getpid();
+    }
+
+    // 应用开始退出时提前释放单实例资源（关闭 server 并解锁锁文件），
+    // 避免有线程卡住导致进程未退出期间新实例无法启动
+    if (qApp) {
+        // Qt::UniqueConnection 对 lambda 无效，用静态标志防止重复连接
+        static bool connected = false;
+        if (!connected) {
+            connected = true;
+            QObject::connect(qApp, &QCoreApplication::aboutToQuit, qApp, [] {
+                if (_d_singleServer.exists() && _d_singleServer->isListening())
+                    _d_singleServer->close();
+                if (_d_singleInstanceLock.exists())
+                    _d_singleInstanceLock->unlock();
+                qCDebug(dgAppHelper) << "single instance released on quit.";
+            });
+        }
     }
 
     if (new_server) {
