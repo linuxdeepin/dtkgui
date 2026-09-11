@@ -33,6 +33,7 @@ add_executable(${BIN_NAME}
 add_dependencies(${BIN_NAME} ${test-plugin})
 
 target_compile_options(${BIN_NAME} PRIVATE -fno-access-control)
+target_compile_definitions(${BIN_NAME} PRIVATE D_IGNORE_DEPRECATIONS)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(${BIN_NAME} PRIVATE -fsanitize=address)

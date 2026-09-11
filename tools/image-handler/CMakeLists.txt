@@ -5,6 +5,10 @@ add_executable(${TARGET_NAME}
     main.cpp
 )
 
+# DImageHandler is deprecated but still used by this tool,
+# so ignore deprecation warnings when building it.
+target_compile_definitions(${TARGET_NAME} PRIVATE D_IGNORE_DEPRECATIONS)
+
 target_link_libraries(${TARGET_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Gui
     ${LIB_NAME}

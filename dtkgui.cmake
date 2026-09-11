@@ -19,7 +19,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Set build option
 option(DTK_DISABLE_LIBXDG "Disable libxdg" OFF)
 option(DTK_DISABLE_LIBRSVG "Disable librsvg" OFF)
-option(DTK_DISABLE_EX_IMAGE_FORMAT "Disable libraw and freeimage" OFF)
+# DImageHandler is deprecated, disable libraw and freeimage by default.
+option(DTK_DISABLE_EX_IMAGE_FORMAT "Disable libraw and freeimage" ON)
 
 set(CMAKE_CXX_STANDARD 17)
 
