@@ -13,15 +13,17 @@ dimagehandler.h 提供图像处理类 DImageHandler
 取得图片数据，通过 `DImageHandler::thumbnail` 取得图片缩略图。设置文件路径将不会立即加载图片，
 将在需要图片数据时读取，当不需要缓存数据时，可通过 `DImageHandler::clearCache` 清除缓存数据。
 
+@warning 该类已废弃，将在后续版本中移除。请使用 QImageReader/QImageWriter
+或其它图像处理库代替。拓展图片格式支持默认已关闭。
+
 @note 拓展的图片格式依赖 FreeImage 和 LibRaw 公共库，DImageHandler 通过动态加载的方式解析公共库接口。
 可通过 DImageHandler::supportFormats() 获取当前支持的图片格式类型。
 
 ## 编译
-支持拓展的图片格式，编译时会判断环境是否存在依赖包，安装 libfreeimage-dev 及 libraw-dev ，
-设置编译选项 DTK_DISABLE_EX_IMAGE_FORMAT=OFF 后将开启拓展图片格式支持。
+拓展的图片格式依赖 FreeImage 和 LibRaw 公共库，DImageHandler 通过动态加载的方式解析公共库接口。
 
-不同包构建环境默认策略不同，在 **debian** 和 **linglong** 构建环境默认依赖 libfreeimage-dev 及 libraw-dev ，
-支持拓展图片格式，其它环境需手动安装。
+自 6.7.50 起，编译选项 DTK_DISABLE_EX_IMAGE_FORMAT 默认开启，即默认 **不** 启用拓展图片格式。
+如需启用，需安装 libfreeimage-dev 及 libraw-dev ，并显式设置编译选项 DTK_DISABLE_EX_IMAGE_FORMAT=OFF 。
 
 ## image-handler 工具示例
 可在程序根目录 ./tools/image-handler 中查看 image-handler 工具项目。

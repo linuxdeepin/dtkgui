@@ -84,6 +84,10 @@ if(NOT DTK_DISABLE_EX_IMAGE_FORMAT AND EX_IMAGE_FORMAT_LIBS_FOUND)
     )
 endif()
 
+# DImageHandler is deprecated but still built for API/ABI compatibility,
+# so ignore deprecation warnings when building internal targets.
+target_compile_definitions(${LIB_NAME} PRIVATE D_IGNORE_DEPRECATIONS)
+
 if(NOT DTK_DISABLE_LIBXDG)
     target_link_libraries(${LIB_NAME} PRIVATE
         Qt${QT_VERSION_MAJOR}XdgIconLoader

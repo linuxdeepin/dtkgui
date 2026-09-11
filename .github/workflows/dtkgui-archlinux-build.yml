@@ -33,7 +33,7 @@ jobs:
             qt5-base qt5-tools qt5-wayland qt5-svg qt5-imageformats \
             extra-cmake-modules \
             gtest \
-            librsvg libraw \
+            librsvg \
             libqt5xdg \
             icu uchardet dbus spdlog gsettings-qt \
             dtkcommon dtklog \
@@ -46,7 +46,7 @@ jobs:
             qt6-base qt6-tools qt6-wayland qt6-svg qt6-imageformats \
             extra-cmake-modules \
             gtest \
-            librsvg libraw \
+            librsvg \
             libqtxdg \
             icu uchardet dbus spdlog \
             dtkcommon dtk6log \

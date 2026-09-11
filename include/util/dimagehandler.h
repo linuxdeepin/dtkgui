@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -14,7 +14,18 @@
 DGUI_BEGIN_NAMESPACE
 
 class DImageHandlerPrivate;
-class DImageHandler : public QObject, public DTK_CORE_NAMESPACE::DObject
+
+/*!
+ * \brief The DImageHandler class provides image reading, saving, rotating and
+ *  filtering operations.
+ *
+ * \deprecated This class is deprecated and will be removed in the future.
+ *  The extended image formats support based on FreeImage and LibRaw is
+ *  disabled by default. Please use QImageReader/QImageWriter or other
+ *  image libraries instead.
+ */
+class D_DECL_DEPRECATED_X("DImageHandler is deprecated, please use QImageReader/QImageWriter or other image libraries instead.")
+    DImageHandler : public QObject, public DTK_CORE_NAMESPACE::DObject
 {
     Q_OBJECT
 
