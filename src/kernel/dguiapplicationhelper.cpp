@@ -866,6 +866,51 @@ static QColor dark_dpalette[DPalette::NColorTypes] {
     QColor(255, 255, 255, 0.1 * 255)    //ObviousBackground
 };
 
+// Helper: read a palette color array from dconfig with size validation.
+// Returns a pointer to a local buffer if the dconfig array is valid,
+// otherwise returns the fallback static array.
+static const QColor *paletteColorsFromDConfig(const QList<QVariant> &arr,
+                                               const QColor *fallback,
+                                               int expectedSize,
+                                               QColor *buffer)
+{
+    if (arr.size() != expectedSize)
+        return fallback;
+
+    for (int i = 0; i < expectedSize; ++i) {
+        const QString &str = arr.at(i).toString();
+        if (str.isEmpty()) {
+            buffer[i] = fallback[i];
+        } else {
+            QColor c(str);
+            buffer[i] = c.isValid() ? c : fallback[i];
+        }
+    }
+    return buffer;
+}
+
+// Helper: get the Window color for generatePaletteColor_helper.
+// Reads from dconfig with size validation, falls back to static array.
+static QColor paletteWindowColor(DGuiApplicationHelper::ColorType type)
+{
+    if (_d_dconfig && _d_dconfig->isInitializeSucceeded()) {
+        QList<QVariant> arr = (type == DGuiApplicationHelper::DarkType)
+            ? _d_dconfig->darkQPalette()
+            : _d_dconfig->lightQPalette();
+        if (arr.size() == QPalette::NColorRoles) {
+            const QString &str = arr.at(QPalette::Window).toString();
+            if (!str.isEmpty()) {
+                QColor c(str);
+                if (c.isValid())
+                    return c;
+            }
+        }
+    }
+    return (type == DGuiApplicationHelper::DarkType)
+        ? dark_qpalette[QPalette::Window]
+        : light_qpalette[QPalette::Window];
+}
+
 /*!
   \brief 根据主题获取标准调色板.
 
@@ -877,6 +922,22 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
     static const DPalette *light_palette = nullptr, *dark_palette = nullptr;
     static const DPalette *alpha_light_palette = nullptr, *alpha_dark_palette = nullptr;
     const bool allowCompositingColor = DGuiApplicationHelper::testAttribute(ColorCompositing);
+
+    // One-time connection: invalidate cached palettes when dconfig palette values change.
+    static bool s_paletteDConfigConnected = false;
+    if (!s_paletteDConfigConnected) {
+        s_paletteDConfigConnected = true;
+        QObject::connect(_d_dconfig.operator()(), &OrgDeepinDTKPreference::valueChanged,
+                         qApp, [](const QString &key, const QVariant &) {
+            if (key == QLatin1String("lightQPalette") || key == QLatin1String("darkQPalette") ||
+                key == QLatin1String("lightDPalette") || key == QLatin1String("darkDPalette")) {
+                delete light_palette; light_palette = nullptr;
+                delete dark_palette; dark_palette = nullptr;
+                delete alpha_light_palette; alpha_light_palette = nullptr;
+                delete alpha_dark_palette; alpha_dark_palette = nullptr;
+            }
+        });
+    }
 
     if (type == LightType) {
         if (Q_UNLIKELY(allowCompositingColor)) {
@@ -905,6 +966,10 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
     DPalette *pa;
     const QColor *qcolor_list, *dcolor_list;
 
+    // Local buffers for dconfig-derived color arrays.
+    QColor local_qpalette[QPalette::NColorRoles];
+    QColor local_dpalette[DPalette::NColorTypes];
+
     if (type == DarkType) {
         pa = new DPalette();
 
@@ -913,8 +978,21 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
         else
             dark_palette = pa;
 
-        qcolor_list = dark_qpalette;
-        dcolor_list = dark_dpalette;
+        // Try reading palette arrays from dconfig with size validation.
+        bool dconfigOk = false;
+        if (_d_dconfig && _d_dconfig->isInitializeSucceeded()) {
+            QList<QVariant> qArr = _d_dconfig->darkQPalette();
+            QList<QVariant> dArr = _d_dconfig->darkDPalette();
+            if (qArr.size() == QPalette::NColorRoles && dArr.size() == DPalette::NColorTypes) {
+                qcolor_list = paletteColorsFromDConfig(qArr, dark_qpalette, QPalette::NColorRoles, local_qpalette);
+                dcolor_list = paletteColorsFromDConfig(dArr, dark_dpalette, DPalette::NColorTypes, local_dpalette);
+                dconfigOk = true;
+            }
+        }
+        if (!dconfigOk) {
+            qcolor_list = dark_qpalette;
+            dcolor_list = dark_dpalette;
+        }
     } else {
         pa = new DPalette();
 
@@ -923,8 +1001,21 @@ DPalette DGuiApplicationHelper::standardPalette(DGuiApplicationHelper::ColorType
         else
             light_palette = pa;
 
-        qcolor_list = light_qpalette;
-        dcolor_list = light_dpalette;
+        // Try reading palette arrays from dconfig with size validation.
+        bool dconfigOk = false;
+        if (_d_dconfig && _d_dconfig->isInitializeSucceeded()) {
+            QList<QVariant> qArr = _d_dconfig->lightQPalette();
+            QList<QVariant> dArr = _d_dconfig->lightDPalette();
+            if (qArr.size() == QPalette::NColorRoles && dArr.size() == DPalette::NColorTypes) {
+                qcolor_list = paletteColorsFromDConfig(qArr, light_qpalette, QPalette::NColorRoles, local_qpalette);
+                dcolor_list = paletteColorsFromDConfig(dArr, light_dpalette, DPalette::NColorTypes, local_dpalette);
+                dconfigOk = true;
+            }
+        }
+        if (!dconfigOk) {
+            qcolor_list = light_qpalette;
+            dcolor_list = light_dpalette;
+        }
     }
 
     for (int i = 0; i < DPalette::NColorRoles; ++i) {
@@ -1006,13 +1097,13 @@ static void generatePaletteColor_helper(DPalette &base, M role, DGuiApplicationH
     QColor disable_mask_color, inactive_mask_color;
 
     if (type == DGuiApplicationHelper::DarkType) {
-        disable_mask_color = dark_qpalette[QPalette::Window];
-        inactive_mask_color = dark_qpalette[QPalette::Window];
+        disable_mask_color = paletteWindowColor(DGuiApplicationHelper::DarkType);
+        inactive_mask_color = disable_mask_color;
         disable_mask_color.setAlphaF(0.7);
         inactive_mask_color.setAlphaF(0.6);
     } else {
-        disable_mask_color = light_qpalette[QPalette::Window];
-        inactive_mask_color = light_qpalette[QPalette::Window];
+        disable_mask_color = paletteWindowColor(DGuiApplicationHelper::LightType);
+        inactive_mask_color = disable_mask_color;
         disable_mask_color.setAlphaF(0.6);
         inactive_mask_color.setAlphaF(0.4);
     }
