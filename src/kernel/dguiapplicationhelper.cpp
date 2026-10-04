@@ -459,7 +459,7 @@ void DGuiApplicationHelperPrivate::onApplicationPaletteChanged()
         Q_EMIT q->themeTypeChanged(q->toColorType(qGuiApp->palette()));
         Q_EMIT q->applicationPaletteChanged();
     } else {
-        qWarning() << "DGuiApplicationHelper: Don't use QGuiApplication::setPalette on DTK application.";
+        qCDebug(dgAppHelper) << "DGuiApplicationHelper: Don't use QGuiApplication::setPalette on DTK application.";
     }
 }
 
