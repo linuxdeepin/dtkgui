@@ -458,7 +458,11 @@ void DGuiApplicationHelperPrivate::onApplicationPaletteChanged()
     if (Q_LIKELY(!isCustomPalette())) {
         Q_EMIT q->themeTypeChanged(q->toColorType(qGuiApp->palette()));
         Q_EMIT q->applicationPaletteChanged();
-    } else {
+    } else if (qGuiApp->testAttribute(Qt::AA_SetPalette)) {
+        // 仅在调色板变化确由应用自行调用 QGuiApplication::setPalette 引发
+        // （AA_SetPalette 被 Qt 置位）时才告警；DTK 自身经
+        // notifyAppThemeChangedByEvent() 触发的调色板事件属正常流程，
+        // Qt 不会为其置位 AA_SetPalette，不应误报
         qWarning() << "DGuiApplicationHelper: Don't use QGuiApplication::setPalette on DTK application.";
     }
 }
