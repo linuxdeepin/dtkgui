@@ -8,11 +8,13 @@
 #include "dtkgui_global.h"
 #include <QColor>
 #include <QObject>
-#include <QtWaylandClient/private/qwaylandwindow_p.h>
+#include <QPainterPath>
+#include <QRegion>
 #include "private/dplatformwindowinterface_p.h"
 
 DGUI_BEGIN_NAMESPACE
-class PersonalizationWindowContext;
+class TreelandDecorationContext;
+class BackgroundEffectSurface;
 class DTreeLandPlatformWindowHelper : public QObject {
     Q_OBJECT
 public:
@@ -22,15 +24,17 @@ public:
     enum Feature {
         NoTitlebar   = 1 << 0,
         Radius       = 1 << 1,
-        Blur         = 1 << 2,
-        Border       = 1 << 3,
-        Shadow       = 1 << 4,
-        WindowEffect = 1 << 5,
+        Border       = 1 << 2,
+        Shadow       = 1 << 3,
+        WindowEffect = 1 << 4,
+        BlurWindow   = 1 << 5,
+        BlurRegion   = 1 << 6,
     };
     Q_DECLARE_FLAGS(Features, Feature)
 
     QWindow *window() const { return qobject_cast<QWindow *>(parent()); }
-    PersonalizationWindowContext *windowContext() const;
+    TreelandDecorationContext *decorationContext() const;
+    BackgroundEffectSurface *backgroundEffectSurface() const;
 
     void setEnabledNoTitlebar(bool enable);
     void setWindowRadius(int windowRadius);
@@ -39,9 +43,12 @@ public:
     void setShadowRadius(int shadowRadius);
     void setShadowOffset(const QPoint &shadowOffset);
     void setShadowColor(const QColor &shadowColor);
-    void setEnableBlurWindow(bool enableBlurWindow);
     void setWindowEffect(DPlatformHandle::EffectScenes effectScene);
     void setPlatformHandle(DPlatformHandle *handle);
+    void setEnableBlurWindow(bool enabled);
+    void setWindowBlurAreas(const QVector<DPlatformHandle::WMBlurArea> &areas);
+    void setWindowBlurPaths(const QList<QPainterPath> &paths);
+    bool enableBlurWindow() const { return m_blurWindowEnabled; }
 
     bool isEnabledNoTitlebar() const { return m_noTitlebar; }
     int windowRadius() const { return m_radius; }
@@ -50,7 +57,6 @@ public:
     int shadowRadius() const { return m_shadowRadius; }
     QPoint shadowOffset() const { return m_shadowOffset; }
     QColor shadowColor() const { return m_shadowColor; }
-    bool enableBlurWindow() const { return m_blur; }
     DPlatformHandle::EffectScenes windowEffect() const { return m_effectScene; }
 
 private slots:
@@ -67,27 +73,33 @@ private:
     template<typename T>
     void updateFeature(T &member, const T &value, Feature flag) {
         member = value;
+        updateFeature(flag);
+    }
+
+    void updateFeature(Feature flag) {
         m_initialized |= flag;
         m_dirty |= flag;
         scheduleApply();
     }
 
 private:
-    PersonalizationWindowContext *m_windowContext = nullptr;
+    TreelandDecorationContext *m_decorationContext = nullptr;
+    BackgroundEffectSurface *m_backgroundEffectSurface = nullptr;
     static QMap<QWindow *, DTreeLandPlatformWindowHelper*> windowMap;
     DPlatformHandle *m_platformHandle = nullptr;
 
     bool m_noTitlebar = false;
-    bool m_blur = false;
+    bool m_blurWindowEnabled = false;
+    QRegion m_blurRegion;
     int m_radius = 0;
     int m_borderWidth = 0;
     QColor m_borderColor;
     int m_shadowRadius = 0;
     QPoint m_shadowOffset;
     QColor m_shadowColor;
-    DPlatformHandle::EffectScenes m_effectScene;
-    Features m_initialized;
-    Features m_dirty;
+    DPlatformHandle::EffectScenes m_effectScene = {};
+    Features m_initialized = {};
+    Features m_dirty = {};
     bool m_applyScheduled = false;
 };
 
@@ -123,6 +135,9 @@ public:
 
     DPlatformHandle::EffectScene windowEffect() override;
     void setWindowEffect(DPlatformHandle::EffectScenes effectScene) override;
+
+    void setWindowBlurAreas(const QVector<DPlatformHandle::WMBlurArea> &areas);
+    void setWindowBlurPaths(const QList<QPainterPath> &paths);
 };
 
 DGUI_END_NAMESPACE

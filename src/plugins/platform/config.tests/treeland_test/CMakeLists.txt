@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+# SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -19,14 +19,19 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
 
-find_package(TreelandProtocols)
+find_package(TreelandProtocols 0.7.0 REQUIRED)
 set(TreelandProtocols_FOUND ${TreelandProtocols_FOUND})
+find_package(ECM REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
+find_package(WaylandProtocols 1.45 REQUIRED)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
 if("${QT_VERSION_MAJOR}" STREQUAL "6")
     qt6_generate_wayland_protocol_client_sources(${PROJECT_NAME} FILES
-        ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
+        ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-appearance-unstable-v1.xml
+        ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-decoration-unstable-v1.xml
+        ${WaylandProtocols_DATADIR}/staging/ext-background-effect/ext-background-effect-v1.xml
     )
 
     if (${Qt6Core_VERSION} VERSION_GREATER_EQUAL "6.10.0")
@@ -36,14 +41,20 @@ if("${QT_VERSION_MAJOR}" STREQUAL "6")
 else()
     # ECM setup
     include(FeatureSummary)
-    find_package(ECM REQUIRED NO_MODULE)
-    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
     find_package(QtWaylandScanner)
-    ecm_add_qtwayland_client_protocol(TABLET_SRCS
-        PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
-        BASENAME treeland-personalization-manager-v1
+    ecm_add_qtwayland_client_protocol(CLIENT_SRCS
+        PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-appearance-unstable-v1.xml
+        BASENAME treeland-appearance-unstable-v1
     )
-    target_sources(${PROJECT_NAME} PRIVATE ${TABLET_SRCS})
+    ecm_add_qtwayland_client_protocol(CLIENT_SRCS
+        PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-decoration-unstable-v1.xml
+        BASENAME treeland-decoration-unstable-v1
+    )
+    ecm_add_qtwayland_client_protocol(CLIENT_SRCS
+        PROTOCOL ${WaylandProtocols_DATADIR}/staging/ext-background-effect/ext-background-effect-v1.xml
+        BASENAME ext-background-effect-v1
+    )
+    target_sources(${PROJECT_NAME} PRIVATE ${CLIENT_SRCS})
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
         Qt${QT_VERSION_MAJOR}::XkbCommonSupportPrivate
