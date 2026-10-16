@@ -1,24 +1,28 @@
-// SPDX-FileCopyrightText: 2024 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2024 - 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "dtreelandwindowmanagerhelper.h"
-#include "personalizationwaylandclientextension.h"
+#include "treelandbackgroundeffectclientextension.h"
+#include "treelanddecorationclientextension.h"
 
 DGUI_BEGIN_NAMESPACE
 
 TreelandWindowManagerHelper::TreelandWindowManagerHelper(QObject *parent)
     : DWindowManagerHelper(parent)
 {
-    connect(PersonalizationManager::instance(), &PersonalizationManager::activeChanged, this, [this](){
+    connect(BackgroundEffectManager::instance(), &BackgroundEffectManager::blurCapabilityChanged, this, [this](){
         Q_EMIT hasBlurWindowChanged();
+    });
+    connect(TreelandDecorationManager::instance(), &TreelandDecorationManager::activeChanged, this, [this](){
         Q_EMIT hasNoTitlebarChanged();
     });
 }
 
 bool TreelandWindowManagerHelper::hasBlurWindow() const
 {
-    return PersonalizationManager::instance()->isSupported();
+    return BackgroundEffectManager::instance()->isSupported()
+        && BackgroundEffectManager::instance()->hasBlurCapability();
 }
 
 bool TreelandWindowManagerHelper::hasComposite() const
@@ -28,7 +32,7 @@ bool TreelandWindowManagerHelper::hasComposite() const
 
 bool TreelandWindowManagerHelper::hasNoTitlebar() const
 {
-    return PersonalizationManager::instance()->isSupported();
+    return TreelandDecorationManager::instance()->isSupported();
 }
 
 DGUI_END_NAMESPACE

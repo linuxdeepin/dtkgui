@@ -16,7 +16,8 @@
 
 #include "dvtablehook.h"
 
-#include "personalizationwaylandclientextension.h"
+#include "treelanddecorationclientextension.h"
+#include "treelandbackgroundeffectclientextension.h"
 
 DCORE_USE_NAMESPACE
 
@@ -123,6 +124,11 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
         if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
             return DVtableHook::callOriginalFun(w, qWindowEventMember(), event);
         }
+
+        if (!self->m_pressPoint.isNull()
+            && (currentPos - self->m_pressPoint).manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
+            return DVtableHook::callOriginalFun(w, qWindowEventMember(), event);
+        }
     }
 
     bool is_mouse_move = event->type() == QEvent::MouseMove
@@ -158,15 +164,6 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
             return ret;
         }
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        QPointF delta = me->globalPosition() - self->m_pressPoint;
-#else
-        QPointF delta = me->globalPos() - self->m_pressPoint;
-#endif
-        if (delta.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
-            return ret;
-        }
-
         if (!self->m_windowMoving && self->m_enableSystemMove) {
             self->m_windowMoving = true;
 
@@ -185,12 +182,9 @@ bool MoveWindowHelper::windowEvent(QWindow *w, QEvent *event)
 }
 
 QMap<QWindow *, DTreeLandPlatformWindowHelper*> DTreeLandPlatformWindowHelper::windowMap;
-DTreeLandPlatformWindowHelper *DTreeLandPlatformWindowHelper::get(QWindow *window) 
-{
-    if (!PersonalizationManager::instance()->isSupported()) {
-        return nullptr;
-    }
 
+DTreeLandPlatformWindowHelper *DTreeLandPlatformWindowHelper::get(QWindow *window)
+{
     if (!window) {
         return nullptr;
     }
@@ -208,9 +202,19 @@ DTreeLandPlatformWindowHelper::DTreeLandPlatformWindowHelper(QWindow *window)
 {
     window->installEventFilter(this);
 
-    if (!PersonalizationManager::instance()->isActive()) {
-        qWarning() << "Personalization is not active" << window;
-        connect(PersonalizationManager::instance(), &PersonalizationManager::activeChanged, this, &DTreeLandPlatformWindowHelper::onActiveChanged, Qt::QueuedConnection);
+    connect(BackgroundEffectManager::instance(), &BackgroundEffectManager::blurCapabilityChanged,
+            this, [this] {
+        const auto initializedBlur = m_initialized & (Features(BlurWindow) | BlurRegion);
+        if (initializedBlur) {
+            m_dirty |= initializedBlur;
+            scheduleApply();
+        }
+    });
+
+    if (TreelandDecorationManager::instance()->isSupported()
+        && !TreelandDecorationManager::instance()->isActive()) {
+        // Activation is queued by QWaylandClientExtension; retry when it completes.
+        connect(TreelandDecorationManager::instance(), &TreelandDecorationManager::activeChanged, this, &DTreeLandPlatformWindowHelper::onActiveChanged, Qt::QueuedConnection);
     }
 
     if (window->handle()) {
@@ -220,21 +224,28 @@ DTreeLandPlatformWindowHelper::DTreeLandPlatformWindowHelper(QWindow *window)
 
 DTreeLandPlatformWindowHelper::~DTreeLandPlatformWindowHelper()
 {
-    if (m_windowContext) {
-        delete m_windowContext;
-        m_windowContext = nullptr;
+    if (m_decorationContext) {
+        delete m_decorationContext;
+        m_decorationContext = nullptr;
     }
     windowMap.remove(static_cast<QWindow*>(parent()));
+    delete m_backgroundEffectSurface;
+    m_backgroundEffectSurface = nullptr;
 }
 
 bool DTreeLandPlatformWindowHelper::eventFilter(QObject *watched, QEvent *event) {
+    if (event->type() == QEvent::Expose && m_dirty) {
+        scheduleApply();
+    }
+    if (event->type() == QEvent::Resize && m_blurWindowEnabled) {
+        m_dirty |= BlurWindow;
+        scheduleApply();
+    }
     if (event->type() == QEvent::PlatformSurface) {
         QPlatformSurfaceEvent *se = static_cast<QPlatformSurfaceEvent*>(event);
         if (se->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
-            if (PersonalizationManager::instance()->isActive()) {
-                initWaylandWindow();
-                onSurfaceCreated();
-            }
+            initWaylandWindow();
+            onSurfaceCreated();
         }
     }
     return QObject::eventFilter(watched, event);
@@ -254,7 +265,7 @@ void DTreeLandPlatformWindowHelper::initWaylandWindow()
 
 void DTreeLandPlatformWindowHelper::onActiveChanged()
 {
-    if (PersonalizationManager::instance()->isActive()) {
+    if (TreelandDecorationManager::instance()->isActive()) {
         if (window()->handle()) {
             initWaylandWindow();
             onSurfaceCreated();
@@ -270,20 +281,28 @@ void DTreeLandPlatformWindowHelper::onSurfaceCreated()
 
 void DTreeLandPlatformWindowHelper::onSurfaceDestroyed()
 {
-    if (m_windowContext) {
-        delete m_windowContext;
-        m_windowContext = nullptr;
+    if (m_decorationContext) {
+        delete m_decorationContext;
+        m_decorationContext = nullptr;
     }
+    delete m_backgroundEffectSurface;
+    m_backgroundEffectSurface = nullptr;
 }
 
-PersonalizationWindowContext *DTreeLandPlatformWindowHelper::windowContext() const
+TreelandDecorationContext *DTreeLandPlatformWindowHelper::decorationContext() const
 {
-    if (m_windowContext) {
-        return m_windowContext;
+    if (m_decorationContext) {
+        return m_decorationContext;
     }
 
+    auto manager = TreelandDecorationManager::instance();
+    if (!manager->isSupported() || !manager->isInitialized())
+        return nullptr;
+
     auto waylandWindow = dynamic_cast<QtWaylandClient::QWaylandWindow *>(window()->handle());
-    if (!waylandWindow)
+    // Qt exposes the window after acknowledging the initial xdg_surface configure,
+    // including the xdg-decoration negotiation. Earlier decoration overrides are ignored.
+    if (!waylandWindow || !waylandWindow->isExposed())
         return nullptr;
 
     if (!waylandWindow->waylandSurface()) {
@@ -297,11 +316,33 @@ PersonalizationWindowContext *DTreeLandPlatformWindowHelper::windowContext() con
         return nullptr;
     }
 
-    if (!m_windowContext) {
-        const_cast<DTreeLandPlatformWindowHelper *>(this)->m_windowContext = new PersonalizationWindowContext(PersonalizationManager::instance()->get_window_context(surface));
+    if (!m_decorationContext) {
+        const_cast<DTreeLandPlatformWindowHelper *>(this)->m_decorationContext = new TreelandDecorationContext(manager->get_decoration_context(surface));
     }
 
-    return m_windowContext;
+    return m_decorationContext;
+}
+
+BackgroundEffectSurface *DTreeLandPlatformWindowHelper::backgroundEffectSurface() const
+{
+    if (m_backgroundEffectSurface)
+        return m_backgroundEffectSurface;
+
+    auto manager = BackgroundEffectManager::instance();
+    if (!manager->isSupported() || !manager->hasBlurCapability() || !manager->isInitialized())
+        return nullptr;
+
+    auto waylandWindow = dynamic_cast<QtWaylandClient::QWaylandWindow *>(window()->handle());
+    if (!waylandWindow || !waylandWindow->waylandSurface())
+        return nullptr;
+
+    auto surface = waylandWindow->waylandSurface()->object();
+    if (!surface)
+        return nullptr;
+
+    const_cast<DTreeLandPlatformWindowHelper *>(this)->m_backgroundEffectSurface =
+        new BackgroundEffectSurface(manager->get_background_effect(surface));
+    return m_backgroundEffectSurface;
 }
 
 void DTreeLandPlatformWindowHelper::setEnabledNoTitlebar(bool enable)
@@ -339,11 +380,6 @@ void DTreeLandPlatformWindowHelper::setShadowColor(const QColor &shadowColor)
     updateFeature(m_shadowColor, shadowColor, Shadow);
 }
 
-void DTreeLandPlatformWindowHelper::setEnableBlurWindow(bool enableBlurWindow)
-{
-    updateFeature(m_blur, enableBlurWindow, Blur);
-}
-
 void DTreeLandPlatformWindowHelper::setWindowEffect(DPlatformHandle::EffectScenes effectScene)
 {
     updateFeature(m_effectScene, effectScene, WindowEffect);
@@ -354,30 +390,56 @@ void DTreeLandPlatformWindowHelper::setPlatformHandle(DPlatformHandle *handle)
     m_platformHandle = handle;
 }
 
+void DTreeLandPlatformWindowHelper::setEnableBlurWindow(bool enableBlurWindow)
+{
+    updateFeature(m_blurWindowEnabled, enableBlurWindow, BlurWindow);
+}
+
+void DTreeLandPlatformWindowHelper::setWindowBlurAreas(const QVector<DPlatformHandle::WMBlurArea> &areas)
+{
+    QRegion region;
+    for (const auto &area : areas) {
+        const QRect rect(area.x, area.y, area.width, area.height);
+        if (area.xRadius > 0 || area.yRaduis > 0) {
+            QPainterPath path;
+            path.addRoundedRect(rect, area.xRadius, area.yRaduis, Qt::AbsoluteSize);
+            region += QRegion(path.toFillPolygon().toPolygon());
+        } else {
+            region += rect;
+        }
+    }
+    updateFeature(m_blurRegion, region, BlurRegion);
+}
+
+void DTreeLandPlatformWindowHelper::setWindowBlurPaths(const QList<QPainterPath> &paths)
+{
+    QRegion region;
+    for (const auto &path : paths) {
+        region += QRegion(path.toFillPolygon().toPolygon(), path.fillRule());
+    }
+    updateFeature(m_blurRegion, region, BlurRegion);
+}
+
 void DTreeLandPlatformWindowHelper::scheduleApply()
 {
     if (m_applyScheduled)
         return;
     m_applyScheduled = true;
-    QMetaObject::invokeMethod(this, &DTreeLandPlatformWindowHelper::applyPending);
+    QMetaObject::invokeMethod(this, &DTreeLandPlatformWindowHelper::applyPending, Qt::QueuedConnection);
 }
 
 void DTreeLandPlatformWindowHelper::applyPending()
 {
     m_applyScheduled = false;
 
-    if (auto context = windowContext()) {
+    if (auto context = decorationContext()) {
         if (m_dirty & NoTitlebar) {
             m_dirty &= ~NoTitlebar;
-            context->set_titlebar(m_noTitlebar ? PersonalizationWindowContext::enable_mode_disable : PersonalizationWindowContext::enable_mode_enable);
+            context->set_titlebar_mode(m_noTitlebar ? TreelandDecorationContext::titlebar_mode_hide : TreelandDecorationContext::titlebar_mode_show);
         }
         if (m_dirty & Radius) {
             m_dirty &= ~Radius;
-            context->set_round_corner_radius(m_radius);
-        }
-        if (m_dirty & Blur) {
-            m_dirty &= ~Blur;
-            context->set_blend_mode(m_blur ? PersonalizationWindowContext::blend_mode_blur : PersonalizationWindowContext::blend_mode_transparent);
+            context->set_corner_radius(m_radius);
         }
         if (m_dirty & Border) {
             m_dirty &= ~Border;
@@ -395,7 +457,7 @@ void DTreeLandPlatformWindowHelper::applyPending()
         if (m_dirty & WindowEffect) {
             m_dirty &= ~WindowEffect;
             if (m_effectScene.testFlag(DPlatformHandle::EffectNoRadius)) {
-                context->set_round_corner_radius(0);
+                context->set_corner_radius(0);
             }
             if (m_effectScene.testFlag(DPlatformHandle::EffectNoShadow)) {
                 context->set_shadow(0, 0, 0, 0, 0, 0, 0);
@@ -404,6 +466,32 @@ void DTreeLandPlatformWindowHelper::applyPending()
                 context->set_border(0, 0, 0, 0, 0);
             }
         }
+    }
+
+    const auto blurFeatures = Features(BlurWindow) | BlurRegion;
+    if (m_dirty & blurFeatures) {
+        const QRegion region = m_blurWindowEnabled
+            ? QRegion(QRect(QPoint(0, 0), window()->size())) : m_blurRegion;
+        auto waylandWindow = dynamic_cast<QtWaylandClient::QWaylandWindow *>(window()->handle());
+        bool changed = false;
+        if (region.isEmpty()) {
+            changed = m_backgroundEffectSurface != nullptr;
+            delete m_backgroundEffectSurface;
+            m_backgroundEffectSurface = nullptr;
+            m_dirty &= ~blurFeatures;
+        } else {
+            auto manager = BackgroundEffectManager::instance();
+            if (manager->hasBlurCapability() && waylandWindow) {
+                if (auto effect = backgroundEffectSurface()) {
+                    effect->setBlurRegion(region, waylandWindow->display());
+                    m_dirty &= ~blurFeatures;
+                    changed = true;
+                }
+            }
+        }
+        // Unconfigured surfaces receive the pending blur state with their first frame.
+        if (changed && waylandWindow && waylandWindow->isExposed())
+            waylandWindow->commit();
     }
 }
 
@@ -435,6 +523,8 @@ bool DTreeLandPlatformWindowInterface::isEnabled() const
 
 bool DTreeLandPlatformWindowInterface::isEnabledNoTitlebar() const
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return false;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->isEnabledNoTitlebar();
     return false;
@@ -442,6 +532,8 @@ bool DTreeLandPlatformWindowInterface::isEnabledNoTitlebar() const
 
 bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return false;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setEnabledNoTitlebar(enable);
         return true;
@@ -451,6 +543,8 @@ bool DTreeLandPlatformWindowInterface::setEnabledNoTitlebar(bool enable)
 
 int DTreeLandPlatformWindowInterface::windowRadius() const
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return 0;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->windowRadius();
     return 0;
@@ -458,6 +552,8 @@ int DTreeLandPlatformWindowInterface::windowRadius() const
 
 void DTreeLandPlatformWindowInterface::setWindowRadius(int windowRadius)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setWindowRadius(windowRadius);
         if (m_platformHandle)
@@ -467,6 +563,8 @@ void DTreeLandPlatformWindowInterface::setWindowRadius(int windowRadius)
 
 int DTreeLandPlatformWindowInterface::borderWidth() const
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return 0;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->borderWidth();
     return 0;
@@ -474,6 +572,8 @@ int DTreeLandPlatformWindowInterface::borderWidth() const
 
 void DTreeLandPlatformWindowInterface::setBorderWidth(int borderWidth)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setBorderWidth(borderWidth);
         if (m_platformHandle)
@@ -483,6 +583,8 @@ void DTreeLandPlatformWindowInterface::setBorderWidth(int borderWidth)
 
 QColor DTreeLandPlatformWindowInterface::borderColor() const
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return {};
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->borderColor();
     return {};
@@ -490,6 +592,8 @@ QColor DTreeLandPlatformWindowInterface::borderColor() const
 
 void DTreeLandPlatformWindowInterface::setBorderColor(const QColor &borderColor)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setBorderColor(borderColor);
         if (m_platformHandle)
@@ -499,6 +603,8 @@ void DTreeLandPlatformWindowInterface::setBorderColor(const QColor &borderColor)
 
 int DTreeLandPlatformWindowInterface::shadowRadius() const
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return 0;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->shadowRadius();
     return 0;
@@ -506,6 +612,8 @@ int DTreeLandPlatformWindowInterface::shadowRadius() const
 
 void DTreeLandPlatformWindowInterface::setShadowRadius(int shadowRadius)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setShadowRadius(shadowRadius);
         if (m_platformHandle)
@@ -515,6 +623,8 @@ void DTreeLandPlatformWindowInterface::setShadowRadius(int shadowRadius)
 
 QPoint DTreeLandPlatformWindowInterface::shadowOffset() const
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return {};
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->shadowOffset();
     return {};
@@ -522,6 +632,8 @@ QPoint DTreeLandPlatformWindowInterface::shadowOffset() const
 
 void DTreeLandPlatformWindowInterface::setShadowOffset(const QPoint &shadowOffset)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setShadowOffset(shadowOffset);
         if (m_platformHandle)
@@ -531,6 +643,8 @@ void DTreeLandPlatformWindowInterface::setShadowOffset(const QPoint &shadowOffse
 
 QColor DTreeLandPlatformWindowInterface::shadowColor() const
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return {};
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->shadowColor();
     return {};
@@ -538,6 +652,8 @@ QColor DTreeLandPlatformWindowInterface::shadowColor() const
 
 void DTreeLandPlatformWindowInterface::setShadowColor(const QColor &shadowColor)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setShadowColor(shadowColor);
         if (m_platformHandle)
@@ -547,6 +663,8 @@ void DTreeLandPlatformWindowInterface::setShadowColor(const QColor &shadowColor)
 
 bool DTreeLandPlatformWindowInterface::enableBlurWindow() const
 {
+    if (!BackgroundEffectManager::instance()->isSupported())
+        return false;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return helper->enableBlurWindow();
     return false;
@@ -554,6 +672,8 @@ bool DTreeLandPlatformWindowInterface::enableBlurWindow() const
 
 void DTreeLandPlatformWindowInterface::setEnableBlurWindow(bool enable)
 {
+    if (!BackgroundEffectManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setEnableBlurWindow(enable);
         if (m_platformHandle)
@@ -563,6 +683,8 @@ void DTreeLandPlatformWindowInterface::setEnableBlurWindow(bool enable)
 
 DPlatformHandle::EffectScene DTreeLandPlatformWindowInterface::windowEffect()
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return {};
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window))
         return static_cast<DPlatformHandle::EffectScene>(static_cast<int>(helper->windowEffect()));
     return {};
@@ -570,10 +692,31 @@ DPlatformHandle::EffectScene DTreeLandPlatformWindowInterface::windowEffect()
 
 void DTreeLandPlatformWindowInterface::setWindowEffect(DPlatformHandle::EffectScenes effectScene)
 {
+    if (!TreelandDecorationManager::instance()->isSupported())
+        return;
     if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
         helper->setWindowEffect(effectScene);
         if (m_platformHandle)
             Q_EMIT m_platformHandle->windowEffectChanged();
     }
 }
+
+void DTreeLandPlatformWindowInterface::setWindowBlurAreas(const QVector<DPlatformHandle::WMBlurArea> &areas)
+{
+    if (!BackgroundEffectManager::instance()->isSupported())
+        return;
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setWindowBlurAreas(areas);
+    }
+}
+
+void DTreeLandPlatformWindowInterface::setWindowBlurPaths(const QList<QPainterPath> &paths)
+{
+    if (!BackgroundEffectManager::instance()->isSupported())
+        return;
+    if (auto helper = DTreeLandPlatformWindowHelper::get(m_window)) {
+        helper->setWindowBlurPaths(paths);
+    }
+}
+
 DGUI_END_NAMESPACE
