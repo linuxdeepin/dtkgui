@@ -55,26 +55,37 @@ else()
 endif()
 
 if(NOT DTK_DISABLE_TREELAND)
-    find_package(TreelandProtocols)
+    find_package(TreelandProtocols 0.7.0 REQUIRED)
     find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS WaylandClient)
     set(TreelandProtocols_FOUND ${TreelandProtocols_FOUND})
+    find_package(ECM REQUIRED NO_MODULE)
+    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
+    find_package(WaylandProtocols 1.45 REQUIRED)
 endif()
 
 if(NOT DTK_DISABLE_TREELAND AND TreelandProtocols_FOUND)
     message("Support Treeland!")
     if("${QT_VERSION_MAJOR}" STREQUAL "6")
         qt6_generate_wayland_protocol_client_sources(${LIB_NAME} FILES
-        ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
-    )
+            ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-appearance-unstable-v1.xml
+            ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-decoration-unstable-v1.xml
+            ${WaylandProtocols_DATADIR}/staging/ext-background-effect/ext-background-effect-v1.xml
+        )
     else()
         # ECM setup
         include(FeatureSummary)
-        find_package(ECM REQUIRED NO_MODULE)
-        set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ECM_MODULE_PATH}")
         find_package(QtWaylandScanner)
         ecm_add_qtwayland_client_protocol(CLIENT_LIB_SRCS
-            PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-personalization-manager-v1.xml
-            BASENAME treeland-personalization-manager-v1
+            PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-appearance-unstable-v1.xml
+            BASENAME treeland-appearance-unstable-v1
+        )
+        ecm_add_qtwayland_client_protocol(CLIENT_LIB_SRCS
+            PROTOCOL ${TREELAND_PROTOCOLS_DATA_DIR}/treeland-decoration-unstable-v1.xml
+            BASENAME treeland-decoration-unstable-v1
+        )
+        ecm_add_qtwayland_client_protocol(CLIENT_LIB_SRCS
+            PROTOCOL ${WaylandProtocols_DATADIR}/staging/ext-background-effect/ext-background-effect-v1.xml
+            BASENAME ext-background-effect-v1
         )
         target_sources(${LIB_NAME} PRIVATE
             ${CLIENT_LIB_SRCS}

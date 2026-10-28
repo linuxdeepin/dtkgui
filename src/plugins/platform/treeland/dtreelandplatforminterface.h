@@ -14,19 +14,15 @@
 DGUI_BEGIN_NAMESPACE
 
 class DTreelandPlatformInterfacePrivate;
-class PersonalizationManager;
-class PersonalizationFontContext;
-class PersonalizationAppearanceContext;
-class PersonalizationWindowContext;
+class TreelandAppearance;
 
 class DTreelandPlatformInterface : public QObject, public DPlatformInterface, public DCORE_NAMESPACE::DObject
 {
     Q_OBJECT
-    friend PersonalizationFontContext;
-    friend PersonalizationAppearanceContext;
-    friend PersonalizationWindowContext;
+    friend TreelandAppearance;
 public:
     explicit DTreelandPlatformInterface(DPlatformTheme *platformTheme);
+    ~DTreelandPlatformInterface() override;
 
     QByteArray iconThemeName() const override;
     QByteArray fontName() const override;
@@ -48,13 +44,6 @@ public:
     void setActiveColor(const QColor activeColor) override;
 
 private:
-    void initContext();
-
-private:
-    PersonalizationManager *m_manager;
-    QScopedPointer<PersonalizationAppearanceContext> m_appearanceContext;
-    QScopedPointer<PersonalizationFontContext> m_fontContext;
-
     QColor m_activeColor;
     int m_titleHeight;
     QByteArray m_fontName;
@@ -65,7 +54,7 @@ private:
     int m_windowRadius;
     int m_scrollBarPolicy;
     QByteArray m_themeName;
-    uint32_t m_blurOpacity;
+    qreal m_blurOpacity;
 };
 
 DGUI_END_NAMESPACE
