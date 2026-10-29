@@ -100,19 +100,19 @@ PersonalizationAppearanceContext::PersonalizationAppearanceContext(struct ::tree
 void PersonalizationAppearanceContext::treeland_personalization_appearance_context_v1_round_corner_radius(int32_t radius)
 {
     m_interface->m_windowRadius = radius;
-    emit m_interface->m_platformTheme->windowRadiusChanged(radius);
+    Q_EMIT m_interface->m_platformTheme->windowRadiusChanged(radius);
 }
 
 void PersonalizationAppearanceContext::treeland_personalization_appearance_context_v1_icon_theme(const QString &theme_name)
 {
     m_interface->m_iconThemeName = theme_name.toUtf8();
-    emit m_interface->m_platformTheme->iconThemeNameChanged(theme_name.toUtf8());
+    Q_EMIT m_interface->m_platformTheme->iconThemeNameChanged(theme_name.toUtf8());
 }
 
 void PersonalizationAppearanceContext::treeland_personalization_appearance_context_v1_active_color(const QString &active_color)
 {
     m_interface->m_activeColor = active_color;
-    emit m_interface->m_platformTheme->activeColorChanged(active_color);
+    Q_EMIT m_interface->m_platformTheme->activeColorChanged(active_color);
 }
 
 void PersonalizationAppearanceContext::treeland_personalization_appearance_context_v1_window_theme_type(uint32_t type)
@@ -122,7 +122,7 @@ void PersonalizationAppearanceContext::treeland_personalization_appearance_conte
         theme = theme + QStringLiteral("-dark");
     }
     m_interface->m_themeName = theme.toUtf8();
-    emit m_interface->m_platformTheme->themeNameChanged(theme.toUtf8());
+    Q_EMIT m_interface->m_platformTheme->themeNameChanged(theme.toUtf8());
 }
 
 void PersonalizationAppearanceContext::treeland_personalization_appearance_context_v1_window_opacity(uint32_t opacity)
@@ -149,13 +149,13 @@ PersonalizationFontContext::PersonalizationFontContext(struct ::treeland_persona
 void PersonalizationFontContext::treeland_personalization_font_context_v1_font(const QString &font_name)
 {
     m_interface->m_fontName = font_name.toUtf8();
-    emit m_interface->m_platformTheme->fontNameChanged(font_name.toUtf8());
+    Q_EMIT m_interface->m_platformTheme->fontNameChanged(font_name.toUtf8());
 }
 
 void PersonalizationFontContext::treeland_personalization_font_context_v1_monospace_font(const QString &font_name)
 {
     m_interface->m_monoFontName = font_name.toUtf8();
-    emit m_interface->m_platformTheme->monoFontNameChanged(font_name.toUtf8());
+    Q_EMIT m_interface->m_platformTheme->monoFontNameChanged(font_name.toUtf8());
 }
 
 void PersonalizationFontContext::treeland_personalization_font_context_v1_font_size(uint32_t font_size)
@@ -164,7 +164,7 @@ void PersonalizationFontContext::treeland_personalization_font_context_v1_font_s
     qreal pointSize = font_size / 10.0;
     pointSize = qBound(8.25, pointSize, 15.00);
     m_interface->m_fontPointSize = pointSize;
-    emit m_interface->m_platformTheme->fontPointSizeChanged(pointSize);
+    Q_EMIT m_interface->m_platformTheme->fontPointSizeChanged(pointSize);
 }
 
 DGUI_END_NAMESPACE
