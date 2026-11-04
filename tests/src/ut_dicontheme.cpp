@@ -5,9 +5,13 @@
 #include "test.h"
 #include "DIconTheme"
 
+#include <DStandardPaths>
+
+#include <QDir>
 #include <QIcon>
 
 DGUI_USE_NAMESPACE
+DCORE_USE_NAMESPACE
 
 TEST(ut_DIconTheme, builtinIcon)
 {
@@ -47,4 +51,19 @@ TEST(ut_DIconTheme, cachedTheme)
     DIconTheme::cached()->clear();
     const QIcon icon1_cached2 = DIconTheme::cached()->findQIcon("edit");
     ASSERT_NE(icon1_cached2.cacheKey(), icon1.cacheKey());
+}
+
+TEST(ut_DIconTheme, userDciThemePath)
+{
+    const QString userPath = QDir::cleanPath(DStandardPaths::path(DStandardPaths::XDG::DataHome) + "/dsg/icons");
+    const QStringList paths = DIconTheme::dciThemeSearchPaths();
+    ASSERT_FALSE(paths.isEmpty());
+    // 用户级 DCI 目录优先于系统目录, 且不重复出现
+    ASSERT_EQ(QDir::cleanPath(paths.first()), userPath);
+    int count = 0;
+    for (const QString &path : paths) {
+        if (QDir::cleanPath(path) == userPath)
+            ++count;
+    }
+    ASSERT_EQ(count, 1);
 }

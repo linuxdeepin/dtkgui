@@ -47,6 +47,17 @@ static inline QStringList systemDciThemePaths()
     return paths;
 }
 
+// Like ~/.local/share/icons for XDG icon themes, lets users override system
+// DCI icons without root or setting DSG_DATA_DIRS.
+static inline QString userDciThemePath()
+{
+    const QString dataHome = DStandardPaths::path(DStandardPaths::XDG::DataHome);
+    if (dataHome.isEmpty())
+        return QString();
+
+    return joinPath(joinPath(dataHome, QLatin1String("dsg")), QLatin1String("icons"));
+}
+
 static inline QString applicationDciThemePath()
 {
     return QLatin1String(":/dsg/icons");
@@ -217,7 +228,16 @@ QString DIconTheme::Cached::findDciIconFile(const QString &iconName, const QStri
 }
 
 static inline QStringList getDciThemePaths() {
-    QStringList paths = systemDciThemePaths();
+    QStringList paths;
+    const QString userPath = userDciThemePath();
+    if (!userPath.isEmpty())
+        paths.push_back(userPath);
+
+    for (const QString &path : systemDciThemePaths()) {
+        // DSG_DATA_DIRS may already contain the user data directory
+        if (QDir::cleanPath(path) != QDir::cleanPath(userPath))
+            paths.push_back(path);
+    }
     paths.push_back(applicationDciThemePath());
     return paths;
 }
