@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022-2023 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022-2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -233,9 +233,11 @@ static inline QStringList getDciThemePaths() {
     if (!userPath.isEmpty())
         paths.push_back(userPath);
 
-    for (const QString &path : systemDciThemePaths()) {
+    const QString cleanUserPath = QDir::cleanPath(userPath);
+    const QStringList systemPaths = systemDciThemePaths();
+    for (const QString &path : systemPaths) {
         // DSG_DATA_DIRS may already contain the user data directory
-        if (QDir::cleanPath(path) != QDir::cleanPath(userPath))
+        if (QDir::cleanPath(path) != cleanUserPath)
             paths.push_back(path);
     }
     paths.push_back(applicationDciThemePath());

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2022-2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
@@ -55,7 +55,11 @@ TEST(ut_DIconTheme, cachedTheme)
 
 TEST(ut_DIconTheme, userDciThemePath)
 {
-    const QString userPath = QDir::cleanPath(DStandardPaths::path(DStandardPaths::XDG::DataHome) + "/dsg/icons");
+    const QString dataHome = DStandardPaths::path(DStandardPaths::XDG::DataHome);
+    if (dataHome.isEmpty())
+        GTEST_SKIP() << "no XDG data home on this platform";
+
+    const QString userPath = QDir::cleanPath(dataHome + "/dsg/icons");
     const QStringList paths = DIconTheme::dciThemeSearchPaths();
     ASSERT_FALSE(paths.isEmpty());
     // 用户级 DCI 目录优先于系统目录, 且不重复出现
