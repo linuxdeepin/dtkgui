@@ -608,6 +608,12 @@ bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QVector<DPlat
         return impl->setWindowBlurArea(area);
     }
 #endif
+#ifndef DTK_DISABLE_TREELAND
+    if (auto impl = dynamic_cast<DTreeLandPlatformWindowInterface *>(platformWindowImpl(&handle))) {
+        impl->setWindowBlurAreas(area);
+        return true;
+    }
+#endif
     handle.setEnableBlurWindow(true);
     return true;
 }
@@ -662,6 +668,12 @@ bool DPlatformHandle::setWindowBlurAreaByWM(QWindow *window, const QList<QPainte
 #ifndef DTK_DISABLE_XCB
     if (auto impl = dynamic_cast<DXCBPlatformWindowInterface *>(platformWindowImpl(&handle))) {
         return impl->setWindowBlurArea(paths);
+    }
+#endif
+#ifndef DTK_DISABLE_TREELAND
+    if (auto impl = dynamic_cast<DTreeLandPlatformWindowInterface *>(platformWindowImpl(&handle))) {
+        impl->setWindowBlurPaths(paths);
+        return true;
     }
 #endif
     handle.setEnableBlurWindow(true);
