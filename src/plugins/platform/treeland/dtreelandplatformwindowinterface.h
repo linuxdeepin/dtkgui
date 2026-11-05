@@ -53,7 +53,7 @@ public:
     bool enableBlurWindow() const { return m_blur; }
     DPlatformHandle::EffectScenes windowEffect() const { return m_effectScene; }
 
-private slots:
+private Q_SLOTS:
     void onActiveChanged();
     void onSurfaceCreated();
     void onSurfaceDestroyed();
