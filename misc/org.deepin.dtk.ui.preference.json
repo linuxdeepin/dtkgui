@@ -21,7 +21,7 @@
             "description": "The application theme type, which can be set to follow the system theme (0), light theme (1), dark theme (2)",
             "description[zh_CN]": "应用主题的颜色，可以设置为跟随系统(0)、浅色(1)、 深色(2)，默认为跟随系统",
             "permissions": "readwrite",
-            "visibility": "public"
+            "visibility": "private"
         }
     }
 }
